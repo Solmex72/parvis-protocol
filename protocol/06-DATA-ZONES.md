@@ -1,92 +1,96 @@
-# 06 — DATA ZONES
+> **Uoffisiell oversettelse.** Den normative versjonen av dette dokumentet er den engelske, i grenen
+> `main`. Denne oversettelsen er gjort tilgjengelig for enkelhets skyld og **er ikke gjennomgått av en
+> morsmålsbruker**. Ved avvik fra den engelske originalen **gjelder engelsk**. Protokollens betegnelser
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verb og filnavnene) beholdes bevisst på
+> engelsk: det er bokstavelige verdier som agenter tolker.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — DATASONER
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Status: normativ.** Hvor en fil får bo.
 
 ---
 
-## 2. The two zones
+## 1. Hvorfor et forbud ikke virket
 
-| Zone | Property | Holds |
+Den opprinnelige regelen lød *”ingen hemmeligheter, aldri, ingen steder”* — **uten noe sted å legge private data
+i stedet.**
+
+Et forbud uten bestemmelsessted blir ikke overholdt. Det omgås, og privat materiale havner ved et uhell i det
+synkroniserte treet. Det skjedde gjentatte ganger, også ved en agent som selv var omfattet av regelen.
+
+**Regelen er en styringsbeslutning, ikke et forbud.**
+
+---
+
+## 2. De to sonene
+
+| Sone | Egenskap | Inneholder |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Synkroniserer til skylagring. **Behandle hver byte som offentliggjort.** | Doktrine, pålegg, agentdefinisjoner, arkitektur, forretningssammenheng, research, teknisk dokumentasjon |
+| **PRIVATE** | **Utenfor enhver synkroniseringsrot** — og utenfor brukerprofilen, slik at omdirigering av kjente mapper heller ikke når dit | Hemmeligheter, virkelige personer og personopplysningene deres, private prosjekter og medier, alt det ville være galt å finne i en sikkerhetskopi |
 
-### The test
+### Prøven
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Ville det være et problem om dette lå i et skyøyeblikksbilde om et år?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Ja → PRIVATE. Nei → PUBLIC. Ved virkelig usikkerhet → **PRIVATE.** Prisen for overklassifisering er bryderi.
+Prisen for underklassifisering kan ikke tas tilbake.
 
-### Know what actually syncs
+### Vit hva som faktisk synkroniserer
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Kontroller dette på den virkelige maskinen, ikke ut fra en antakelse. På en vanlig arbeidsstasjon kan flere
+synkroniseringsklienter kjøre samtidig, og alt under brukerens mapper for dokumenter, skrivebord eller bilder
+forlater maskinen og oppbevares i versjonshistorikken i uker. **Å slette lokalt kaller det ikke tilbake.**
 
-Two consequences that each cause real failures:
+To følger som hver for seg forårsaker virkelige feil:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **Byggeutgang må omdirigeres** ut av en synkroniseringsrot, ellers ødelegger speilet den midt i byggingen.
+2. **Nøkler bor utenfor**, bevisst og som standard.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. Unntaket: påloggingsopplysninger hører til ingen sone
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**Aktive påloggingsopplysninger — passord, API-nøkler, tokens, sendenøkler — hører hjemme i en passordbehandler,
+ikke i noen av filsystemene.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+Den private sonen inneholder *private data*. En passordbehandler inneholder *påloggingsopplysninger*. Dette er
+ingen ordkløveri: en privat katalog er ikke kryptert som standard, og en fil er en fil. I det øyeblikket én
+kopieres, siteres i en utskrift eller vedlegges noe, er den røpet.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Formuler den private sonens sikkerhetsegenskap snevert, og overdriv den aldri.** Dens eneste påviste egenskap
+er vanligvis at *ingenting kopierer den noe sted*. Uten etterprøvd kryptering av hele disken eller enkeltfiler er
+den ikke kryptert, ikke sikkerhetskopiert og ingen safe.
 
 ---
 
-## 6. Pruning without loss
+## 4. Klassifiseringen er Operatørens, og den kan justeres
 
-Before anything leaves the working tree:
+Hold den levende tabellen i én enkelt fil — `DATA-CLASSIFICATION.md` — der Operatøren flytter kategorier mellom
+soner, og som enhver agent leser i stedet for å gjette.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Denne protokollfilen oppgir **mekanismen**. Den filen oppgir **policyen**. Der de to er uenige, vinner
+policyfilen.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Følger for agenter
+
+- **Ingen hemmelighet i noe tre som pakkes.** En sammenhengspakke finnes for å limes inn i en ny økt. Navngi hva
+  som holdes og hvor; aldri verdien.
+- **Ingen hemmelighet når `surface/`.** Den vises på skjermen.
+- **Ingen hemmelighet når en nettleser.** Se [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Skjul ved henvisning, ikke ved sletting.** `<api key — see password manager entry "acme-prod">` holder
+  kjensgjerningen finnbar uten å røpe verdien.
+
+---
+
+## 6. Beskjæring uten tap
+
+Før noe forlater arbeidstreet:
+
+1. Kopier det til et forseglet lager **utenfor røttene** — en arkivfil, ikke nåbar med glob.
+2. Forbered stiene i `marked-deletion.md` / `marked-archive.md`.
+3. **Utførelsen er Operatørens hånd**, med treet falt til ro.
+
+Slett aldri i mengde under pågående samtidighet.

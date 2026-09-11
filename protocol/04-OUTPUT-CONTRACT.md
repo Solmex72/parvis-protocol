@@ -1,38 +1,42 @@
-# 04 — THE OUTPUT CONTRACT
+> **Uoffisiell oversettelse.** Den normative versjonen av dette dokumentet er den engelske, i grenen
+> `main`. Denne oversettelsen er gjort tilgjengelig for enkelhets skyld og **er ikke gjennomgått av en
+> morsmålsbruker**. Ved avvik fra den engelske originalen **gjelder engelsk**. Protokollens betegnelser
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verb og filnavnene) beholdes bevisst på
+> engelsk: det er bokstavelige verdier som agenter tolker.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — UTGANGSKONTRAKTEN
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**Status: normativ.** Hvor arbeidet havner når det er ferdig.
 
 ---
 
-## 2. Where output goes
+## 1. Regelen
 
-| Kind of output | Lands at |
+**Rapporter ikke til chatten. Arbeid i filtreet, skriv utgangen til disk, og vis en peker.**
+
+En agent som avslutter med å skrive et langt svar i et chattevindu, har lagt utgangen sin der ingenting annet i
+flåten kan lese den — ingen annen agent, ingen overvåking, ingen konsoll, ingen neste økt. Filen er den varige
+nedskrivingen; chatten er en utskrift ingen lenger nede ser.
+
+---
+
+## 2. Hvor utgangen havner
+
+| Slag av utgang | Lander i |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| Arbeidsresultat, funn, en rapport | den ansvarlige filen, eller `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Alt Operatøren bør se nå | en kort pekerfil i `_os/events/surface/` |
+| En anmodning som krever Operatøren | `_os/exchange/requests/REQ-<slug>.md` |
+| Protokollinjen | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**Katalogen `surface/` er varselet. Filen er innholdet.** Skriv innholdet på dets rette plass, og legg så igjen
+en enkeltlinjes peker i `surface/`, slik at konsollen viser Operatøren hvor det landet.
 
 ---
 
-## 3. The task index
+## 3. Oppgaveprotokollen
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+Én linje per ordre. Tilføy en `REQ`-linje **før** start, slik at en avbrutt oppgave forblir synlig.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +45,45 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**En `DONE`-linje uten bevissti er ugyldig.** Finnes ingen fil, har arbeidet ikke landet noe sted der Operatøren
+kan se det. Selvrapport er `[CLAIMED]`; filen er det som gjør den `[PROVEN]`.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**En avvisning hører til her for godt.** Slik slutter flåten å ta opp avgjorte spørsmål igjen. Slett den ikke
+senere.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
-
----
-
-## 4. Completion is the Operator seeing it
-
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
+**Den ærlige grensen:** denne protokollen iakttar ingenting. Den er nøyaktig så fullstendig som agentene som
+skriver i den. En manglende oppgave er ikke bevis på at oppgaven aldri fant sted — bare på at ingen skrev den
+ned. Behandle en linje som *en påstand med en bevissti vedlagt*, aldri som bevis. Kontroller at bevisfilen
+finnes, før du stoler på noe `DONE`.
 
 ---
 
-## 5. The counter-rule that outranks routing
+## 4. Ferdig er når Operatøren ser det
 
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+Ikke når en agent erklærer det. Et svar er ikke et stanspunkt: overvåkinger forblir spent gjennom det, arbeidet
+fortsetter, og så skjer en bevisst avmelding.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. Motregelen som går foran styringen
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**Nødstoppet og åpenheten går fortsatt til mennesket, straks og iøynefallende.**
+
+En svikt vises like iøynefallende som en suksess. Å styre utgang til filer må aldri bli et sted der et dårlig
+resultat begraves. Kommer flåtens gode nyheter i chatten og de dårlige i en fil ingen åpner, er kontrakten snudd
+om, og flåten lyver nå gjennom styring.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. Den ærlige grensen for selve kontrakten
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+En agent som kjører inne i et chattesele, avgir fortsatt assistenttekst i den chatten — denne kontrakten kan
+ikke omdirigere selen. Det den binder, er **det agenten velger å skrive**: innholdet i filer, og chatteksten
+begrenset til en kort peker — *”skrevet til `<path>`, vist på konsollen”* — aldri hele rapporten.
+
+---
+
+## 7. Ingen hemmelighet når flaten
+
+`surface/` leses av en konsoll og kan vises på en skjerm, i et skjermbilde eller i et delt vindu. Reglene for
+datasoner ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) gjelder her med full kraft.

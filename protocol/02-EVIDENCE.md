@@ -1,118 +1,121 @@
-# 02 — EVIDENCE
+> **Uoffisiell oversettelse.** Den normative versjonen av dette dokumentet er den engelske, i grenen
+> `main`. Denne oversettelsen er gjort tilgjengelig for enkelhets skyld og **er ikke gjennomgått av en
+> morsmålsbruker**. Ved avvik fra den engelske originalen **gjelder engelsk**. Protokollens betegnelser
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verb og filnavnene) beholdes bevisst på
+> engelsk: det er bokstavelige verdier som agenter tolker.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — BEVIS
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**Status: normativ.** Hvordan en iakttakelse blir en nedskrevet kjensgjerning.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+Disiplinen denne filen beskriver, brukes vanligvis på *forslag* — en agent sier hvor sannsynlig det er at planen
+dens virker, før mennesket bestemmer. Den brukes nesten aldri på *påstander*. Slik tenker en flåte nøye over hva
+den vil ha lov til å **gjøre**, og skjødesløst over hva den skriver ned som **sant**.
+
+Det er samme handling. En påstand som føres inn i protokollen, er et forslag om at protokollen skal endres.
+Parvis bruker én disiplin på begge.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. Enhver påstand bærer en merking
 
-| Tag | Means | Admissible where |
+| Merking | Betyr | Tillatt hvor |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | Etterprøvd mot en oppgitt primærkilde **du har lest i denne kjøringen**. Nevn kommandoen, lesingen, målingen. | Hvor som helst, også i en hovedfil. |
+| `[CLAIMED]` | Meldt av noe annet. Ikke etterprøvd. | Arbeidsfiler. Aldri en hovedfil. |
+| `[ASSUMED]` | En arbeidsforutsetning ingen har kontrollert. | Arbeidsfiler, uttrykkelig. |
+| `[PROPOSED]` | Et anslag, en anbefaling, en plan. | Forslag. Aldri protokollen. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**Merkingen følger med påstanden.** Et `[PROPOSED]` blir ikke `[PROVEN]` av å bli kopiert til en viktigere fil.
+Oppgradering krever en ny måling, ikke et nytt sted.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**Bare `[PROVEN]` kan endre en hovedfil.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. Oppgi kilde eller merk — hvitvask aldri
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+Et tall oppgir kilden sin, ellers er det ikke et tall, men en anelse med et desimaltegn.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+Har du ikke kilden, **si det, og gi resonnementet i stedet.** Det er et brukbart svar. Et kildeløst tall
+framstilt som kjensgjerning er det ikke.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**Hvitvask aldri en svikt til et funn.** Et søk som ga feil, er et mislykket kall, ikke et tomt resultatsett. En
+side som ikke ville lastes, er ikke bevis på fravær. Skriv hva som skjedde.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. Selvbeskrivelse er `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+En agents beretning om sin egen tilstand, sin egen dekning eller sitt eget ferdige arbeid er `[CLAIMED]` — uansett
+hvor sikker den er. Først en ytre nedskriving gjør den `[PROVEN]`: en fil på disk, en kommandos returkode, en
+loggelinje skrevet av noe som ikke er deg.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+Derfor er en `DONE`-linje uten bevissti ugyldig (se
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). ”Jeg gjorde det” er en påstand. Filen er beviset.
 
 ---
 
-## 6. Negative findings count
+## 4. Mål to ganger for alt på trinn 0–2
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+En enkelt kontroll bekrefter aldri en sikkerhetstilstand. To uavhengige målinger før enhver påstand av Prioritet
+0, alltid.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**Mål på nytt, husk aldri.** Et tre beveger seg under samtidige økter — en sti som ble lest ved begynnelsen av et
+trekk, kan være borte ved slutten. Tilstanden er bare kjennbar fra disken i *denne* kjøringen. Før aldri ”ledig”
+eller ”gjeldende” videre fra et tidligere trekk, en minnefil eller et sammendrag.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**En opptelling er en måling, ikke en kjensgjerning.** Tell på nytt ved brukspunktet. Oppgi aldri fra minnet et
+antall filer, et antall agenter eller en versjon.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. Et avbrutt kall er ikke et funn
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+Ved **transporttap** — DNS-feil, tilbakestilt forbindelse, avvisning, tidsavbrudd uten svar — gjenta samme kall
+straks og gjentatte ganger. Skriv aldri ”ingen resultater” for et kall som aldri kom fram, og fyll aldri hullet
+fra minnet.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**Et svar som kom fram, er et svar, ikke grunn til gjentakelse.** En 403, en 404, et tomt resultatsett, en
+uttrykkelig avvisning — det er data. Å gjenta mot en avvisning for å få et annet svar er omgåelse av oppdagelse,
+og det er forbudt på trinn 2 uansett hvem sin konto og hvem sitt nett det kjører på.
+
+Forskjellen på én linje: *gjenta kallet som aldri kom fram; gjenta aldri svaret du ikke likte.*
 
 ---
 
-## 9. The rule these all serve
+## 6. Negative funn teller
 
-> A fact asserted in six files will be wrong in five of them.
+”Kontrollerte X, ingen fare” er det som hindrer de tre neste øktene i å kontrollere X igjen. Skriv det ned.
 
-Evidence discipline is what makes the sixth one findable.
+**Skriv ned mens du lærer, ikke til slutt.** Et funn som bare holdes i arbeidsminnet og deretter går tapt, er
+ikke til å skille fra arbeid som aldri ble utført.
+
+---
+
+## 7. Fjerninger er integritetssignalet
+
+Når et tre etterprøves mot en utgangstilstand, har rapporten tre klasser — lagt til, endret, fjernet. Vekst og
+redigeringer er ventet bevegelse. **En fjerning er linjen det er verdt å slå alarm om.**
+
+Sett ikke en ny utgangstilstand oppå ukontrollert samtidig arbeid. Kontroller først, stemple etterpå.
+
+---
+
+## 8. Revisjon er en rolle, ikke et humør
+
+En revisor ramser opp enhver agent, kommando og pålegg **fra disken** og prøver hver enkelt mot faste klasser —
+og teller både rene kontroller og mangler. En kjøring som ikke frigjør noe, har ikke revidert noe; den har bare
+samlet klager.
+
+**Revisoren reparerer aldri.** Funn går til rettelsesprosessen ([`05-CORRECTION.md`](05-CORRECTION.md)) eller til
+den ansvarlige agenten. En revisor som reparerer det den finner, har ødelagt sitt eget bevis og kan ikke lenger
+betros å melde en ren kjøring.
+
+---
+
+## 9. Regelen alt dette tjener
+
+> En kjensgjerning som hevdes i seks filer, vil være feil i fem av dem.
+
+Bevisdisiplin er det som gjør den sjette mulig å finne.

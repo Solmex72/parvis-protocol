@@ -1,101 +1,103 @@
-# 07 — THE INTERFACE LAYER
+> **Uoffisiell oversettelse.** Den normative versjonen av dette dokumentet er den engelske, i grenen
+> `main`. Denne oversettelsen er gjort tilgjengelig for enkelhets skyld og **er ikke gjennomgått av en
+> morsmålsbruker**. Ved avvik fra den engelske originalen **gjelder engelsk**. Protokollens betegnelser
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verb og filnavnene) beholdes bevisst på
+> engelsk: det er bokstavelige verdier som agenter tolker.
 
-**Status: normative.** This is the file the project is named for.
+# 07 — GRENSESNITTLAGET
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**Status: normativ.** Dette er filen prosjektet er oppkalt etter.
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+Enhver flate et menneske berører, er **Parvis**. Den skrivebeskyttede hallvisningen er *Parvis HMI*; flismenyen
+du styrer flåten fra, er *Parvis Console*.
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. Regelen som får HTML-en til å virke
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> En nettleserside er en **skjerm og et tastatur**, ikke et program med disktilgang.
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+Den ene kjensgjerningen styrer hele laget:
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **Siden viser og samler inn.** Den gjengir tilstand og tar imot inndata. Åpnet fra en filsti kan den på egen
+  hånd **verken lese treet eller skrive en ordre.** Nettleserens sandkasse forbyr begge deler, og det er en
+  fordel.
+- **Sidecaren slår broen.** En liten tjeneste på tilbakekoblingssløyfen — bundet til `127.0.0.1` og ingenting
+  annet — er det eneste som leser treet for siden og skriver det siden sender inn. Siden henter tilstanden med
+  `GET`; siden sender en prompt med `POST`; sidecaren utfører diskarbeidet. **Ingen sidecar, ingen levende Parvis
+  — bare et øyeblikksbilde.**
+- **Ingenting omgår gjennomsynet.** En prompt sendt fra Parvis er en **innføring, ikke en utførelse.** Sidecaren
+  skriver en `REQ`-linje i oppgaveprotokollen og stanser. Den starter aldri en agent, kjører aldri en kommando,
+  sender aldri. Å fastsette nytt arbeid forblir Operatørens tastetrykk.
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+Derfor ”virker” siden: siden er ærlig om å være et vindu, sidecaren gjør det lille virkelige arbeidet i kanten,
+og **gjennomsynet står fortsatt mellom en prompt og en maskin i bevegelse.**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. Harde krav — enhver Parvis-flate
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **Selvbærende.** Én HTML-fil: CSS og JS innebygd, ingen ytre skript, ingen CDN. Bare nettskrifter med en
+   virkelig reservekjede. Den må kunne gjengis frakoblet fra en filsti.
 
-| Requirement | Why |
+2. **Fargene er tilstanden, lest levende, aldri påfunnet.** Grønn = kjører, rav = spør først, rød = stanset —
+   utledet av STATE-filen og den levende protokollen. **En verdi uten levende kilde viser `—`, aldri et
+   troverdig utseende tall.** Rød går foran enhver annen farge og hele grensesnittet.
+
+3. **Sidecaren kjører bare på tilbakekoblingssløyfen og holder ingen hemmelighet siden kan se.** Ingen API-nøkkel,
+   ingen påloggingsopplysninger, ingen verdifull token når nettleseren. Sidecaren godkjenner siden med en lokal
+   økttoken og utfører det privilegerte arbeidet selv. **Siden holder aldri noe verdt å stjele.**
+
+4. **Et øyeblikksbilde merkes som øyeblikksbilde,** med lesetiden sin. Bare en side som snakker med en levende
+   sidecar, kan utgi seg for å være levende. En foreldet side som ser levende ut, er verre enn ingen side.
+
+5. **Nødstoppet går foran grensesnittet.** Under `STOP` innfører Parvis ingenting, og sidecaren skriver ingenting
+   utover avmeldingslinjen. **En rød hall tar ingen ordrer.**
+
+6. **Parvis-merket og ingen tredjeparts firmanavn.** Fra hvilke virkelige systemer mønsteret enn er lært, er
+   mønsteret ditt, og det heter Parvis. En flate som sprer en annens handelsnavn, er feil og rettes.
+
+---
+
+## 3. Sikkerhetskrav til sidecaren
+
+En HTTP-tjeneste på tilbakekoblingssløyfen på en utviklerarbeidsstasjon er en virkelig angrepsflate. Disse
+punktene er ikke valgfrie.
+
+| Krav | Hvorfor |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **Bind `127.0.0.1` uttrykkelig**, aldri `0.0.0.0` | Å binde alle grensesnitt offentliggjør flåtekonsollen din på det lokale nettet. |
+| **Valider `Host`-hodet** mot en tillatelsesliste med `127.0.0.1:<port>` / `localhost:<port>` | Beseirer DNS-rebinding, som lar en besøkt nettside nå en tjeneste på sløyfen. |
+| **Avvis forespørsler med et `Origin` du ikke har utstedt** | Samme angrepsklasse, annen vektor. |
+| **Krev en økttoken** på enhver endrende rute, utstedt ved sidelasting, aldri logget | Siden beviser at den er siden din. |
+| **Tillatelseslist enhver sti** tjenesten leser eller skriver, løs den så opp på nytt, og bekreft innesluttethet | Beseirer stivandring. En tillatelsesliste alene er ikke nok dersom symbolske lenker finnes. |
+| **Feil trygt ved en uleselig estop** — nekt, fall ikke tilbake til `RUN` | Se [`01-ESTOP.md`](01-ESTOP.md) §2. |
+| **Ingen `eval`, ingen skallkall, ingen maleinnsetting av brukerinndata** | Promptlinjen er et inndatafelt, ikke en kommandolinje. |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+Referanseimplementasjonen i [`reference/sidecar/`](../reference/sidecar/) virkeliggjør alle disse punktene og er
+kommentert ved hvert enkelt.
 
 ---
 
-## 4. What the surfaces are
+## 4. Hva flatene er
 
-| Surface | What | State |
+| Flate | Hva | Status |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | Paneler med faner — tilstand, dokumenter, protokoll, buss, flate, innstillinger | Leveres. |
+| **Parvis Floor** | Fanen Lager: tredimensjonal hall, kretsing og nedstigning, utstyrsstyring | Leveres. Se [`09-FLOOR.md`](09-FLOOR.md). |
+| **Promptlinje** | Inndatafeltet, på konsollen og ved hvert hallutstyr | Leveres. |
+| **Sidecaren** | Bro på sløyfen: leser treet, skriver `REQ`-linjer, holder ingen hemmeligheter | Leveres. |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**Lever panelene først.** Den tredimensjonale hallen er den delen alle vil bygge, og den delen som er verdiløs
+uten protokollen under seg — den gjengir tilstand resten av protokollen frambringer, og på et tomt tre viser den
+med rette ingenting.
 
 ---
 
-## 5. Standing
+## 5. Holdning
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
+- **Siden leser. Sidecaren skriver. Operatøren fastsetter.**
+- Ingen flate starter, sender, ruller ut eller opphever et nødstopp.
+- Ingen hemmelighet når nettleseren, noensinne.
+- Utgang går til filer og til konsollen, ikke til et chattevindu
   ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).
