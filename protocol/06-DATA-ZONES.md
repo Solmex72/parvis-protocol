@@ -1,92 +1,99 @@
-# 06 — DATA ZONES
+> **Неофициальный перевод.** Нормативной версией этого документа является английская, в ветке `main`.
+> Этот перевод предоставлен для удобства и **не проверялся носителем языка**. При расхождении с
+> английским оригиналом **преимущество имеет английский**. Идентификаторы протокола (`RUN`, `YELLOW`,
+> `STOP`, `[PROVEN]`, `[CLAIMED]`, глаголы шины и имена файлов) намеренно оставлены на английском: это
+> буквальные значения, которые разбирают агенты.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — ЗОНЫ ДАННЫХ
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Статус: нормативный.** Где файлу позволено жить.
 
 ---
 
-## 2. The two zones
+## 1. Почему запрет не сработал
 
-| Zone | Property | Holds |
+Исходное правило гласило *«никаких тайн, никогда, нигде»* — **и при этом не было ни одного места, куда
+можно было бы положить личные данные взамен.**
+
+Запрет без назначения не соблюдают. Его обходят, и личный материал случайно оказывается в
+синхронизируемом дереве. Это происходило неоднократно, в том числе с агентом, который сам подчинялся этому
+правилу.
+
+**Правило — это решение о маршрутизации, а не запрет.**
+
+---
+
+## 2. Две зоны
+
+| Зона | Свойство | Содержит |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Синхронизируется в облако. **Считайте каждый байт опубликованным.** | Доктрину, поручения, определения агентов, архитектуру, деловой контекст, исследования, техническую документацию |
+| **PRIVATE** | **Вне всякого корня синхронизации** — и вне профиля пользователя, чтобы перенаправление известных папок тоже туда не дотянулось | Тайны, реальных людей и их персональные данные, личные проекты и медиа, всё, что было бы неправильно обнаружить в резервной копии |
 
-### The test
+### Проверка
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Стало бы проблемой, окажись это через год в облачном снимке?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Да → PRIVATE. Нет → PUBLIC. При настоящей неуверенности → **PRIVATE.** Цена завышенной классификации —
+неудобство. Цену заниженной отменить нельзя.
 
-### Know what actually syncs
+### Знайте, что действительно синхронизируется
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Проверьте это на реальной машине, а не по предположению. На типичном рабочем месте одновременно могут
+работать несколько клиентов синхронизации, и всё, что лежит в папках документов, рабочего стола или
+изображений пользователя, покидает машину и хранится в истории версий неделями. **Локальное удаление это не
+отзывает.**
 
-Two consequences that each cause real failures:
+Два следствия, каждое из которых вызывает реальные отказы:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **Вывод сборки должен перенаправляться** за пределы корня синхронизации, иначе зеркало повредит его
+   посреди сборки.
+2. **Ключи живут снаружи**, намеренно и по умолчанию.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. Изъятие: учётные данные не принадлежат ни одной зоне
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**Действующие учётные данные — пароли, ключи API, токены, ключи трансляции — принадлежат менеджеру паролей,
+а не какой-либо из файловых систем.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+Личная зона содержит *личные данные*. Менеджер паролей содержит *учётные данные*. Это не буквоедство:
+личный каталог по умолчанию не зашифрован, а файл есть файл. В тот миг, когда один из них скопирован,
+процитирован в стенограмме или к чему-то приложен, он раскрыт.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Формулируйте свойство безопасности личной зоны узко и никогда его не преувеличивайте.** Её единственное
+доказанное свойство обычно в том, что *ничто её никуда не копирует*. В отсутствие проверенного шифрования
+всего диска или отдельных файлов она не зашифрована, не резервируется и не является сейфом.
 
 ---
 
-## 6. Pruning without loss
+## 4. Классификация принадлежит Оператору и поддаётся настройке
 
-Before anything leaves the working tree:
+Держите живую таблицу в одном файле — `DATA-CLASSIFICATION.md`, — где Оператор перемещает категории между
+зонами и который каждый агент читает вместо того, чтобы гадать.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Этот файл протокола излагает **механизм**. Тот файл излагает **политику**. Где они расходятся, побеждает
+файл политики.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Следствия для агентов
+
+- **Никакой тайны в дереве, которое пакуется.** Пакет контекста существует, чтобы его вставили в новую
+  сессию. Назовите, что хранится и где; никогда — значение.
+- **Никакая тайна не достигает `surface/`.** Он показывается на экране.
+- **Никакая тайна не достигает браузера.** См. [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Скрывайте по ссылке, а не удалением.** `<api key — see password manager entry "acme-prod">` сохраняет
+  факт находимым, не раскрывая значения.
+
+---
+
+## 6. Обрезка без потерь
+
+Прежде чем что-либо покинет рабочее дерево:
+
+1. Скопируйте это в опечатанное хранилище **вне корней** — в архивный файл, недостижимый по glob.
+2. Подготовьте пути в `marked-deletion.md` / `marked-archive.md`.
+3. **Исполнение — это рука Оператора**, при приведённом в покой дереве.
+
+Никогда не удаляйте массово при активном параллелизме.

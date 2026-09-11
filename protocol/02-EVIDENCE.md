@@ -1,118 +1,125 @@
-# 02 — EVIDENCE
+> **Неофициальный перевод.** Нормативной версией этого документа является английская, в ветке `main`.
+> Этот перевод предоставлен для удобства и **не проверялся носителем языка**. При расхождении с
+> английским оригиналом **преимущество имеет английский**. Идентификаторы протокола (`RUN`, `YELLOW`,
+> `STOP`, `[PROVEN]`, `[CLAIMED]`, глаголы шины и имена файлов) намеренно оставлены на английском: это
+> буквальные значения, которые разбирают агенты.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — ДОКАЗАТЕЛЬСТВО
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**Статус: нормативный.** Как наблюдение становится записанным фактом.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+Дисциплину, описанную в этом файле, обычно применяют к *предложениям* — агент говорит, насколько вероятно,
+что его план сработает, прежде чем человек примет решение. К *утверждениям* её почти никогда не применяют.
+Поэтому флот рассуждает внимательно о том, на что хочет разрешения **действовать**, и небрежно о том, что
+записывает как **истинное**.
+
+Это одно и то же действие. Утверждение, входящее в запись, есть предложение изменить запись. Parvis
+применяет к обоим одну дисциплину.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. Каждое утверждение несёт пометку
 
-| Tag | Means | Admissible where |
+| Пометка | Значит | Допустимо где |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | Проверено по процитированному первичному источнику, **который вы прочли в этом прогоне**. Назовите команду, чтение, измерение. | Где угодно, включая главный файл. |
+| `[CLAIMED]` | Сообщено чем-то другим. Не проверено. | Рабочие файлы. Никогда главный файл. |
+| `[ASSUMED]` | Рабочая посылка, которую никто не проверял. | Рабочие файлы, явно. |
+| `[PROPOSED]` | Оценка, рекомендация, план. | Предложения. Никогда запись. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**Пометка путешествует вместе с утверждением.** `[PROPOSED]` не становится `[PROVEN]` оттого, что его
+скопировали в более важный файл. Повышение требует нового измерения, а не нового места.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**Только `[PROVEN]` может изменить главный файл.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. Цитируйте или помечайте — никогда не отмывайте
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+Число называет свой источник, иначе это не число, а интуиция с десятичной запятой.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+Если источника у вас нет, **скажите об этом и приведите вместо него рассуждение.** Это полезный ответ.
+Число без источника, поданное как факт, — нет.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**Никогда не отмывайте неудачу в находку.** Поиск, завершившийся ошибкой, — это неудавшийся вызов, а не
+пустой набор результатов. Страница, которая не загрузилась, не есть доказательство отсутствия. Запишите,
+что произошло.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. Самоописание — это `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+Рассказ агента о собственном состоянии, собственном покрытии или собственной завершённой работе есть
+`[CLAIMED]` — сколь бы уверен он ни был. Только внешняя запись делает его `[PROVEN]`: файл на диске, код
+возврата команды, строка журнала, записанная чем-то, что не является вами.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+Поэтому строка `DONE` без пути к доказательству недействительна (см.
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). «Я это сделал» — утверждение. Файл — доказательство.
 
 ---
 
-## 6. Negative findings count
+## 4. Мерьте дважды для всего со ступеней 0–2
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+Одна проверка никогда не удостоверяет состояние безопасности. Два независимых измерения перед любым
+утверждением Приоритета 0, всегда.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**Измеряйте заново, никогда не вспоминайте.** Дерево движется под параллельными сессиями — путь,
+прочитанный в начале хода, может исчезнуть к его концу. Состояние познаваемо только с диска в *этом*
+прогоне. Никогда не переносите «свободно» или «актуально» из прошлого хода, файла памяти или сводки.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**Подсчёт — это измерение, а не факт.** Пересчитайте в точке использования. Никогда не называйте по памяти
+число файлов, число агентов или версию.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. Оборвавшийся вызов — не находка
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+При **потере транспорта** — сбой DNS, сброс соединения, отказ, тайм-аут без ответа — повторите тот же
+вызов немедленно и неоднократно. Никогда не пишите «нет результатов» для вызова, который так и не дошёл, и
+никогда не заполняйте пробел по памяти.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**Пришедший ответ — это ответ, а не повод для повтора.** 403, 404, пустой набор результатов, явный отказ —
+это данные. Повторять попытки против отказа, чтобы получить другой ответ, — это уклонение от обнаружения, и
+это запрещено на ступени 2 независимо от того, на чьём счёте и в чьей сети это выполняется.
+
+Различие в одной строке: *повторяйте вызов, который не дошёл; никогда не повторяйте ответ, который вам не
+понравился.*
 
 ---
 
-## 9. The rule these all serve
+## 6. Отрицательные находки считаются
 
-> A fact asserted in six files will be wrong in five of them.
+«Проверено X, опасности нет» — это то, что удерживает следующие три сессии от повторной проверки X.
+Запишите это.
 
-Evidence discipline is what makes the sixth one findable.
+**Записывайте по мере того, как узнаёте, а не в конце.** Находка, хранимая только в рабочей памяти и затем
+утраченная, неотличима от работы, которая никогда не выполнялась.
+
+---
+
+## 7. Удаления — сигнал целостности
+
+При сверке дерева с базовым состоянием отчёт имеет три класса — добавлено, изменено, удалено. Рост и
+правки — ожидаемое движение. **Удаление — это строка, из-за которой стоит бить тревогу.**
+
+Не задавайте новое базовое состояние поверх непроверенной параллельной работы. Сначала аудит, потом штамп.
+
+---
+
+## 8. Аудит — это роль, а не настроение
+
+Аудитор перечисляет каждого агента, команду и поручение **с диска** и сверяет каждое с фиксированными
+классами, считая как чистые проверки, так и дефекты. Прогон, который ничего не очищает, ничего не
+проаудировал; он лишь собрал жалобы.
+
+**Аудитор никогда не чинит.** Находки направляются в процесс исправления
+([`05-CORRECTION.md`](05-CORRECTION.md)) или ответственному агенту. Аудитор, который чинит найденное,
+уничтожил собственное доказательство, и ему больше нельзя доверять сообщение о чистом прогоне.
+
+---
+
+## 9. Правило, которому всё это служит
+
+> Факт, утверждённый в шести файлах, будет ошибочен в пяти из них.
+
+Дисциплина доказательства — это то, что делает шестой находимым.

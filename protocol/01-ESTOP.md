@@ -1,39 +1,45 @@
-# 01 — ESTOP
+> **Неофициальный перевод.** Нормативной версией этого документа является английская, в ветке `main`.
+> Этот перевод предоставлен для удобства и **не проверялся носителем языка**. При расхождении с
+> английским оригиналом **преимущество имеет английский**. Идентификаторы протокола (`RUN`, `YELLOW`,
+> `STOP`, `[PROVEN]`, `[CLAIMED]`, глаголы шины и имена файлов) намеренно оставлены на английском: это
+> буквальные значения, которые разбирают агенты.
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP (АВАРИЙНЫЙ ОСТАНОВ)
+
+**Статус: нормативный. Приоритет 0. Обязателен для каждого агента в каждом начинании.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. Что это может и чего не может — прочтите сначала
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**Это не может остановить идущую сессию.** Никакой файл не может. Агент посреди ответа не читает диск, не
+имеет линии прерывания и доведёт до конца то, что делает. Тот, кто говорит, что файл-флаг останавливает
+флот, описывает желание.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**Только Оператор останавливает работающего агента, закрыв его окно.** Это и есть настоящий аварийный
+останов, и ничем другим он никогда не был.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+Этот файл связывает каждого агента в те два момента, когда он *действительно* читает диск:
 
-| Moment | Obligation |
+| Момент | Обязанность |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **Запуск** | Прочитайте состояние прежде своей доктрины, прежде своей памяти, прежде всего. |
+| **Каждая контрольная точка** | Перед любой записью, любым сообщением, любым вызовом инструмента с побочным действием, любой тратой. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+Агент, который видит `STOP` и продолжает, — неисправный агент. В этом вся модель принуждения: не
+механизм — обязанность, проверяемая часто.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+Честно назвать границу — часть протокола. Останов, который вы считаете мгновенным, опаснее того, о котором
+вы знаете, что он не мгновенный, потому что вы на него положитесь.
 
 ---
 
-## 1. The two signals
+## 1. Два сигнала
 
-### The sentinel is the fact
+### Часовой есть факт
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+**Обычный файл** с именем ровно `estop` — без расширения, ноль байт нормально — в корне начинания или в
+**любом вышестоящем каталоге** обрабатываемого дерева.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+Проверяйте **файл**, никогда — простое существование, и никогда — шаблон glob:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` — это доктрина. Она никогда не должна срабатывать в проверке. Сопоставление, которое это
+  допускает, создало бы останов, который Оператор не сможет снять.
+- `_os/estop/` — это каталог. Тоже не срабатывает.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+Несколько корней срабатывают **независимо**. Проверьте каждый. Сообщите путь, для которого выполнили
+`stat`, — никогда «estop», что скрывает, на какой именно вы смотрели.
 
-### The STATE file is a derived mirror
+### Файл STATE — производное отражение
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — одна строка, больше ничего.
 
 ```
 RUN
@@ -66,117 +72,117 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| Поле | Правило |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| глагол | `RUN`, `YELLOW` или `STOP`. Ничто иное не разбирается. |
+| время | UTC, ISO-8601. |
+| кто | Кто это объявил. Только Оператор может записать `STOP` / `YELLOW` или снять их. |
+| причина | Одна строка, простым языком, без жаргона. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**Если часовой и отражение расходятся, побеждает останов.** Отражение пишут инструменты, и оно устаревает;
+часовой есть факт.
 
 ---
 
-## 2. The three states
+## 2. Три состояния
 
-| STATE | What an agent does |
+| STATE | Что делает агент |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **Действуйте.** Выполняйте команды, которых требует работа, не спрашивая разрешения на каждую. Не останавливайтесь, не перечисляйте варианты, не ставьте рутинную работу в очередь за подтверждением. |
+| `YELLOW` | **Сначала спросите.** Каждая команда предлагается до выполнения. Та же работа, та же компетентность — разница в подтверждении. |
+| `STOP` | Остановитесь. §3. |
 
-### What `RUN` does not do
+### Чего `RUN` не делает
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` убирает *паузу перед рутинной работой*. Он не убирает **ни одного существующего барьера**, потому что
+они касаются природы действия, а не его скорости:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- учётные данные, входы в системы, покупки, выделение ресурсов — **всегда в руках Оператора**;
+- действия вовне — публикация, отправка, развёртывание — **всегда по явному согласию**;
+- всё, что человек выполнит физически, — **по-прежнему проходит барьер безопасности**;
+- разрушительные или необратимые действия — **по-прежнему подтверждаются, в любом состоянии**;
+- собственные постоянные ограничения агента — **вовсе не зависят от STATE**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` отвечает на вопрос *«должен ли я спрашивать перед каждым шагом?»* — нет. Он не отвечает на вопрос
+*«можно ли мне всё?»* Агент, который читает `RUN`, а затем делает что-то из этого списка, неверно прочитал
+состояние, а не был им уполномочен.
 
-### Fail-safe on an unreadable verb
+### Безопасный отказ при нечитаемом глаголе
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+Файл STATE, который **отсутствует, пуст, нечитаем или содержит любое другое слово, читается как `YELLOW`**
+— никогда как `RUN`. Спросите.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> Это строка, которую в реализациях переворачивают чаще всего. `try { read } catch { return "RUN" }`
+> превращает каждую ошибку диска, каждую смену прав и каждую опечатку в молчаливое разрешение. Эталонный
+> sidecar при ошибке чтения переходит в `YELLOW` и отказывается обслуживать; см.
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+Файл-часовой полностью перевешивает этот раздел: присутствующий файл `estop` означает `STOP`, что бы ни
+говорил STATE.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**Только Оператор пишет этот файл.** Никакой агент его не пишет — включая того агента, который нашёл
+проблему. Агент, считающий, что флот должен остановиться, выставляет `GATE` на шину и говорит об этом. Он не
+останавливает флот собственной властью и не перезапускает ни одного.
 
 ---
 
-## 4. What clears it
+## 3. Что агент делает при `STOP`
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **Больше ничего не пишите.** Ни файл памяти, ни отчёт, ни шину.
+2. **Сохраните на месте и остановитесь.** Не завершайте ни одного шага, который ещё не записан. Пометьте
+   то, что есть, как частичное, с одной строкой о том, где вы остановились.
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > Ранние редакции этого протокола говорили *отбросить*. Это было неверно: отброшенный полуотчёт
+   > уничтожает работу, которую доктрина перезапуска призвана защищать. Опасность — усечённый файл, позже
+   > прочитанный как законченный, и предотвращает это именно **пометка**, а не удаление.
+3. **Скажите Оператору одну строку:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **Остановитесь.** Не просите разрешения продолжить. Не предлагайте обход. Не проверяйте, относится ли
+   причина к вам, — она относится к вам.
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**Отказ — это ответ, а не повторная попытка.** Не входите в цикл ожидания `RUN`. Сообщите и завершите.
 
 ---
 
-## 6. Measure twice
+## 4. Что его снимает
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+Оператор возвращает файл в `RUN`. Ничто иное этого не делает — ни тайм-аут, ни агент, считающий проблему
+решённой, ни течение времени, ни новая сессия, которая останова не видела.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+Обработчик, снимающий себя сам, есть переворот принципа безопасного отказа и отклоняется по существу.
 
 ---
 
-## 7. The honest limit, stated once
+## 5. Область действия
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Аварийный останов **по умолчанию распространяется на весь флот**. Останова для отдельного агента нет,
+потому что отказ, требующий останова, почти никогда не ограничивается одним агентом, а частичный останов
+приглашает ровно к тому рассуждению — *«это было про кого-то другого»*, — которое этот файл призван
+запретить.
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**Изолированные агенты включены.** Агент, который не на шине и не на общей поверхности, всё равно читает
+этот файл. Изоляция определяет, что агент может *говорить*. Она никогда не определяет, можно ли его
+*остановить*.
+
+---
+
+## 6. Мерьте дважды
+
+Одна зелёная проверка никогда не удостоверяет состояние безопасности. Прочтите оба сигнала, с диска, **в
+этом прогоне**. Никогда не цитируйте запомненное состояние — ни из контекста, ни из файла памяти, ни из
+прошлого хода. Неверно прочитанного формата `stat` достаточно, чтобы получить ложное «свободно» или ложное
+«остановлено», и то и другое случалось на практике.
+
+Самая надёжная доступная форма — **постоянный монитор** над файлом STATE и каждым путём часового,
+сообщающий только об изменении: молчащий, пока свободно, и срабатывающий в тот миг, когда останов взводится.
+Это превращает «я один раз проверил при запуске» в покрытие в реальном времени и закрывает промежуток, в
+котором останов взводится посреди сессии.
+
+---
+
+## 7. Честная граница, сказанная один раз
+
+Этот протокол делает останов **надёжным при каждом запуске и каждой контрольной точке**. Он не делает
+останов **мгновенным**, и ничто, записанное в дерево файлов, никогда этого не сделает.
+
+Если прямо сейчас что-то идёт не так: **закройте окно.** Потом запишите файл, чтобы следующий проснувшийся
+агент не запустил это снова.

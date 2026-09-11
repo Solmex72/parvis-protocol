@@ -1,66 +1,71 @@
-# 05 — CORRECTION
+> **Неофициальный перевод.** Нормативной версией этого документа является английская, в ветке `main`.
+> Этот перевод предоставлен для удобства и **не проверялся носителем языка**. При расхождении с
+> английским оригиналом **преимущество имеет английский**. Идентификаторы протокола (`RUN`, `YELLOW`,
+> `STOP`, `[PROVEN]`, `[CLAIMED]`, глаголы шины и имена файлов) намеренно оставлены на английском: это
+> буквальные значения, которые разбирают агенты.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — ИСПРАВЛЕНИЕ
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**Статус: нормативный.** Что происходит, когда записанный факт оказывается неверным.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. Проблема
 
-Reading a governing file puts you under it. Two things follow:
+> Факт, утверждённый в шести файлах, будет ошибочен в пяти из них.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+Исправить файл, который у вас случайно перед глазами, — не исправление. Это порождает дерево, где у истины
+и у ошибки есть ссылки, и следующая сессия берёт тот, который откроет первым. Это определяющий режим отказа
+для флота агентов, перегруженного документацией, и он усугубляется молча.
+
+**Исправление распространяется — или его не было.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. Чтение не бесплатно — оно обязывает
 
-One command, one turn, no proposal step.
+Прочитать управляющий файл — значит встать под него. Отсюда следует двоякое:
+
+1. Всё в нём, что **долговечно, неочевидно и невыводимо из дерева**, попадает в вашу постоянную память до
+   конца сессии.
+2. **Если ваш контекст противоречит файлу, побеждает файл.** Не обходите его. Исправьте запись.
+
+---
+
+## 3. Немедленная коррекция курса (ICC)
+
+Одна команда, один ход, без этапа предложения.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### Последовательность
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · Обход.** Выведите из исправления от 2 до 5 поисковых терминов: **старую** формулировку, её очевидные
+варианты и задействованные имена собственные. Не новую формулировку. Выполните по одному индексированному
+обходу на термин, прежде чем что-либо читать. Никогда не обходите дерево файл за файлом в поисках
+совпадений — для этого есть индекс.
 
-**2 · Classify every hit.**
+**2 · Классифицируйте каждое совпадение.**
 
-| Hit | Action |
+| Совпадение | Действие |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **Утверждает старый факт** | Перепишите. |
+| **Упоминает мимоходом**, верно в любом случае | Оставьте. Не ворошите текст. |
+| **Противоречит новому факту косвенно** — производный вывод, строка таблицы, запланированная задача, построенная на старом значении | **Перепишите и это.** Именно это упускают чаще всего. |
+| **Вне пределов** (§5) | Никогда не правьте. Отметьте в *Left alone*. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · Перепишите всё разом.** Подстройтесь под существующий голос каждого файла и под его соглашение о
+пометках уверенности. Исправленный факт сохраняет ту пометку, которую заслуживает, — **не повышайте
+утверждение до `[PROVEN]` потому, что оно теперь актуально.** Если в старом тексте стояла дата, поставьте
+сегодняшнюю.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+Там, где факт утверждён более чем в трёх файлах, это **дублирование, а не избыточность**: изложите его один
+раз в том файле, которому он принадлежит, а остальные пусть указывают туда.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · Реестр и память.** И то и другое, иначе прогон не закончен. Добавьте запись в начало реестра
+исправлений:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +78,74 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+Затем запишите факт в постоянную память — **сначала проверив, нет ли уже записи памяти по этой теме, и
+обновив именно её**, вместо того чтобы оставить две версии факта, на объединение которого вы только что
+потратили команду.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · Обязанности после правки.** Перезапустите генератор или резервное копирование, к которым обязали
+правки. Перестройте индекс, если файлы создавались или удалялись.
 
 ---
 
-## 5. What is never rewritten
+## 4. Постоянное решение отменяется открыто
 
-| Never touched | Why |
+Если исправление обесценивает постоянное решение — строку «не пересматривать», пункт `[PROVEN]`, правило
+политики, — **не переворачивайте его молча.** Перепишите его как *отменённое*, с датой и причиной, чтобы
+следующая сессия знала: оно было отменено, а не забыто.
+
+Решение, которое меняется без следа, неотличимо от решения, которого никогда не принимали.
+
+---
+
+## 5. Что никогда не переписывается
+
+| Никогда не трогают | Почему |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | История. Историю не исправляют; её замещают. |
+| Сгенерированные файлы | Правьте источник и перезапустите генератор. |
+| Дерево изолированного агента | Доступ только по прямому указанию. |
+| Авторитетный главный контекст другого корня | Сообщите о расхождении. Не правьте через границу владения. |
+| Всё, что содержит тайну | Полностью вне досягаемости текстового обхода. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**Обход, переписывающий текст, уничтожит двоичные файлы.** Ограничивайте каждый обход текстовыми
+расширениями по списку разрешённых, никогда — по исключению.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. Чего ICC не делает
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` исправляет запись. **Он не идёт затем выполнять работу, которую исправление подразумевает.** Это
+отдельные действия с отдельными полномочиями, и их смешение — это то, как однострочное исправление
+превращается в непроверенную переделку.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. Соперничающие факты решают и обрезают — а не каталогизируют
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+Когда два файла утверждают противоречащие факты, **решите, какой верен, сохраните его и удалите ошибочные
+утверждения в том же проходе.**
 
-### What still gets escalated instead of settled
+Отчёт о конфликте, оставляющий обоих соперников на диске, ничего не решил. Следующая сессия всё равно берёт
+тот файл, который откроет первым, а правило безопасности с пятью ходящими версиями *менее* надёжно, чем с
+одной, а не более.
 
-Three cases. Surface these; do not decide them:
+**Решайте по существу, никогда по отметке времени.** Победитель — тот файл, которому принадлежит факт,
+версия, подкреплённая измерением, та, что выдерживает разбор. **Самое новое не значит самое верное** —
+канонический отказ здесь — это четыре дублирующих файла памяти, записанных с разницей в девяносто секунд, в
+которых самый новый содержал ложное утверждение, так что правило «побеждает самое новое» унаследовало бы
+ошибку.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**Запишите разрешение.** Какой факт победил, что обрезано и почему — в реестр, чтобы обрезка была читаемой,
+а не молчаливой. Соперник, исчезающий без следа, выглядит точно так же, как соперник, которого никогда не
+было, и следующая сессия создаёт его заново.
 
-Everything ordinary gets decided and cleaned up.
+### Что всё же эскалируется, а не решается
+
+Три случая. Покажите их; не решайте:
+
+- Противоречие опирается на сведения, которых у агента нет.
+- Ошибка была бы **небезопасной или необратимой** — всё со ступеней 0–2.
+- Проигрывающее утверждение лежит **вне границы владения агента** — авторитетный главный контекст другого
+  корня. Сообщите о расхождении; не правьте через границу.
+
+Всё обычное решается и прибирается.

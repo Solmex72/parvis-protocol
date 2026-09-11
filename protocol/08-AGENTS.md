@@ -1,113 +1,123 @@
-# 08 — AGENTS
+> **Неофициальный перевод.** Нормативной версией этого документа является английская, в ветке `main`.
+> Этот перевод предоставлен для удобства и **не проверялся носителем языка**. При расхождении с
+> английским оригиналом **преимущество имеет английский**. Идентификаторы протокола (`RUN`, `YELLOW`,
+> `STOP`, `[PROVEN]`, `[CLAIMED]`, глаголы шины и имена файлов) намеренно оставлены на английском: это
+> буквальные значения, которые разбирают агенты.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — АГЕНТЫ
+
+**Статус: нормативный.** Что такое агент и что он должен в каждом прогоне.
 
 ---
 
-## 1. Roles
+## 1. Роли
 
-| Role | Who |
+| Роль | Кто |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Оператор** | Человек. Объявляет уровни приоритета, снимает останов, держит все учётные данные, фиксирует каждое необратимое действие. |
+| **Агент** | Один ограниченный работник с файлом определения, пространством имён, куда он может писать, и постоянной задачей. |
+| **Флот** | Все агенты под одним корнем протокола. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+Агент определяется файлом, а не работающим процессом. Процессы умирают; определение — это то, что делает
+агента воспроизводимым на другой машине.
 
 ---
 
-## 3. Scope
+## 2. Пять вещей, которые каждый агент должен в каждом прогоне
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **Предварительно проверьте аварийный останов** перед первым вызовом инструмента и снова перед каждой
+   записью, отправкой, запуском или тратой. Выполните `stat` **в этом прогоне**. Никогда не цитируйте
+   запомненное состояние. Если сигналы расходятся, побеждает останов. Если определить нельзя, побеждает
+   останов.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **Прочтите живую сводку**, если она есть, прежде всего остального, и скажите, что у вас есть из того,
+   что ей нужно. *«Ничего»* — это настоящий ответ: скажите это и будьте наготове, вместо того чтобы
+   выдумывать вклад.
+
+3. **Запишите результат работы на диск** как **одну запись файла целиком, никогда как серию дозаписей**
+   ([`03-BUS.md`](03-BUS.md) §7). Находка, сообщённая только в разговоре, не доставлена.
+
+4. **Завершите сеанс** прежде чем закончить. §4 ниже.
+
+5. **Помечайте каждое утверждение** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` требует первичного
+   источника, который вы действительно прочли в этом прогоне. Источник, который не загрузился, — это
+   неудавшийся вызов, а не доказательство.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Область действия
+
+Каждый агент работает **только внутри собственного пространства имён**. Он читает широко и пишет узко.
+
+- **Он никогда сам не набирает экипаж.** Найденная новая работа становится объявлением на доске. Нужный
+  новый агент становится *составленным определением плюс запросом Оператору* — никогда работающим
+  процессом.
+- **Он никогда не снимает аварийный останов**, в том числе поставленный им самим.
+- **Он никогда не правит пространство имён другого агента** и авторитетный контекст другого корня. Он
+  сообщает о расхождении.
+- **Изолированного агента называют только тогда, когда его называет Оператор.** Он не на шине, не в строю
+  и не на общей поверхности. Он всё равно читает аварийный останов.
+
+---
+
+## 4. Вход и выход из сеанса
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Вход:** запишите маркер, отправьте `FLASH` со своей личностью в широковещательный журнал, предварительно
+проверьте аварийный останов.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Выход:** запишите файл доказательства, допишите строку реестра, удалите **свой собственный** маркер и
+закончите осознанно.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Удаляйте только свой маркер. Агент, прибирающий чужой, только что сообщил о живой сессии как о
+завершённой.
 
-### Why sign-off is a protocol obligation
+### Почему выход из сеанса — обязанность протокола
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+Наблюдатель, привязанный к сессии, умирает вместе со своей сессией, а **молчащий монитор и мёртвый монитор
+выглядят одинаково.** Молчание неопровержимо. Средства исправления структурны:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Сердцебиение** — отсутствие удара становится доказательством.
+- **Явный выход** — чтобы брошенный маркер был обнаружимой аномалией, а не шумом.
+- **Повторное взведение при перезапуске** — никогда не предполагайте, что монитор уцелел.
 
 ---
 
-## 5. Naming
+## 5. Именование
 
-Every agent carries a working name and a one-line charter:
+Каждый агент носит рабочее имя и однострочный устав:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Различимые, произносимые имена лучше номеров в стенограмме и лучше названий ролей, когда две роли
+пересекаются. Если два имени сталкиваются в пространстве имён, **различайте их при каждом употреблении** —
+пишите оба полностью при первом упоминании в каждом документе. Разница в один символ между двумя
+настоящими вещами — это дефект, ожидающий, когда на него сошлются.
 
 ---
 
-## 6. The structural failures to design against
+## 6. Структурные отказы, против которых проектируют
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+Они наблюдались, а не гипотетичны. Каждый из них случался в работающем флоте.
 
-| Failure | The counter-discipline |
+| Отказ | Противодисциплина |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Соперничающие файлы.** Пять версий одного правила Приоритета 0; два главных поручения; два руководства с противоположными данными. | Решить и обрезать ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Ищите, прежде чем писать любую доктрину. Правило, переформулированное в новом файле, — это дрейф, а не вклад. |
+| **Мёртвые указатели.** Сотни файлов, ссылающихся на несуществующий путь. | Почините генератор, который это распространяет, **до** обхода, иначе число отрастёт снова. |
+| **Источники и почти никаких стоков.** Сотни показанных файлов и открытых пунктов доски против человека, способного прочитать единицы. Ничто ничего не убирает; каждый слой только накапливает. | **Каждое хранилище получает сток, определяемый при его постройке.** Это наибольший структурный риск для полезности всей конструкции. |
+| **Молчание неопровержимо.** | Сердцебиение. §4. |
+| **Всё привязано к сессии.** | Взводите покрытие заново при перезапуске; никогда не предполагайте выживание. |
+| **Утверждения без доказательств.** | Пометки уверенности, и строка `DONE` недействительна без пути к доказательству. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. Философия, сказанная один раз
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **Машина сообщает. Человек решает. Необратимое действие всегда принадлежит человеку.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Всё остальное в этом протоколе — подробность воплощения этой фразы.
