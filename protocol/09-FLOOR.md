@@ -1,181 +1,175 @@
-# 09 — THE FLOOR
+> **Uofficiel oversættelse.** Den normative udgave af dette dokument er den engelske, i grenen `main`.
+> Denne oversættelse stilles til rådighed for bekvemmelighedens skyld og **er ikke gennemset af en
+> modersmålstalende**. Ved afvigelse fra den engelske original **gælder engelsk**. Protokollens
+> betegnelser (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verber og filnavnene) bevares
+> bevidst på engelsk: det er bogstavelige værdier, som agenter fortolker.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — HALLEN
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Status: normativ for visualiseringen; oplysende som model.**
+Gennemført i [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## 1. Påstanden
 
-| On the floor | In the fleet | Read from |
+En flåde af agenter er svær at se. Et filtræ er en liste, en procestabel er en liste, og en log er en liste — så
+det eneste billede, nogen har af en flåde i drift, er flere lister, der ikke passer sammen.
+
+**Et automatiseret lager er samme maskine, og det har været læseligt i fyrre år.** Kraner flytter laster mellem
+reoler under et styresystem, og den, der har opsynet, læser en hal med hundredvis af samtidige bevægelser med
+ét blik, på farven, uden at læse en eneste linje tekst.
+
+Parvis låner det. Ikke som udsmykning — som en *afbildning*, hvor hver lagergenstand svarer til nøjagtig én ting
+i træet, og hvor lagerets egne sikkerhedsregler viser sig at være protokollens sikkerhedsregler, allerede tegnet
+det rette sted.
+
+---
+
+## 2. Afbildningen
+
+| I hallen | I flåden | Læses af |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Kran** | en agent, eller en levende session | sessionsmarkørerne i `_os/exchange/bus/session/` |
+| **Palle** | et katalog | træet selv; pallens mærkat er dens sti |
+| **Reolplads** | hvor det katalog bor | dets overordnede |
+| **Åbne en palle** | stige ned i kataloget | **endnu et helt lager** — §4 |
+| **Induct** (indgangsport) | arbejde, der kommer ind | en `REQ`-linje i `_os/tasks/INDEX.md` |
+| **Spur** (udgangsport) | en leverance, der går ud | en fil i `_os/events/surface/`, en eksport |
+| **Transportbånd** | filbussen | `_os/exchange/bus/` — hvordan arbejde flyttes, uden at en kran bærer det |
+| **Lastbil** | en ydre tjeneste eller en anden AI | grænsen. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Pointen er ikke billedet. Pointen er, at **du allerede kan læse denne skærm**, hvis du nogensinde har stået
+foran et lagerstyresystem — og hvis ikke, er modellen alligevel håndgribelig på en måde, en kataloglistning
+ikke er.
 
 ---
 
-## 3. The colours
+## 3. Farverne
 
-One glance, before any navigation:
+Ét blik, før nogen navigering:
 
-| Colour | On the floor | In the fleet |
+| Farve | I hallen | I flåden |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **GRØN** | i bevægelse — en kran bærer en last | en agent arbejder; en levende session midt i en opgave |
+| **BLÅ** | planlagt — i kø, endnu ikke begyndt | et opslag på tavlen: bestilt, venter på en agent |
+| **RAV** | opmærksomhed — en plads kræver en beslutning | `YELLOW`: spørg før hver handling |
+| **RØD** | nødstop — den zone står stille | `STOP`: stoppet er spændt, og denne rod er frosset |
+| **GRÅ** | tom, eller ingen levende kilde | ingen data. Aldrig et gæt. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Dette er intet nyt skema. Det er den tilstand, træet allerede rummer, gengivet.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Rød vinder altid blikket.** En enkelt rød zone standser øjet før al grøn, præcis som stoppet går forud for
+ethvert andet signal ([`01`](01-ESTOP.md)). **En hal, der viser grønt over en rød zone, lyver** — og det er
+netop den fejl, denne regel findes for at forbyde.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**Grå er obligatorisk, hvor der ikke er nogen levende kilde.** En plads uden data gengives grå og viser `—`. Den
+gengives aldrig grøn, fordi grøn er den behagelige standardværdi ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. Det indlejrede lager
 
-This is where the model stops being a visualisation and starts enforcing something.
+**Åbn en palle, og du ser ikke på en kasse. Du ser på endnu et helt lager** — med egne kraner, egne paller, egne
+porte.
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+Dette er nøjagtig filtræet. Et foretagende er et lager; dets afdelinger er gange; deres filer er paller; og en
+palle, der selv er et katalog, er endnu en hal. Visualiseringen er altså **ét enkelt syn, der stiger ned**, med
+samme styring i hver dybde, fordi hvert niveau *er* et lager. Der er intet nyt at lære på vejen ned.
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+Rekursionen er hele grunden til, at billedet holder i stedet for at være et skal. Et instrumentbræt, der kun
+gengiver det øverste niveau, er et fotografi af en flåde; ét, der stiger ned, er et syn af den.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. Lastbiler lægger til ved grænsen — de kører aldrig ind i hallen
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+Her ophører modellen med at være en visualisering og begynder at håndhæve noget.
+
+En ydre tjeneste — en anden AI, et API, en leverandør — er en **lastbil**. Og i et virkeligt lager bakker en
+lastbil op til en port. Den kører ikke ind i hallen, flytter ingen kran, går ikke ind i en reol og åbner intet
+indlejret lager. Den sætter en last af ved en induct eller henter én ved en spur, og det er hele dens adgang.
+
+**Den port er slusen.** Enhver ydre udveksling sker i kanten, filtreret, og intet ydre kommer løs inde i træet.
+
+**En lastbils papirer er ikke til at stole på, før de er kontrolleret.** En last, der kommer på en lastbil, er
+indgående *data*, ikke en ordre til hallen. Den indføres og gennemses som alt andet, adlydes aldrig ved ankomst.
+Det er instrukskildens grænse fra [`03`](03-BUS.md) §5, tegnet som en lasterampe — og tegnet det ene sted, hvor
+en, der ser på skærmen, kan se den overholdt.
+
+Sætter din gengivelse en lastbil i hallen, er gengivelsen forkert, og det samme er den arkitektur, den tegner.
+
+---
+
+## 6. To flader, to opgaver
+
+| | **Hallen** (denne fil) | **Konsollen** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Hvad det er | en tredimensionel hal, set live | en flisemenu, trappet efter adgang |
+| Hvad den viser | **hvordan systemet står** — hver agent, katalog og tilstand på én gang | **hvad du kan gøre** — vælg værktøjet, udfør arbejdet |
+| Udsagnsordet | se, forstå, beslutte | køre, bruge, frembringe |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**Hallen viser, hvordan maskinen tænker; konsollen er til at handle ud fra det, du slutter.** Den ene er et kort,
+den anden en høvlebænk. En styreflade har brug for begge, og fejlen er at bygge kun den smukke.
 
 ---
 
-## 7. Controls
+## 7. Styring
 
-Navigation is what made the original usable, not colour alone:
+Det var navigeringen, der gjorde originalen brugbar, ikke farven alene:
 
-| Control | Does |
+| Styring | Gør |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Træk** | kredse om hallen — dreje, vippe, se ned ad en gang |
+| **Ovenfra** | skifte til en plan set ovenfra. Kredsning for dybde, plan for indretning |
+| **Klik på en palle** | stige ned i den — endnu et lager, samme styring |
+| **Rul** | zoome |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Samme styring i hver dybde. Ikke til forhandling: et syn, hvis samspil ændrer sig, efterhånden som du stiger ned,
+har brudt løftet om, at hvert niveau er et lager.
 
-### The camera is orthographic, on purpose
+### Kameraet er ortografisk, med vilje
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+Der er **ingen perspektivisk formindskelse**. Parallelle linjer mødes aldrig, og en plads i den fjerne ende af
+en gang gengives nøjagtig lige så stor som en ved dine fødder.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+Det virker forkert et øjeblik — øjet venter konvergens og læser dens fravær, som om det stod inde i kasserne og
+så ud. Det er alligevel den rette afvejning, og det er, hvad styreskærme til virkelige automatiserede haller
+bruger: **hele pointen er at sammenligne pladser tværs gennem hallen med ét blik**, og et perspektivkamera gør
+gangens fjerne ende mindre, mattere og sværere at bedømme end den nære. I perspektiv ser ”den reol er fyldigere”
+og ”den reol er tættere på” ens ud. Med et ortografisk kamera ikke.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+Tildækning er stadig virkelig — bortvendte flader kasseres, og nærmere geometri maler over fjernere. Det er et
+fladt kamera, ikke en flad scene.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Udstyr nås også fra en **sidemenu**, grupperet efter art — kraner, paller, de to porte, transportbåndet,
+lastbilerne. Valg fra menuen eller fra hallen åbner samme styring, for en hal, man kun kan færdes i ved at klikke
+på små kasser i en tredimensionel scene, er en fremvisning og intet instrument.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Hvad hallen må og ikke må
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+Enhver begrænsning fra [`07`](07-INTERFACE.md) §5 gælder. Linjen trækkes ét bestemt sted:
 
-**The floor may induct. It may never execute.**
+**Hallen må indføre. Den må aldrig udføre.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+Det er samme linje, som [`07`](07-INTERFACE.md) §1 allerede trækker for konsollen, og det er den, der
+overhovedet lader udstyr have styring. At vælge en kran og rette arbejde til den skriver en `REQ`-linje, der
+navngiver den agent, og lægger et `TELL` i dens indbakke. **Det starter intet.** Ingen proces startes, ingen
+kommando køres, og agenten tager arbejdet op ved sin egen næste kørsel — eller lader være.
 
-Two consequences that are easy to get wrong:
+To følger, der let bliver forkerte:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Rettet arbejde er stadig ingen ordre.** `REQ`-linjen er den kanoniske nedskrivning; indbakkelinjen peger blot
+  på den. En fil, der *befalede* en agent — eller gjorde krav på Operatørens myndighed inde fra træet — ville
+  være den sikkerhedshændelse, [`03`](03-BUS.md) §5 fastlægger, og at bygge det ind i fladen ville være værre end
+  at gøre det i hånden. Myndigheden er Operatøren i samtale. Hallen skriver nedskrivningen, ikke instruksen.
+- **Noget udstyr får bevidst ingen styring.** Transportbåndet er skrivebeskyttet: en konsol, der kunne skrive
+  linjer på bussen, ville fremstille en myndighed, protokollen nægter den. Lastbiler har slet ingen styring — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**Under `STOP` gengives hallen rød og indfører intet.** En rød hal tager ingen ordrer.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+Den ærlige grænse, sagt én gang: **dette er et fotografi af træet i ét øjeblik, ikke et levende telemetriflow.**
+Den spørger med mellemrum. Mellem spørgsmålene er den forældet, viser, hvornår den senest læste, og bliver grå i
+stedet for at lade som noget andet, når sidecaren holder op med at svare.

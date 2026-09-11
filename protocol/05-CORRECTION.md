@@ -1,66 +1,68 @@
-# 05 — CORRECTION
+> **Uofficiel oversættelse.** Den normative udgave af dette dokument er den engelske, i grenen `main`.
+> Denne oversættelse stilles til rådighed for bekvemmelighedens skyld og **er ikke gennemset af en
+> modersmålstalende**. Ved afvigelse fra den engelske original **gælder engelsk**. Protokollens
+> betegnelser (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verber og filnavnene) bevares
+> bevidst på engelsk: det er bogstavelige værdier, som agenter fortolker.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — RETTELSE
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**Status: normativ.** Hvad der sker, når en nedskrevet kendsgerning viser sig at være forkert.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. Problemet
 
-Reading a governing file puts you under it. Two things follow:
+> En kendsgerning, der hævdes i seks filer, vil være forkert i fem af dem.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+At rette den fil, du tilfældigvis har foran dig, er ingen rettelse. Det skaber et træ, hvor både sandheden og
+fejlen har henvisninger, og næste session tager den, der åbnes først. Dette er den kendetegnende fejlmåde for
+en dokumentationstung agentflåde, og den forværres tavst.
+
+**En rettelse breder sig, eller også fandt den ikke sted.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. At læse er ikke gratis — det forpligter
 
-One command, one turn, no proposal step.
+At læse en styrende fil stiller dig under den. To ting følger:
+
+1. Alt i den, der er **varigt, ikke indlysende og ikke udledeligt af træet**, går til din varige hukommelse før
+   sessionens slutning.
+2. **Modsiger din sammenhæng filen, vinder filen.** Gå ikke uden om den. Ret protokollen.
+
+---
+
+## 3. Øjeblikkelig kursrettelse (ICC)
+
+Én kommando, ét træk, uden forslagstrin.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### Rækkefølgen
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · Gennemløb.** Udled af rettelsen 2 til 5 søgeord: den **gamle** formulering, dens åbenlyse varianter og de
+egennavne, der indgår. Ikke den nye formulering. Kør ét indekseret gennemløb pr. søgeord, før du læser noget.
+Gå aldrig træet igennem fil for fil for at finde træffere — det er, hvad indekset er til.
 
-**2 · Classify every hit.**
+**2 · Klassificér hver træffer.**
 
-| Hit | Action |
+| Træffer | Handling |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **Hævder den gamle kendsgerning** | Omskriv den. |
+| **Nævner den i forbifarten**, sandt i begge tilfælde | Lad den være. Rør ikke i teksten. |
+| **Modsiger den nye kendsgerning indirekte** — en afledt slutning, en tabelrække, et planlagt job bygget på den gamle værdi | **Omskriv også den.** Den overses oftest. |
+| **Uden for grænserne** (§5) | Redigér aldrig. Notér under *Left alone*. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · Omskriv det hele på én gang.** Følg hver fils bestående stemme og dens sædvane for tillidsmærkning. En
+rettet kendsgerning beholder den mærkning, den fortjener — **opgradér ikke en påstand til `[PROVEN]`, fordi den
+nu er aktuel.** Bar den gamle tekst en dato, sæt dagens.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+Hvor en kendsgerning hævdes i mere end tre filer, er det **fordobling, ikke redundans**: angiv den én gang i den
+fil, der ejer den, og lad de øvrige pege derhen.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · Protokol og hukommelse.** Begge, ellers er kørslen ikke færdig. Sæt en post øverst i rettelsesprotokollen:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +75,73 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+Skriv derefter kendsgerningen til den varige hukommelse — **kontrollér først, om der allerede findes en
+hukommelsespost om emnet, og opdatér den**, i stedet for at efterlade to udgaver af en kendsgerning, du netop
+har brugt en kommando på at forene.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · Pligter efter redigering.** Kør den generator eller sikkerhedskopiering igen, som redigeringerne krævede.
+Genopbyg indekset, hvis filer er oprettet eller slettet.
 
 ---
 
-## 5. What is never rewritten
+## 4. En stående beslutning omstødes åbent
 
-| Never touched | Why |
+Hvis en rettelse ugyldiggør en stående beslutning — en linje ”tag ikke op igen”, en `[PROVEN]`-post, en
+politikregel — **vend den ikke tavst.** Omskriv den som *omstødt*, med dato og grund, så næste session ved, at
+den er ophævet og ikke glemt.
+
+En beslutning, der ændrer sig uden spor, er ikke til at skelne fra en beslutning, der aldrig blev truffet.
+
+---
+
+## 5. Hvad der aldrig omskrives
+
+| Røres aldrig | Hvorfor |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | Historie. Historie rettes ikke; den afløses. |
+| Genererede filer | Redigér kilden, og kør generatoren igen. |
+| En isoleret agents træ | Adgang kun efter udtrykkelig udpegning. |
+| En anden rods autoritative hovedsammenhæng | Indberet afvigelsen. Redigér ikke over en ejerskabsgrænse. |
+| Alt, der indeholder en hemmelighed | Helt uden for rækkevidde af et tekstgennemløb. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**Et gennemløb, der omskriver tekst, vil ødelægge binære filer.** Begræns hvert gennemløb til tekstendelser via
+en tilladelsesliste, aldrig ved udelukkelse.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. Hvad ICC ikke gør
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` retter protokollen. **Den går derefter ikke ud og udfører det arbejde, rettelsen antyder.** Det er
+adskilte handlinger med adskilte bemyndigelser, og at blande dem sammen er, hvordan en enkeltlinjet rettelse
+bliver til en ugennemset ombygning.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. Konkurrerende kendsgerninger afgøres og beskæres — katalogiseres ikke
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+Når to filer hævder modstridende kendsgerninger, **afgør, hvilken der er rigtig, behold den, og fjern de
+forkerte påstande i samme gennemløb.**
 
-### What still gets escalated instead of settled
+En konfliktrapport, der lader begge konkurrenter blive på disken, har intet løst. Næste session tager stadig den
+fil, der åbnes først, og en sikkerhedsregel med fem cirkulerende udgaver er *mindre* pålidelig end én med en
+enkelt, ikke mere.
 
-Three cases. Surface these; do not decide them:
+**Afgør efter sagens kerne, aldrig efter tidsstempel.** Vinderen er den fil, der ejer kendsgerningen, den udgave,
+der bæres af en måling, den, der holder til prøvelse. **Det nyeste er ikke det sandeste** — den kanoniske fejl
+her er fire fordoblede hukommelsesfiler skrevet med halvfems sekunders mellemrum, hvor den nyeste indeholdt den
+falske påstand, så en regel om at ”det nyeste vinder” ville have arvet fejlen.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**Nedskriv afgørelsen.** Hvilken kendsgerning der vandt, hvad der blev beskåret, og hvorfor — i protokollen, så
+beskæringen bliver læselig i stedet for tavs. En konkurrent, der forsvinder uden spor, ser nøjagtig ud som en
+konkurrent, der aldrig fandtes, og næste session skaber den på ny.
 
-Everything ordinary gets decided and cleaned up.
+### Hvad der alligevel opskaleres i stedet for at afgøres
+
+Tre tilfælde. Vis dem; afgør dem ikke:
+
+- Modsigelsen hviler på oplysninger, agenten ikke har.
+- At tage fejl ville være **usikkert eller uigenkaldeligt** — alt på trin 0–2.
+- Den tabende påstand ligger **uden for agentens ejerskabsgrænse** — en anden rods autoritative
+  hovedsammenhæng. Indberet afvigelsen; redigér ikke over grænsen.
+
+Alt almindeligt afgøres og ryddes op.

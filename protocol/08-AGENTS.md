@@ -1,113 +1,115 @@
-# 08 — AGENTS
+> **Uofficiel oversættelse.** Den normative udgave af dette dokument er den engelske, i grenen `main`.
+> Denne oversættelse stilles til rådighed for bekvemmelighedens skyld og **er ikke gennemset af en
+> modersmålstalende**. Ved afvigelse fra den engelske original **gælder engelsk**. Protokollens
+> betegnelser (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verber og filnavnene) bevares
+> bevidst på engelsk: det er bogstavelige værdier, som agenter fortolker.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — AGENTER
+
+**Status: normativ.** Hvad en agent er, og hvad den skylder ved hver kørsel.
 
 ---
 
-## 1. Roles
+## 1. Roller
 
-| Role | Who |
+| Rolle | Hvem |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Operatøren** | Mennesket. Udråber prioritetsniveauer, ophæver stoppet, holder enhver adgangsoplysning, fastlægger enhver uigenkaldelig handling. |
+| **Agent** | Én afgrænset arbejder med en definitionsfil, et navnerum den må skrive i, og en stående opgave. |
+| **Flåde** | Alle agenter under én protokolrod. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+En agent bestemmes af en fil, ikke af en kørende proces. Processer dør; definitionen er det, der gør agenten
+genskabelig på en anden maskine.
 
 ---
 
-## 3. Scope
+## 2. De fem ting, enhver agent skylder ved hver kørsel
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **Forkontrollér nødstoppet** før det første værktøjskald og igen før enhver skrivning, afsendelse, kørsel
+   eller udgift. Kør `stat` **i denne kørsel**. Citér aldrig en husket tilstand. Er signalerne uenige, vinder
+   stoppet. Kan du ikke afgøre det, vinder stoppet.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **Læs den levende orientering**, hvis der er en, før alt andet, og sig, hvad du har af det, den har brug for.
+   *”Intet”* er et rigtigt svar — sig det, og stå parat, i stedet for at finde på et bidrag.
+
+3. **Skriv leverancen til disk** som **én skrivning af hele filen, aldrig en række tilføjelser**
+   ([`03-BUS.md`](03-BUS.md) §7). Et fund, der kun er meldt i samtale, er ikke leveret.
+
+4. **Meld dig af**, før du slutter. §4 nedenfor.
+
+5. **Mærk enhver påstand** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` kræver en primærkilde, du
+   virkelig har læst i denne kørsel. En kilde, der ikke ville indlæses, er et mislykket kald, ikke et bevis.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Omfang
+
+Enhver agent arbejder **kun inden for sit eget navnerum**. Den læser bredt og skriver snævert.
+
+- **Den hverver aldrig selv besætning.** Nyfundet arbejde bliver et opslag på tavlen. En nødvendig ny agent
+  bliver et *udkast til definition plus en anmodning til Operatøren* — aldrig en kørende proces.
+- **Den ophæver aldrig et nødstop**, heller ikke ét den selv satte.
+- **Den redigerer aldrig en anden agents navnerum** eller en anden rods autoritative sammenhæng. Den indberetter
+  afvigelsen.
+- **En isoleret agent navngives kun, når Operatøren navngiver den.** Den er på ingen bus, i ingen formation og
+  på ingen delt flade. Den læser alligevel nødstoppet.
+
+---
+
+## 4. Tilmelding og afmelding
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Tilmelding:** skriv markøren, send `FLASH` med din identitet til udsendelsesloggen, forkontrollér nødstoppet.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Afmelding:** skriv bevisfilen, tilføj protokollinjen, slet **din egen** markør, og slut bevidst.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Slet kun din egen markør. En agent, der rydder en andens op, har netop meldt en levende session som afsluttet.
 
-### Why sign-off is a protocol obligation
+### Hvorfor afmelding er en protokolpligt
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+En sessionsbundet vagt dør med sin session, og **en tavs overvågning og en død overvågning ser ens ud.** Tavshed
+kan ikke gendrives. Rettelserne er strukturelle:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Hjerteslag** — fraværet af et slag bliver et bevis.
+- **Udtrykkelig afmelding** — så en efterladt markør er en opdagelig afvigelse i stedet for støj.
+- **Spænd igen ved genstart** — antag aldrig, at en overvågning overlevede.
 
 ---
 
-## 5. Naming
+## 5. Navngivning
 
-Every agent carries a working name and a one-line charter:
+Enhver agent bærer et arbejdsnavn og et enkeltlinjet grundlag:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Særkendelige, udtalelige navne slår numre i en udskrift og slår rolletitler, når to roller overlapper. Støder to
+navne sammen i navnerummet, **skeln ved hver brug** — skriv begge fuldt ud ved første omtale i hvert dokument.
+En forskel på ét tegn mellem to virkelige ting er en mangel, der venter på at blive påberåbt.
 
 ---
 
-## 6. The structural failures to design against
+## 6. De strukturelle fejl, der skal konstrueres imod
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+De er iagttagede, ikke hypotetiske. Hver eneste af dem er sket i en flåde i drift.
 
-| Failure | The counter-discipline |
+| Fejl | Moddisciplinen |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Konkurrerende filer.** Fem udgaver af én regel af Prioritet 0; to hovedpålæg; to håndbøger med modsatte oplysninger. | Afgør og beskær ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Søg, før du skriver nogen doktrin. En regel omformuleret i en ny fil er drift, ikke et bidrag. |
+| **Døde pegere.** Hundredvis af filer, der henviser til en sti, der ikke findes. | Reparér den generator, der udbreder det, **før** gennemløbet, ellers vokser tallet tilbage. |
+| **Kilder og næsten ingen afløb.** Hundredvis af viste filer og åbne tavleposter over for et menneske, der kan læse nogle få. Intet trækker noget tilbage; hvert lag hober blot op. | **Ethvert lager får et afløb, fastlagt når lageret bygges.** Dette er den største strukturelle risiko for, at hele konstruktionen gør nytte. |
+| **Tavshed kan ikke gendrives.** | Hjerteslag. §4. |
+| **Alt sessionsbundet.** | Spænd dækningen igen ved genstart; antag aldrig overlevelse. |
+| **Påstande uden bevis.** | Tillidsmærkninger, og en `DONE`-linje er ugyldig uden bevissti. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. Filosofien, sagt én gang
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **Maskinen melder. Mennesket beslutter. Den uigenkaldelige handling tilhører altid en person.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Alt andet i denne protokol er en gennemførelsesdetalje af den sætning.

@@ -1,39 +1,45 @@
-# 01 — ESTOP
+> **Uofficiel oversættelse.** Den normative udgave af dette dokument er den engelske, i grenen `main`.
+> Denne oversættelse stilles til rådighed for bekvemmelighedens skyld og **er ikke gennemset af en
+> modersmålstalende**. Ved afvigelse fra den engelske original **gælder engelsk**. Protokollens
+> betegnelser (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, bussens verber og filnavnene) bevares
+> bevidst på engelsk: det er bogstavelige værdier, som agenter fortolker.
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP (NØDSTOP)
+
+**Status: normativ. Prioritet 0. Bindende for enhver agent i ethvert foretagende.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. Hvad dette kan og ikke kan — læs dette først
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**Det kan ikke standse en igangværende session.** Ingen fil kan det. En agent midt i et svar læser ikke disken,
+har ingen afbrydelseslinje og gør det færdigt, den er i gang med. Den, der siger, at en flagfil standser en
+flåde, beskriver et ønske.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**Kun Operatøren standser en kørende agent ved at lukke dens vindue.** Det er det virkelige nødstop, og det har
+aldrig været andet.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+Hvad denne fil gør, er at binde enhver agent i de to øjeblikke, hvor den *rent faktisk* læser disken:
 
-| Moment | Obligation |
+| Øjeblik | Pligt |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **Opstart** | Læs tilstanden før din doktrin, før din hukommelse, før alt. |
+| **Hvert kontrolpunkt** | Før enhver skrivning, enhver besked, ethvert værktøjskald med sideeffekt, ethvert forbrug. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+En agent, der ser `STOP` og fortsætter, er en defekt agent. Det er hele håndhævelsesmodellen: ikke en mekanisme
+— en pligt, kontrolleret ofte.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+At angive grænsen ærligt hører til protokollen. Et stop, du tror er øjeblikkeligt, er farligere end et, du ved
+ikke er det, fordi du vil forlade dig på det.
 
 ---
 
-## 1. The two signals
+## 1. De to signaler
 
-### The sentinel is the fact
+### Vagten er kendsgerningen
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+En **almindelig fil** med navnet nøjagtigt `estop` — uden filendelse, nul byte er normalt — i roden af et
+foretagende eller i **et hvilket som helst overordnet katalog** i det træ, der arbejdes på.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+Afprøv en **fil**, aldrig blot forekomst, og aldrig et globmønster:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` er doktrin. Den må aldrig udløse kontrollen. En sammenligning, der tillod det, ville skabe et
+  stop, Operatøren ikke kan ophæve.
+- `_os/estop/` er et katalog. Udløser heller ikke.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+Flere rødder udløser **uafhængigt**. Kontrollér hver enkelt. Angiv den sti, du kørte `stat` på — aldrig
+”estoppet”, hvilket skjuler, hvilken du kiggede på.
 
-### The STATE file is a derived mirror
+### STATE-filen er et afledt spejl
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — én linje, intet andet.
 
 ```
 RUN
@@ -66,117 +72,115 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| Felt | Regel |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| verbum | `RUN`, `YELLOW` eller `STOP`. Intet andet fortolkes. |
+| tid | UTC, ISO-8601. |
+| hvem | Hvem der udråbte det. Kun Operatøren må skrive `STOP` / `YELLOW` eller ophæve dem. |
+| grund | Én linje, i klart sprog, uden fagjargon. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**Hvis vagten og spejlet er uenige, vinder stoppet.** Spejlet skrives af værktøjer og bliver forældet; vagten
+er kendsgerningen.
 
 ---
 
-## 2. The three states
+## 2. De tre tilstande
 
-| STATE | What an agent does |
+| STATE | Hvad en agent gør |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **Fortsæt.** Kør de kommandoer, arbejdet kræver, uden at bede om lov ved hver enkelt. Stands ikke, opremsning ikke muligheder, sæt ikke rutinearbejde i kø bag en bekræftelse. |
+| `YELLOW` | **Spørg først.** Hver kommando foreslås, før den køres. Samme arbejde, samme kunnen — forskellen er bekræftelsen. |
+| `STOP` | Stands. §3. |
 
-### What `RUN` does not do
+### Hvad `RUN` ikke gør
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` fjerner *pausen før rutinearbejde*. Det fjerner **ingen bestående spærring**, for de angår handlingens
+art, ikke dens hastighed:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- adgangsoplysninger, logins, indkøb, tildeling af ressourcer — **altid i Operatørens hænder**;
+- udadvendte handlinger — offentliggøre, sende, udrulle — **altid med udtrykkelig tilladelse**;
+- alt, som et menneske skal udføre fysisk — **går fortsat gennem sikkerhedsspærringen**;
+- ødelæggende eller uigenkaldelige handlinger — **bekræftes fortsat, i enhver tilstand**;
+- en agents egne stående begrænsninger — **afhænger slet ikke af STATE**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` besvarer spørgsmålet *”skal jeg spørge før hvert skridt?”* — nej. Det besvarer ikke spørgsmålet *”må jeg
+hvad som helst?”* En agent, der læser `RUN` og derpå gør noget fra denne liste, har læst tilstanden forkert,
+ikke fået bemyndigelse af den.
 
-### Fail-safe on an unreadable verb
+### Fejlsikring ved ulæseligt verbum
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+En STATE-fil, der **mangler, er tom, ulæselig eller bærer et hvilket som helst andet ord, læses som `YELLOW`**
+— aldrig som `RUN`. Spørg.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> Dette er den linje, der oftest vendes om i implementeringer. Et `try { read } catch { return "RUN" }` gør
+> enhver diskfejl, enhver rettighedsændring og enhver tastefejl til en tavs bemyndigelse. Reference-sidecaren
+> falder til `YELLOW` og nægter at betjene ved en læsefejl; se
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+Vagtfilen går helt forud for dette afsnit: en tilstedeværende `estop`-fil betyder `STOP`, hvad STATE end
+siger.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**Kun Operatøren skriver denne fil.** Ingen agent skriver den — heller ikke den agent, der fandt problemet. En
+agent, der mener, flåden bør standse, rejser et `GATE` på bussen og siger det. Den standser ikke flåden på egen
+myndighed, og den genstarter ingen.
 
 ---
 
-## 4. What clears it
+## 3. Hvad en agent gør ved `STOP`
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **Skriv ikke mere.** Hverken hukommelsesfilen, rapporten eller bussen.
+2. **Gem på stedet, og stands så.** Fuldfør intet skridt, der ikke allerede er skrevet. Mærk det, der findes,
+   som ufuldstændigt, med én linje om, hvor du standsede.
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > Tidligere udkast til denne protokol sagde *kassér*. Det var forkert: en kasseret halv rapport ødelægger
+   > arbejde, som genstartsdoktrinen findes for at beskytte. Faren er en afkortet fil, der senere læses som
+   > færdig — og det er **mærkningen**, der forhindrer det, ikke sletningen.
+3. **Sig én linje til Operatøren:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **Stands.** Bed ikke om lov til at fortsætte. Foreslå ingen omvej. Undersøg ikke, om grunden gælder dig —
+   den gælder dig.
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**En afvisning er et svar, ikke et nyt forsøg.** Gå ikke i sløjfe og vent på `RUN`. Indberet og afslut.
 
 ---
 
-## 6. Measure twice
+## 4. Hvad der ophæver det
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+Operatøren stiller filen tilbage til `RUN`. Intet andet gør det — ikke en tidsgrænse, ikke en agent, der anser
+problemet for løst, ikke tidens gang, ikke en ny session, der aldrig så stoppet.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+En håndtering, der ophæver sig selv, er en omvending af fejlsikringen og afvises efter sagens kerne.
 
 ---
 
-## 7. The honest limit, stated once
+## 5. Omfang
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Nødstoppet gælder **som udgangspunkt hele flåden**. Der findes intet stop per agent, for den fejl, der kræver
+et stop, begrænser sig næsten aldrig til én agent, og et delvist stop indbyder til netop den tankegang — *”det
+handlede om en anden”* — som denne fil findes for at forbyde.
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**Isolerede agenter er omfattet.** En agent, der ikke er på nogen bus og ingen delt flade, læser alligevel
+denne fil. Isolation styrer, hvad en agent må *sige*. Den styrer aldrig, om den må *standses*.
+
+---
+
+## 6. Mål to gange
+
+En enkelt grøn kontrol attesterer aldrig en sikkerhedstilstand. Læs begge signaler, fra disken, **i denne
+kørsel**. Citér aldrig en husket tilstand — hverken fra sammenhængen, en hukommelsesfil eller et tidligere
+træk. Et fejllæst `stat`-format er nok til at give et falsk ”frit” eller et falsk ”standset”, og begge dele er
+sket i praksis.
+
+Den stærkeste tilgængelige form er en **vedvarende overvågning** af STATE-filen og hver vagtsti, der kun melder
+ved ændring: tavs så længe der er frit, og udløser i det øjeblik et stop spændes. Det omsætter ”jeg
+kontrollerede én gang ved opstart” til dækning i realtid og lukker det hul, hvor et stop spændes midt i en
+session.
+
+---
+
+## 7. Den ærlige grænse, sagt én gang
+
+Denne protokol gør et stop **pålideligt ved hver opstart og hvert kontrolpunkt**. Den gør ikke et stop
+**øjeblikkeligt**, og intet skrevet i et filtræ vil nogensinde gøre det.
+
+Går noget galt lige nu: **luk vinduet.** Skriv derefter filen, så den næste agent, der vågner, ikke starter det
+igen.
