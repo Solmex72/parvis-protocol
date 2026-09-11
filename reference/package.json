@@ -49,7 +49,8 @@
     "test": "node bin/parvis.mjs selftest",
     "redteam": "node airlock/redteam.mjs",
     "stress": "node stress.mjs",
-    "leakcheck": "node credentials/leakcheck.mjs .."
+    "leakcheck": "node credentials/leakcheck.mjs ..",
+    "lint": "npx --yes eslint --config ../eslint.config.mjs .."
   },
   "dependencies": {},
   "devDependencies": {}
