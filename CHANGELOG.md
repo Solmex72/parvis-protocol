@@ -7,6 +7,59 @@ All notable changes to this project are recorded here. Format follows
 Because `protocol/` is a specification, a **breaking** change there means wording that existing
 adopters' agents were told to follow. Those get a major version, the same as an API break.
 
+## [1.1.0] — 2026-09-11
+
+The agent pickup loop: inducted `REQ` rows can now activate agents, without the console ever
+spawning anything.
+
+### Added
+
+- **`parvis watch --agent NAME`** ([`reference/sidecar/watch.mjs`](reference/sidecar/watch.mjs)) —
+  the agent-side pickup loop, run by the Operator as its own process. Each cycle it preflights the
+  estop (sentinel first, `STATE` second, unreadable is `YELLOW`), heartbeats its own session
+  marker, and claims one open `REQ` row addressed to `NAME` with an exclusive-create file in
+  `_os/tasks/claims/`, so two watchers racing for a row have exactly one winner. The row reaches
+  the agent as a **file**, never as `argv`, and framed as data (03 §5). With `--run PROG --arg A`
+  the agent is started with `PARVIS_REQ_FILE` and friends in its environment; `shell:false`.
+  Afterwards the watcher checks that the *agent* wrote its own `DONE`/`BLOCKED`/`REFUSED` — it
+  never writes `DONE` for anyone (02 §3, 04 §3) — and appends `BLOCKED` if it did not. `STOP`
+  holds and writes nothing, not even a sign-off; `YELLOW` claims nothing and says what it sees.
+  `--unaddressed` (opt-in, by design) also claims rows inducted under the Operator's own channel
+  name. `--once`, `--dry`, `--every SEC`.
+- **Quarantine.** A `REQ` row that carries instruction-shaped text — an override, a role switch,
+  an authority claim, fake system syntax, an encoded blob — is a **security event** (03 §5, 10 §4):
+  the watcher refuses to claim it, records `<key>.hostile`, surfaces the row verbatim in one file
+  the Operator reads, and puts only the key and marker names on the bus, never the text. Two
+  content markers (a path, the word "password") are handed to the agent as flags instead.
+- **`parvis manifest`** — what the ledger is waiting on, for a human at a terminal. Open rows with
+  `HOSTILE` prefixes, closed rows with who closed them and whether the evidence path resolves,
+  active claims and whether their owner is alive, session markers with heartbeat age, and rows the
+  console cannot see. Read-only; proven by mtime.
+- **[`reference/sidecar/ledger.mjs`](reference/sidecar/ledger.mjs)** — one parser for every reader
+  of `_os/tasks/INDEX.md`, and one lock for every writer. A `REQ` with a later `DONE`/`BLOCKED`/
+  `REFUSED` that names it (`closes <key>`) or repeats its text is **closed**; a `REQ` named by
+  another `REQ`'s `closes` is **taken**. The lock is an exclusive-create file with the holder's
+  pid; a dead holder's lock is released only when it is dead **and** past the stale window, never
+  on age or liveness alone. A busy ledger means *write nothing and say so* (`ELEDGERBUSY`).
+
+### Changed
+
+- **Sidecar.** `induct()` and `/tasks/amend` take the ledger lock; a rewrite can no longer drop an
+  append that lands mid-request (measured: 6 appenders × 40 rows against a concurrent rewriter,
+  240/240 survive). A held lock returns **503** with nothing written. The warehouse floor stops
+  counting closed or taken `REQ` rows as scheduled, so a crane's queue clears when the agent's own
+  `DONE` lands. `/tasks` rows carry `key`, `closed` and `taken`.
+- **CLI version** `1.1.0`.
+
+### Honest limits, stated
+
+- Nothing here makes an agent trustworthy with a row; the launcher the Operator configures is the
+  grant, and `--unaddressed` admits a class of rows from a world-appendable file, which is why it
+  is a flag you have to type.
+- `closes <key>` is categorisation, never authorisation: any writer can append a row closing any
+  key. The manifest shows the closer beside every closed row so nothing disappears unlabelled.
+- The quarantine is a pattern list. It catches shapes; it does not read intent.
+
 ## [1.0.0] — 2026-09-11
 
 First public release. Extracted from a private multi-agent system that ran daily for several
@@ -107,4 +160,5 @@ was decided, what stayed open, and what was removed is in [DECISIONS.md](DECISIO
 identifiers, third-party PII, the agent roster, and the operational exhaust of a running fleet.
 Itemised in [DECISIONS.md](DECISIONS.md) Part 3.
 
+[1.1.0]: https://github.com/Solmex72/parvis-protocol/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Solmex72/parvis-protocol/releases/tag/v1.0.0

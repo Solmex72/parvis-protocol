@@ -5,6 +5,7 @@
 //   parvis serve            start the console      (Windows / macOS / Linux)
 //   parvis init [dir]       scaffold an _os tree
 //   parvis check            preflight the estop, exit non-zero if not RUN
+//   parvis manifest         what the ledger is waiting on — read-only, writes nothing
 //   parvis estop [reason]   place the sentinel     (see NOTE below)
 //   parvis clear            clear the sentinel and set STATE to RUN
 //   parvis selftest         verify this install works on this platform
@@ -230,6 +231,17 @@ function parseFlags() {
     else if (a === "--no-open") f.openBrowser = false;
     else if (a === "--open") f.openBrowser = true;
     else if (a === "--expose") f.allowNonLoopback = true;
+    // parvis watch
+    else if (a === "--agent") f.agent = take();
+    else if (a === "--every") f.every = Number(take());
+    else if (a === "--run") f.run = take();
+    else if (a === "--arg") (f.args = f.args || []).push(take());
+    else if (a === "--unaddressed") f.unaddressed = true;
+    else if (a === "--once") f.once = true;
+    else if (a === "--dry") f.dry = true;
+    else if (a.startsWith("--agent=")) f.agent = a.slice(8);
+    else if (a.startsWith("--every=")) f.every = Number(a.slice(8));
+    else if (a.startsWith("--run=")) f.run = a.slice(6);
     else if (a.startsWith("--host=")) f.host = a.slice(7);
     else if (a.startsWith("--port=")) f.port = Number(a.slice(7));
     else if (a.startsWith("--root=")) f.root = a.slice(7);
@@ -246,6 +258,183 @@ async function cmdServe() {
     console.error("  " + String(e.message).split("\n").join("\n  ") + "\n");
     process.exit(1);
   }
+}
+
+//
+// The agent-side pickup loop (08 §2, §4). Runs as ITS OWN process, never inside
+// the console's HTTP server, so 07 §1 still holds for the console: the thing
+// that serves the page never spawns anything. This does, but only when the
+// Operator hands it a launcher, and it never puts the REQ text on a command line.
+// parvis watch --agent NAME [--every SEC] [--run PROG --arg A ...] [--unaddressed] [--once] [--dry]
+async function cmdWatch() {
+  const config = await import(pathToFileURL(path.join(PKG_ROOT, "sidecar", "config.mjs")).href);
+  const w = await import(pathToFileURL(path.join(PKG_ROOT, "sidecar", "watch.mjs")).href);
+  const flags = parseFlags();
+  let cfg;
+  try { cfg = config.load({ root: flags.root }); }
+  catch (e) {
+    console.error("\n  " + c.red("configuration error"));
+    console.error("  " + String(e.message).split("\n").join("\n  ") + "\n");
+    process.exit(1);
+  }
+  if (!flags.agent) {
+    console.error("\n  " + c.red("--agent <NAME> is required") + "  (the agent this watcher signs on as)\n");
+    process.exit(2);
+  }
+  console.log("");
+  try {
+    const r = await w.watch(cfg, {
+      agent: flags.agent, every: flags.every, run: flags.run, args: flags.args || [],
+      unaddressed: !!flags.unaddressed, once: !!flags.once, dry: !!flags.dry,
+      log: (m) => console.log("  " + m),
+    });
+    console.log("\n  " + c.dim(r.cycles + " cycle(s), " + r.claimed + " claimed, session " + r.session) + "\n");
+  } catch (e) {
+    console.error("\n  " + c.red("watch failed") + "  " + e.message + "\n");
+    process.exit(1);
+  }
+}
+
+//
+// What the ledger is waiting on, for a human at a terminal. Reads the index,
+// the claims directory and the session markers; writes nothing, not even a bus
+// line. Open REQ rows render through the airlock's neutralise() and carry a
+// HOSTILE prefix when its markers hit — the same screen the watcher applies
+// before it will claim anything. Closed rows show who closed them and whether
+// the evidence path resolves (04 §3). Exit 0; exit 2 if the index is unreadable.
+async function cmdManifest() {
+  const config = await import(pathToFileURL(path.join(PKG_ROOT, "sidecar", "config.mjs")).href);
+  const L = await import(pathToFileURL(path.join(PKG_ROOT, "sidecar", "ledger.mjs")).href);
+  const A = await import(pathToFileURL(path.join(PKG_ROOT, "airlock", "airlock.mjs")).href);
+  const flags = parseFlags();
+  let cfg;
+  try { cfg = config.load({ root: flags.root }); }
+  catch (e) {
+    console.error("\n  " + c.red("configuration error"));
+    console.error("  " + String(e.message).split("\n").join("\n  ") + "\n");
+    process.exit(1);
+  }
+  const root = cfg.root;
+  const operator = cfg.operator || "parvis-console";
+  const INDEX = path.join(root, "_os", "tasks", "INDEX.md");
+  const CLAIMS = path.join(root, "_os", "tasks", "claims");
+  const SESSIONS = path.join(root, "_os", "exchange", "bus", "session");
+  const rel = (p) => path.relative(root, p).split(path.sep).join("/");
+  const age = (t) => {
+    const m = Math.round((Date.now() - t) / 60000);
+    return m < 60 ? m + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " days";
+  };
+  const trunc = (t, n) => { t = String(t); return t.length > n ? t.slice(0, n - 1) + "…" : t; };
+
+  // The estop as this root sees it: sentinel first, then the STATE mirror, unreadable is YELLOW (01 §1).
+  const estop = (() => {
+    let dir = root;
+    for (;;) {
+      const p = path.join(dir, "estop");
+      try { if (fs.statSync(p).isFile()) return { verb: "STOP", reason: "sentinel at " + p }; } catch { /* walk up */ }
+      const up = path.dirname(dir); if (up === dir) break; dir = up;
+    }
+    let line;
+    try { line = fs.readFileSync(path.join(root, "_os", "estop", "STATE"), "utf8").split(/\r?\n/)[0].trim(); }
+    catch { return { verb: "YELLOW", reason: "STATE unreadable" }; }
+    const verb = (line.split(/\s+/)[0] || "").toUpperCase();
+    if (!["RUN", "YELLOW", "STOP"].includes(verb)) return { verb: "YELLOW", reason: "STATE unparseable" };
+    return { verb, reason: line.slice(verb.length).trim() };
+  })();
+
+  console.log("");
+  console.log("  " + c.b("manifest") + "  " + root);
+  console.log("  estop     " + paint(estop));
+
+  const rows = L.readIndex(INDEX);
+  if (rows === null) {
+    console.log("  ledger    " + c.red("unreadable") + "  " + rel(INDEX) + "\n");
+    process.exit(2);
+  }
+  const open = rows.filter((r) => r.status === "REQ" && !r.closed && !r.taken);
+  const settled = rows.filter((r) => r.status === "REQ" && (r.closed || r.taken));
+  console.log("  ledger    " + rel(INDEX) + c.dim("  · " + rows.length + " rows · " + open.length + " open · " + settled.length + " closed/taken · " + rows.invisible.length + " console-invisible"));
+
+  // Terminal claim files decide what the watcher will still consider.
+  let claimFiles = [];
+  try { claimFiles = fs.readdirSync(CLAIMS); } catch { /* no claims yet */ }
+  const has = (k, ext) => claimFiles.includes(k + ext);
+
+  console.log("");
+  console.log("  " + c.b("awaiting") + c.dim("   open REQ rows, oldest first"));
+  if (!open.length) console.log("    " + c.dim("nothing — the ledger is clear"));
+  for (const r of open) {
+    const hits = A.scan(r.what);
+    const hostile = hits.filter((h) => h.id !== "exfiltration" && h.id !== "path-escape");
+    const flags = hits.filter((h) => h.id === "exfiltration" || h.id === "path-escape");
+    const tag = has(r.key, ".hostile") ? c.red("QUARANTINED ") : hostile.length ? c.red("HOSTILE ") : has(r.key, ".claim") ? c.amber("claimed ") : "";
+    console.log("    " + tag + c.b(r.key) + "  L" + r.line + "  " + r.date + "  " + c.dim(r.who) + "  " + trunc(A.neutralise(r.what), 88));
+    if (hostile.length) console.log("              " + c.red("markers: " + hostile.map((h) => h.id).join(", ")) + c.dim("  — the watcher will not claim this; re-induct it in plain words"));
+    if (flags.length) console.log("              " + c.amber("flags: " + flags.map((h) => h.id).join(", ")) + c.dim("  — content markers, handed to the agent as data"));
+    if (has(r.key, ".claim")) {
+      try {
+        const cl = JSON.parse(fs.readFileSync(path.join(CLAIMS, r.key + ".claim"), "utf8"));
+        const alive = fs.existsSync(path.join(SESSIONS, String(cl.session) + ".on")) || L.pidAlive(cl.pid);
+        console.log("              " + c.dim("claimed by " + cl.agent + " (" + cl.session + ") " + age(Date.parse(cl.claimedAt)) + " ago, " + (alive ? "alive" : c.amber("owner gone"))));
+      } catch { /* unreadable claim: say nothing false */ }
+    } else if (!hostile.length && !has(r.key, ".hostile")) {
+      const watchable = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/.test(r.who);
+      console.log("              " + c.dim(r.who === operator
+        ? "address it to an agent from the console, or:  parvis watch --agent <name> --unaddressed --once"
+        : watchable ? "parvis watch --agent " + r.who + " --once"
+        : "agent name is not watchable (letters, digits, - and _ only, no spaces) — no watcher can sign on as it"));
+    }
+  }
+
+  if (settled.length) {
+    console.log("");
+    console.log("  " + c.b("closed / taken") + c.dim("   the floor no longer counts these as open"));
+    for (const r of settled) {
+      const cz = r.closed;
+      let tail;
+      if (cz) {
+        tail = cz.status + " by " + cz.by + " (L" + cz.line + ")";
+        if (cz.status === "DONE") {
+          const ev = L.evidencePath(cz.evidence);
+          const ok = ev && fs.existsSync(path.isAbsolute(ev) ? ev : path.join(root, ev));
+          tail += ok ? c.dim("  evidence ok") : c.amber("  evidence " + (ev ? "MISSING: " + ev : "not given") + " — [CLAIMED], not [PROVEN]");
+        }
+      } else {
+        tail = "taken by " + r.taken.by + " (L" + r.taken.line + ")";
+      }
+      console.log("    " + c.dim(r.key) + "  L" + r.line + "  " + trunc(A.neutralise(r.what), 60) + "  → " + tail);
+    }
+  }
+
+  const hostiles = claimFiles.filter((f) => f.endsWith(".hostile"));
+  if (hostiles.length) {
+    console.log("");
+    console.log("  " + c.red("security events") + c.dim("   " + rel(CLAIMS)));
+    for (const f of hostiles) console.log("    " + c.red(f) + c.dim("  — see _os/events/surface; a human removes this file to release the row"));
+  }
+
+  let markers = [];
+  try { markers = fs.readdirSync(SESSIONS).filter((f) => f.endsWith(".on")); } catch { /* none */ }
+  if (markers.length) {
+    console.log("");
+    console.log("  " + c.b("sessions") + c.dim("   " + rel(SESSIONS)));
+    for (const f of markers) {
+      let st; try { st = fs.statSync(path.join(SESSIONS, f)); } catch { continue; }
+      const a = Date.now() - st.mtimeMs;
+      console.log("    " + (a > 6 * 3600 * 1000 ? c.amber(f) : f) + c.dim("  heartbeat " + age(st.mtimeMs) + " ago"));
+    }
+    console.log("    " + c.dim("a marker outlives its session only when the session died; only the Operator clears one (08 §4)"));
+  }
+
+  if (rows.invisible.length) {
+    console.log("");
+    console.log("  " + c.b("console-invisible") + c.dim("   rows without a real date; the console and the watcher skip them"));
+    console.log("    " + c.dim("L" + rows.invisible.map((r) => r.line).join(", L")));
+  }
+  console.log("");
+  console.log("  " + c.dim("read-only: nothing was written."));
+  console.log("");
+  process.exit(0);
 }
 
 async function cmdConfig() {
@@ -482,6 +671,10 @@ function usage() {
   ${c.b("parvis")} — the Parvis protocol console
 
     ${c.b("parvis serve")}  ${c.dim("[flags]")}      start the console
+    ${c.b("parvis watch")}  ${c.dim("--agent N")}    agent-side pickup loop: claim REQ rows addressed to N
+                                    ${c.dim("[--every SEC] [--run PROG --arg A ...] [--once] [--dry]")}
+                                    ${c.dim("[--unaddressed]  also claim rows inducted under the Operator's own name")}
+    ${c.b("parvis manifest")}              what the ledger is waiting on  ${c.dim("(read-only)")}
     ${c.b("parvis config")} ${c.dim("[--init]")}     show effective config, or write the file
     ${c.b("parvis init")}   ${c.dim("[dir]")}        scaffold an _os tree
     ${c.b("parvis check")}                 preflight the estop; exit 1 if not RUN
@@ -511,6 +704,8 @@ function usage() {
 
 switch (cmd) {
   case "serve": case "start": await cmdServe(); break;
+  case "watch": case "pickup": await cmdWatch(); break;
+  case "manifest": case "pending": await cmdManifest(); break;
   case "config": await cmdConfig(); break;
   case "init": cmdInit(); break;
   case "check": case "preflight": cmdCheck(); break;
@@ -519,7 +714,7 @@ switch (cmd) {
   case "airlock": case "dock": await cmdAirlock(); break;
   case "selftest": case "test": await cmdSelftest(); break;
   case "help": case "--help": case "-h": usage(); break;
-  case "version": case "--version": case "-v": console.log("parvis 1.0.0"); break;
+  case "version": case "--version": case "-v": console.log("parvis 1.1.0"); break;
   default:
     console.error(`\n  unknown command: ${cmd}`);
     usage();

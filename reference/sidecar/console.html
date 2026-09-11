@@ -616,23 +616,32 @@
         el.className = "row";
         // 04 §3: a DONE with no evidence path is invalid — surface that, do not hide it.
         var bad = (t.status === "DONE" && !t.evidence);
+        // A REQ is settled when a later row names it (closes <key>) or repeats its
+        // text: the agent's own DONE/BLOCKED/REFUSED, or another REQ saying "on it".
+        // The row itself is never edited — the label is read from the closer.
+        var settled = (t.status === 'REQ' && (t.closed || t.taken));
+        var settledTag = !settled ? '' :
+          t.closed ? ' <span class="tag t-' + esc(t.closed.status) + '">→ ' + esc(t.closed.status) + ' by ' + esc(t.closed.by) + '</span>'
+                   : ' <span class="tag t-REQ">taken by ' + esc(t.taken.by) + '</span>';
         el.innerHTML =
           '<span class="tag t-' + esc(t.status) + '">' + esc(t.status) + '</span>' +
-          '<span class="nm">' + esc(t.what) +
+          '<span class="nm"' + (settled ? ' style="color:var(--ink3)"' : '') + '>' + esc(t.what) +
             (t.evidence ? ' <span style="color:var(--ink3)">— ' + esc(t.evidence) + '</span>' : '') +
             (bad ? ' <span class="tag t-bad">NO EVIDENCE — INVALID</span>' : '') +
+            settledTag +
           '</span>' +
           '<span class="meta">' + esc(t.who) + ' · ' + esc(t.date) + '</span>' +
           // The pick list. An open REQ is a proposal, and a proposal you cannot
-          // change before it is picked up is not much of a review. Only REQ rows
-          // get controls: DONE, BLOCKED and REFUSED are history (05 section 5).
-          (t.status === 'REQ'
+          // change before it is picked up is not much of a review. Only OPEN REQ
+          // rows get controls: DONE, BLOCKED and REFUSED are history (05 section 5),
+          // and a REQ someone has already closed or taken is no longer open.
+          (t.status === 'REQ' && !settled
             ? '<span class="amend">' +
                 '<button class="mini" data-act="edit">modify</button>' +
                 '<button class="mini" data-act="cancel">cancel</button>' +
               '</span>'
             : '');
-        if (t.status === 'REQ' && t.raw) {
+        if (t.status === 'REQ' && !settled && t.raw) {
           el.querySelector('[data-act=edit]').addEventListener('click', function(){
             var cur = el.querySelector('.nm');
             if (el.querySelector('.amend-in')) return;

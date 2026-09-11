@@ -213,6 +213,21 @@ parvis airlock            # the dock: what has come in from outside, and what it
 parvis airlock redteam    # replay the injection corpus against your own ingress
 ```
 
+**4 · Let agents pick work up** — the console inducts a prompt into a `REQ` row and stops there, on
+purpose. Picking that row up is a separate process the Operator runs, so the console keeps its
+promise that it never spawns anything:
+
+```bash
+parvis watch --agent BRIDGE                       # claim REQ rows addressed to BRIDGE; hand each to the agent as a FILE
+parvis watch --agent BRIDGE --run node --arg agent.mjs   # ...and start the agent, with the row's path in PARVIS_REQ_FILE
+parvis manifest                                   # what the ledger is waiting on — read-only, writes nothing
+```
+
+A row is data, never a command: it reaches the agent as a file, never on a command line, and rows
+shaped like instructions are quarantined as security events instead of claimed. The watcher never
+writes `DONE` for anyone — the agent appends its own row with an evidence path, or the watcher
+appends `BLOCKED`. See [`reference/sidecar/watch.mjs`](reference/sidecar/watch.mjs).
+
 The sidecar binds loopback only, validates `Host` and `Origin`, mints a per-process session token,
 serves a path allowlist with a `realpath` containment check, treats an unreadable estop as
 `YELLOW` rather than `RUN`, and refuses every write unless the state is `RUN`. It never spawns a

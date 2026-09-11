@@ -28,6 +28,8 @@ node bin/parvis.mjs serve --root ../my-project
 | `parvis serve [flags]` | Start the console. |
 | `parvis init [dir]` | Scaffold `_os/` and copy `protocol/` into it. Never overwrites. |
 | `parvis check` | Preflight the estop. **Exits 1 when not `RUN`** — gate a hook or a CI job on this. |
+| `parvis watch --agent N` | The agent-side pickup loop, run by the Operator as its own process. Claims one open `REQ` row addressed to `N` at a time (exclusive-create, one winner per race), hands it to the agent as a **file** — never `argv` — and, with `--run PROG --arg A…`, starts the agent with `PARVIS_REQ_FILE` in its environment. Never writes `DONE` for anyone; appends `BLOCKED` if the agent wrote nothing. Instruction-shaped rows are quarantined as security events. `--unaddressed` also takes rows inducted under the Operator's own name (opt-in, on purpose). `--once`, `--dry`, `--every SEC`. |
+| `parvis manifest` | What the ledger is waiting on: open rows (with `HOSTILE` where the airlock's markers hit), closed rows and whether their evidence resolves, active claims, session markers, rows the console cannot see. **Read-only.** |
 | `parvis config [--init]` | Show the effective config and where each value came from; write the file. |
 | `parvis estop <reason>` | Place the stop. Refuses without a reason in plain English. |
 | `parvis clear` | Remove the sentinel, set `RUN`. |

@@ -25,6 +25,7 @@ import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as config from "./config.mjs";
 import * as airlock from "../airlock/airlock.mjs";
+import { parseIndex, withLedgerLock } from "./ledger.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CONSOLE_HTML = path.join(HERE, "console.html");
@@ -228,25 +229,20 @@ export function createServer(cfg) {
     return txt.split(/\r?\n/).filter((l) => l.trim()).slice(-n);
   }
 
-  const ROW_RE = /^(REQ|DONE|BLOCKED|REFUSED)\s*\|/;
-  // A real row carries a real date. The template ships example rows reading
-  // `YYYY-MM-DD | who | ...` inside a fenced block, and without this guard the
-  // placeholder is parsed as a live task and an agent called "who" appears on
-  // the floor. A documented example must never register as fleet state.
-  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
+  // One parser for every reader (ledger.mjs): a real row carries a real date,
+  // so the template's `YYYY-MM-DD | who | ...` example never registers as fleet
+  // state; and a REQ with a later DONE/BLOCKED/REFUSED that names it (`closes
+  // <key>`) or repeats its text is `closed`, so the floor stops counting it.
   function taskRows(limit = 80) {
     const lines = tailLines(TASK_INDEX, 5000);
     if (lines === null) return null;
-    const rows = [];
-    for (const l of lines) {
-      if (!ROW_RE.test(l)) continue;
-      const p = l.split("|").map((s) => s.trim());
-      if (!DATE_RE.test(p[1] || "")) continue;
-      // raw is what /tasks/amend must be pinned to: a client can only amend a row
-      // it actually read, so it sends this back verbatim.
-      rows.push({ status: p[0] || "", date: p[1], who: p[2] || "", what: p[3] || "", evidence: p[4] || "", raw: l });
-    }
+    // raw is what /tasks/amend must be pinned to: a client can only amend a row
+    // it actually read, so it sends this back verbatim. key is the same row's
+    // content hash, the handle the watcher and the manifest use.
+    const rows = parseIndex(lines.join("\n")).map((r) => ({
+      status: r.status, date: r.date, who: r.who, what: r.what, evidence: r.evidence, raw: r.raw,
+      key: r.key, closed: r.closed, taken: r.taken,
+    }));
     return rows.slice(-limit).reverse();
   }
 
@@ -364,7 +360,7 @@ export function createServer(cfg) {
     // Open REQ rows per agent — scheduled work, blue.
     const openByAgent = new Map();
     for (const r of taskRows(400) || []) {
-      if (r.status !== "REQ") continue;
+      if (r.status !== "REQ" || r.closed || r.taken) continue;
       openByAgent.set(r.who, (openByAgent.get(r.who) || 0) + 1);
     }
 
@@ -450,7 +446,7 @@ export function createServer(cfg) {
   // An agent id is a bare name. Anything else could escape the inbox path.
   const AGENT_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
 
-  function induct(prompt, agent) {
+  async function induct(prompt, agent) {
     const stamp = new Date().toISOString();
     const day = stamp.slice(0, 10);
     const oneLine = String(prompt).replace(/[\r\n]+/g, " ").trim().slice(0, 500);
@@ -467,7 +463,9 @@ export function createServer(cfg) {
     const note = target ? `inducted from the crane control by ${by}, awaiting ${target}`
                         : "inducted from the console, awaiting the Operator";
     const row = `REQ     | ${day} | ${who} | ${oneLine} | ${note}\n`;
-    fs.appendFileSync(TASK_INDEX, row, "utf8");
+    // One writer at a time (ledger.mjs): an append that lands mid-rewrite is lost.
+    // Awaited, so a foreign holder stalls this request and never the whole server.
+    await withLedgerLock(ROOT, async () => fs.appendFileSync(TASK_INDEX, row, "utf8"), "induct");
 
     // Addressed work also drops a line in that agent's inbox — as a TELL, and
     // deliberately never as an order.
@@ -662,6 +660,10 @@ export function createServer(cfg) {
         }
 
         const LF = String.fromCharCode(10), CR = String.fromCharCode(13);
+        // The whole read -> splice -> write happens under the ledger lock, or not at all.
+        let held;
+        try {
+          held = await withLedgerLock(ROOT, async () => {
         let bodyText;
         try { bodyText = fs.readFileSync(TASK_INDEX, "utf8"); }
         catch { return json(res, { error: "task index unreadable" }, 500); }
@@ -701,6 +703,12 @@ export function createServer(cfg) {
         }
         // Nothing is executed here either. This edits a record, not a machine.
         return json(res, { ok: true, action: action, line: at + 1, row: rebuilt, executed: false });
+          }, "amend");
+        } catch (e) {
+          if (e.code === "ELEDGERBUSY") return json(res, { error: "ledger busy — another writer holds _os/tasks/.INDEX.lock; nothing was written, try again" }, 503);
+          throw e;
+        }
+        return held;
       }
 
       if (url.pathname === "/induct" && POST) {
@@ -711,8 +719,11 @@ export function createServer(cfg) {
         if (agent !== undefined && agent !== null && !AGENT_RE.test(String(agent))) {
           return json(res, { error: "bad agent id" }, 400);
         }
-        try { return json(res, { ok: true, ...induct(prompt, agent) }); }
-        catch (e) { return json(res, { error: String(e.message) }, 500); }
+        try { return json(res, { ok: true, ...(await induct(prompt, agent)) }); }
+        catch (e) {
+          if (e.code === "ELEDGERBUSY") return json(res, { error: "ledger busy — another writer holds _os/tasks/.INDEX.lock; nothing was written, try again" }, 503);
+          return json(res, { error: String(e.message) }, 500);
+        }
       }
 
       return json(res, { error: "not found" }, 404);

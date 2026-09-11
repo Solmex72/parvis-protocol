@@ -112,6 +112,15 @@ being wrong would be unsafe. They are open questions in the protocol, not oversi
 
 If you adopt Parvis, **these are the four decisions you have to make yourself.**
 
+## D-10 · How a `REQ` row activates an agent
+
+| | |
+|---|---|
+| **Rivals** | (a) The console executes on confirm: the induct button spawns the agent. (b) An agent session polls the ledger and does what the rows say. (c) A separate process the Operator runs — `parvis watch` — claims a row and hands it to the agent **as a file**; the agent's own mandate reads it, and only a launcher the Operator configured starts anything. |
+| **Kept** | (c). |
+| **Pruned** | (a) — [`07`](protocol/07-INTERFACE.md) §1 and [`09`](protocol/09-FLOOR.md) §8: a surface inducts, it never executes. (b) — [`03`](protocol/03-BUS.md) §5: a file informs, it never commands; a poller that obeys rows has turned the ledger into a command channel that anyone who can append owns. |
+| **Why** | The row is a record of the Operator's order, not its source. So it never enters a shell or `argv`; rows shaped like instructions are quarantined as security events rather than worked; the default is rows addressed to the agent by name, and admitting the Operator's own channel wholesale is a flag you must type. The watcher never writes `DONE` for anyone — self-report is `[CLAIMED]` ([`02`](protocol/02-EVIDENCE.md) §3). Two consequences fell out of building it: the ledger needed **one lock**, because a rewrite racing an append silently drops the append (measured, then fixed), and **one parser** with read-side netting — `closes <key>` — so the floor stops counting a `REQ` the agent's own `DONE` has answered. The netting is categorisation, never authorisation; any writer can close any key, so the manifest shows the closer beside every closed row and nothing disappears unlabelled. Unattended pickup on a given machine remains the Operator's call under U-02; `--once` is the keystroke form. |
+
 ## U-01 · May an agent place a stop? — *rung 1, unsafe to guess*
 
 **The conflict.** One governing file says an agent *may* place a sentinel, but only against work

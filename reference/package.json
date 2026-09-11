@@ -1,6 +1,6 @@
 {
   "name": "parvis-protocol",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Reference implementation for the Parvis protocol — a loopback sidecar and console for file-based agent fleets.",
   "keywords": [
     "agents",
