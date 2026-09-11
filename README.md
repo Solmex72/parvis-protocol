@@ -120,11 +120,19 @@ the instrument rather than written in a file an attacker could argue with. Money
 the retry rule**: a payment that timed out may have landed, so it is never retried, only
 reconciled. [`11`](protocol/11-TREASURY.md).
 
+**9 · An agent gains a capability, never a secret.**
+A credential reaches an agent by being *placed* where its process can read it — an environment
+variable from the password manager, a keychain item, a broker that exposes operations instead of
+keys. It is never *sent*: a secret pasted into a session is written to that session's transcript
+in plaintext and stays there, which is measured rather than assumed. So the human grant is an act
+at the provider, scope is set before the credential exists, and exposure is answered by rotation
+rather than deletion. [`12`](protocol/12-CREDENTIALS.md).
+
 ---
 
 ## The protocol
 
-Eleven files. Read them in order; each is short.
+Twelve files. Read them in order; each is short.
 
 | | File | Settles |
 |---|---|---|
@@ -140,6 +148,7 @@ Eleven files. Read them in order; each is short.
 | 09 | [**FLOOR**](protocol/09-FLOOR.md) | The warehouse mapping: agents are cranes, directories are pallets, external services are trucks that dock at the boundary. |
 | 10 | [**AIRLOCK**](protocol/10-AIRLOCK.md) | The dock itself. Everything from outside is `UNTRUSTED_DATA`, quarantined by content hash, and promoted only by a human. |
 | 11 | [**TREASURY**](protocol/11-TREASURY.md) | Where a fleet may touch money. Two credentials, tiers drawn by irreversibility, the ceiling on the instrument, and why a spend is never retried. |
+| 12 | [**CREDENTIALS**](protocol/12-CREDENTIALS.md) | How an agent comes to hold a capability without holding the secret. Injection not transmission, scope before existence, rotation not deletion. |
 
 [`DECISIONS.md`](DECISIONS.md) records which contradictions were settled during extraction, which
 version won, and why.
