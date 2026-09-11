@@ -781,18 +781,30 @@
   //
   // Directories are stored into that structure in order, so the same tree
   // always lays out the same way.
-  var LEVELS = 3, LEVEL_H = 0.58, RACK_W = 0.95, RACK_D = 0.92,
+  var LEVELS = 3   /* reassigned by plan(): the building grows taller as it fills */, LEVEL_H = 0.58, RACK_W = 0.95, RACK_D = 0.92,
       AISLE_W = 1.30, BAY_PITCH = 1.06;
   var AISLE_PITCH = AISLE_W + 2 * RACK_W;
 
+  // Proportioned on a real high-bay ASRS rather than invented numbers:
+  // USCS McDonough 2, 1275 Medline Place, McDonough GA — 73,027 racked pallet
+  // positions of which 47,000 are automated, 49 dock doors, 22,050,000 cubic
+  // feet, -05F to 35F across zones, Norfolk Southern rail.
+  //
+  // The growth ORDER is the order that site actually built in: racks run long
+  // first, then the building goes tall, then it adds aisles — and it keeps
+  // adding aisles, because McDonough is on its third phase. Aisles are
+  // therefore uncapped. The previous caps (5 aisles, 9 bays) topped out near
+  // 270 positions and then silently stopped growing, so a large directory
+  // rendered as a full-looking floor that was quietly understating what it held.
+  var MAX_BAYS = 44;     // a real ASRS aisle is tens of bays long
+  var MAX_LEVELS = 12;   // high-bay: roughly a 100ft clear height
+
   function plan(n){
-    var perBay = 2 * LEVELS;                              // both faces, all levels
-    var aisles = Math.max(1, Math.min(5, Math.ceil(n / 36)));
-    // A rack with one bay is not a rack. Keep them long — an aisle you can run
-    // a crane down is what makes the floor read as a warehouse rather than a
-    // shelf.
-    var bays = Math.max(3, Math.min(9, Math.ceil(n / (aisles * perBay))));
-    return { aisles: aisles, bays: bays, perBay: perBay };
+    var levels = Math.max(3, Math.min(MAX_LEVELS, Math.ceil(Math.pow(Math.max(1, n), 1 / 3))));
+    var perBay = 2 * levels;                              // both faces, all levels
+    var bays = Math.max(3, Math.min(MAX_BAYS, Math.ceil(n / perBay)));
+    var aisles = Math.max(1, Math.ceil(n / (bays * perBay)));   // uncapped — the site expands
+    return { aisles: aisles, bays: bays, perBay: perBay, levels: levels };
   }
   function slot(i, p){
     // Stock along the rack first, then the far face, then up a level — the
@@ -823,6 +835,7 @@
 
     var n = d.pallets.length;
     var p = plan(Math.max(n, 1));
+    LEVELS = p.levels;   // height is part of the plan, not a constant
     var deckW = p.aisles * AISLE_PITCH + 1.1;
     var deckD = p.bays * BAY_PITCH + 3.0;
     var span = Math.max(deckW, deckD) * 0.92;
@@ -909,6 +922,48 @@
     box(quads, aisleX(0, p) - 0.2, dockZ0 - 1.35, 1.25, 0.8, 0.52, shade(COL.grey, -30),
         { kind: "truck" }, 0);
 
+    // --- the parking lot ---------------------------------------------------
+    // A crane with no attributed work is not idling in the aisle — on a real
+    // floor it returns to a parking bay clear of the racks. This keeps the
+    // working aisle readable and makes "how many are signed on but doing
+    // nothing" countable at a glance.
+    var parkedList = [];
+    for (var pk = 0; pk < d.cranes.length; pk++) {
+      var cpk = d.cranes[pk];
+      var hasTgt = false;
+      if (cpk.at) for (var qq = 0; qq < WH.layout.length; qq++) if (WH.layout[qq].name === cpk.at) { hasTgt = true; break; }
+      if (!hasTgt) parkedList.push(cpk.session || cpk.agent);
+    }
+    var LOT_COLS = 2;
+    var lotRows = Math.max(1, Math.ceil(parkedList.length / LOT_COLS));
+    var LOT_BAY_D = 0.62, LOT_BAY_W = 0.78;
+    var lotX0 = deckW / 2 + 1.25;
+    var lotD = lotRows * LOT_BAY_D;
+    var lotZ0 = -lotD / 2;
+    var lotCz = 0;
+    var lotW = LOT_COLS * LOT_BAY_W;
+
+    // lot surface
+    box(quads, lotX0 + lotW / 2 - LOT_BAY_W / 2, lotCz, lotW + 0.22, lotD + 0.22, 0.04,
+        shade(COL.grey, -46), { kind: "parking" }, 0);
+    // bay markings
+    for (var br = 0; br <= lotRows; br++) {
+      var bz = lotZ0 + br * LOT_BAY_D;
+      lines.push({ a:{x:lotX0 - LOT_BAY_W/2, y:0.07, z:bz}, b:{x:lotX0 + lotW - LOT_BAY_W/2, y:0.07, z:bz},
+                   c: stopped ? COL.red : shade(COL.grey, -8), w: 1 });
+    }
+    lines.push({ a:{x:lotX0 - LOT_BAY_W/2, y:0.07, z:lotZ0}, b:{x:lotX0 - LOT_BAY_W/2, y:0.07, z:lotZ0+lotD},
+                 c: stopped ? COL.red : shade(COL.grey, -8), w: 1 });
+    lines.push({ a:{x:lotX0 + lotW - LOT_BAY_W/2, y:0.07, z:lotZ0}, b:{x:lotX0 + lotW - LOT_BAY_W/2, y:0.07, z:lotZ0+lotD},
+                 c: stopped ? COL.red : shade(COL.grey, -8), w: 1 });
+
+    function parkBay(cid) {
+      var ix = parkedList.indexOf(cid);
+      if (ix < 0) ix = 0;
+      var col = ix % LOT_COLS, row = Math.floor(ix / LOT_COLS);
+      return { x: lotX0 + col * LOT_BAY_W, z: lotZ0 + row * LOT_BAY_D + LOT_BAY_D / 2 };
+    }
+
     // --- cranes: in the aisle, travelling along it, carriage at a level ---
     var now = performance.now();
     for (var k = 0; k < d.cranes.length; k++) {
@@ -919,14 +974,38 @@
       // A crane is bound to one aisle. With no attribution it holds at the
       // induct end of aisle 0 — parked, grey, never placed somewhere invented.
       var aIdx = tgt ? tgt.sl.aisle : 0;
-      var tz = tgt ? tgt.z : dockZ0 + 0.5;
+
+      // No attributed work -> it belongs in the parking lot, in its own bay.
+      var bay = tgt ? null : parkBay(cr.session || cr.agent);
+      var tx = tgt ? aisleX(aIdx, p) : bay.x;
+      var tz = tgt ? tgt.z : bay.z;
       var tLevel = tgt ? levelY(tgt.sl.level) : 0;
 
-      var pos = WH.cranePos[cr.session || cr.agent] || { x: aisleX(aIdx, p), z: tz, y: tLevel };
-      pos.x += (aisleX(aIdx, p) - pos.x) * 0.10;
+      var cid = cr.session || cr.agent;
+
+      // SPAWN — a crane that has just appeared drops onto the rail rather than
+      // blinking into existence, so you can see WHICH agent just signed on.
+      // 08 §4: a marker appears at sign-on, so an arrival is a real event and
+      // animating it states something true.
+      if (!WH.craneSeen) WH.craneSeen = {};
+      if (WH.craneSeen[cid] === undefined) WH.craneSeen[cid] = now;
+      var age = now - WH.craneSeen[cid];
+      var SPAWN = 900;
+      var spawning = age < SPAWN;
+      var sp = spawning ? (1 - Math.pow(1 - age / SPAWN, 3)) : 1;   // ease-out cubic
+      var drop = spawning ? (1 - sp) * 3.2 : 0;
+
+      var pos = WH.cranePos[cid] || { x: tx, z: tz, y: tLevel };
+      pos.x += (tx - pos.x) * 0.10;
       pos.z += (tz - pos.z) * 0.07;
       pos.y += (tLevel - pos.y) * 0.09;
-      WH.cranePos[cr.session || cr.agent] = pos;
+      WH.cranePos[cid] = pos;
+
+      // Idle presence: a slow breath, not travel. A parked crane must never
+      // read as a moving one (09 §3), so this is deliberately tiny and only
+      // touches the carriage.
+      var breath = (!stopped && cr.state === "idle")
+        ? Math.sin((now / 1400) + (cid.length * 0.7)) * 0.035 : 0;
 
       var ccol = stopped ? COL.red
                : cr.state === "moving" ? COL.green
@@ -937,14 +1016,20 @@
       var cc = hovC ? shade(ccol, 45) : ccol;
 
       // mast, from the rail to above the top level
-      box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, { kind: "crane", name: cr.agent, cr: cr }, 0);
+      box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, { kind: "crane", name: cr.agent, cr: cr }, drop);
       // base bogie on the rail
-      box(quads, pos.x, pos.z, AISLE_W * 0.82, 0.36, 0.12, shade(cc, -22), { kind: "crane", name: cr.agent, cr: cr }, 0);
+      box(quads, pos.x, pos.z, AISLE_W * 0.82, 0.36, 0.12, shade(cc, -22), { kind: "crane", name: cr.agent, cr: cr }, drop);
       // carriage at the serving level
-      box(quads, pos.x, pos.z, AISLE_W * 0.6, 0.30, 0.22, shade(cc, 12), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.06);
+      box(quads, pos.x, pos.z, AISLE_W * 0.6, 0.30, 0.22, shade(cc, 12), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.06 + drop + breath);
+      // Landing ring while it drops in — the touchdown marker on the rail.
+      if (spawning) {
+        var rr = 0.30 + (1 - sp) * 1.5;
+        lines.push({ a:{x:pos.x-rr,y:0.06,z:pos.z-rr*0.5}, b:{x:pos.x+rr,y:0.06,z:pos.z+rr*0.5}, c: cc, w: 1.6 });
+        lines.push({ a:{x:pos.x-rr,y:0.06,z:pos.z+rr*0.5}, b:{x:pos.x+rr,y:0.06,z:pos.z-rr*0.5}, c: cc, w: 1.6 });
+      }
       // a carried load, only while actually moving to a location
       if (cr.state === "moving" && !stopped && tgt) {
-        box(quads, pos.x, pos.z, 0.36, 0.36, 0.24, shade(COL.amber, -4), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.30);
+        box(quads, pos.x, pos.z, 0.36, 0.36, 0.24, shade(COL.amber, -4), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.30 + drop);
       }
 
       // The path: green while moving, blue while scheduled. On a real floor
@@ -954,7 +1039,9 @@
         lines.push({ a:{x:pos.x,y:pos.y+0.14,z:pos.z}, b:{x:tgt.x,y:tgt.y+0.1,z:tgt.z},
                      c: cr.state === "moving" ? COL.green : COL.blue,
                      w: cr.state === "moving" ? 2 : 1.4,
-                     dash: cr.state === "scheduled" });
+                     dash: cr.state === "scheduled",
+                     arrow: true,
+                     flow: cr.state === "moving" });
       }
     }
 
@@ -989,8 +1076,28 @@
       ctx.save();
       ctx.globalAlpha = ln.w > 1 ? 0.95 : 0.42;
       if (ln.dash) ctx.setLineDash([5, 4]);
+      // A travelling crane's path flows toward the destination, so direction is
+      // readable at a glance without waiting for the crane to actually move.
+      if (ln.flow) { ctx.setLineDash([7, 6]); ctx.lineDashOffset = -((performance.now() / 48) % 13); }
       ctx.strokeStyle = ln.c; ctx.lineWidth = ln.w || 1;
       ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+      // Arrowheads: which way along the path, not just where it runs.
+      if (ln.arrow) {
+        var dx = B.x - A.x, dy = B.y - A.y, len = Math.sqrt(dx*dx + dy*dy);
+        if (len > 26) {
+          var ux = dx/len, uy = dy/len, hd = 7.5, heads = Math.min(3, Math.floor(len/48));
+          ctx.setLineDash([]); ctx.globalAlpha = 0.95; ctx.fillStyle = ln.c;
+          for (var h = 1; h <= heads; h++) {
+            var t2 = (h / (heads + 1)) + (ln.flow ? ((performance.now()/2600) % (1/(heads+1))) : 0);
+            var px = A.x + dx*t2, py = A.y + dy*t2;
+            ctx.beginPath();
+            ctx.moveTo(px + ux*hd, py + uy*hd);
+            ctx.lineTo(px - uy*hd*0.55 - ux*hd*0.35, py + ux*hd*0.55 - uy*hd*0.35);
+            ctx.lineTo(px + uy*hd*0.55 - ux*hd*0.35, py - ux*hd*0.55 - uy*hd*0.35);
+            ctx.closePath(); ctx.fill();
+          }
+        }
+      }
       ctx.restore();
     }
 
@@ -1006,16 +1113,53 @@
         ctx.globalAlpha = 0.9; ctx.fillText(lab, sc.x, sc.y); ctx.globalAlpha = 1;
       }
     }
+    // 08 §5 — where two agents share a name, disambiguate at every use. Four
+    // cranes called BRIDGE are four different sessions, and a floor that draws
+    // them all as "BRIDGE" is unreadable exactly when it matters.
+    var nameCount = {};
+    for (var nc = 0; nc < d.cranes.length; nc++) {
+      nameCount[d.cranes[nc].agent] = (nameCount[d.cranes[nc].agent] || 0) + 1;
+    }
+    var nameSeen = {};
     for (var m = 0; m < d.cranes.length; m++) {
       var c2 = d.cranes[m];
       var cp2 = WH.cranePos[c2.session || c2.agent];
       if (!cp2) continue;
-      var s2 = project({ x: cp2.x, y: frameTop + 0.95, z: cp2.z }, vp);
-      ctx.fillStyle = stopped ? COL.red
+
+      var lbl = c2.agent;
+      if (nameCount[c2.agent] > 1) {
+        nameSeen[c2.agent] = (nameSeen[c2.agent] || 0) + 1;
+        var sfx = c2.session ? String(c2.session).slice(-4) : String(nameSeen[c2.agent]);
+        lbl = c2.agent + "·" + sfx;
+      }
+      if (lbl.length > 16) lbl = lbl.slice(0, 15) + "…";
+
+      // Stagger the label height so neighbouring cranes do not print over each
+      // other. Three bands is enough to separate a full dock rail.
+      var band = (m % 3) * 0.52;
+      var s2 = project({ x: cp2.x, y: frameTop + 0.95 + band, z: cp2.z }, vp);
+      var col2 = stopped ? COL.red
                     : c2.state === "moving" ? COL.green
                     : c2.state === "gated" ? COL.amber
                     : c2.state === "scheduled" ? COL.blue : COL.grey;
-      ctx.fillText(c2.agent, s2.x, s2.y);
+
+      // A short leader from the label down to its own mast, so a staggered
+      // label still obviously belongs to one crane.
+      var top2 = project({ x: cp2.x, y: frameTop + 0.62, z: cp2.z }, vp);
+      ctx.save();
+      ctx.globalAlpha = 0.45; ctx.strokeStyle = col2; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(s2.x, s2.y + 3); ctx.lineTo(top2.x, top2.y); ctx.stroke();
+      ctx.restore();
+
+      // Plate behind the text so it stays legible over the racks.
+      var w2 = ctx.measureText(lbl).width;
+      ctx.save();
+      ctx.globalAlpha = 0.62; ctx.fillStyle = COL.bg || "#0e1116";
+      ctx.fillRect(s2.x - w2/2 - 3, s2.y - 8, w2 + 6, 11);
+      ctx.restore();
+
+      ctx.fillStyle = col2;
+      ctx.fillText(lbl, s2.x, s2.y);
     }
     // aisle numbers at the induct end
     ctx.fillStyle = COL.grey; ctx.globalAlpha = 0.7;
