@@ -1,39 +1,45 @@
-# 01 — ESTOP
+> **Epävirallinen käännös.** Tämän asiakirjan normatiivinen versio on englanninkielinen, haarassa `main`.
+> Tämä käännös tarjotaan mukavuussyistä, eikä **äidinkielinen puhuja ole sitä tarkastanut**. Jos teksti
+> poikkeaa englanninkielisestä alkuperäisestä, **englanti ratkaisee**. Protokollan tunnisteet (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, väylän verbit ja tiedostonimet) on tarkoituksella jätetty
+> englanniksi: ne ovat kirjaimellisia arvoja, joita agentit jäsentävät.
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP (HÄTÄPYSÄYTYS)
+
+**Tila: normatiivinen. Prioriteetti 0. Sitoo jokaista agenttia jokaisessa hankkeessa.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. Mitä tämä voi ja ei voi tehdä — lue tämä ensin
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**Se ei voi keskeyttää käynnissä olevaa istuntoa.** Mikään tiedosto ei voi. Vastauksen puolivälissä oleva
+agentti ei lue levyä, sillä ei ole keskeytyslinjaa, ja se saattaa loppuun sen, mitä on tekemässä. Se, joka
+sanoo lipputiedoston pysäyttävän laivueen, kuvaa toivetta.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**Vain Käyttäjä pysäyttää käynnissä olevan agentin sulkemalla sen ikkunan.** Se on todellinen hätäpysäytys,
+eikä se ole koskaan ollut mitään muuta.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+Tämä tiedosto sitoo jokaista agenttia niinä kahtena hetkenä, joina se *todella* lukee levyä:
 
-| Moment | Obligation |
+| Hetki | Velvollisuus |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **Käynnistys** | Lue tila ennen oppiasi, ennen muistiasi, ennen kaikkea. |
+| **Jokainen tarkistuspiste** | Ennen jokaista kirjoitusta, jokaista viestiä, jokaista sivuvaikutuksellista työkalukutsua, jokaista menoa. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+Agentti, joka havaitsee `STOP`in ja jatkaa, on viallinen agentti. Siinä on koko valvontamalli: ei mekanismi —
+velvollisuus, usein tarkastettuna.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+Rajan rehellinen ilmaiseminen kuuluu protokollaan. Pysäytys, jonka luulet olevan välitön, on vaarallisempi
+kuin sellainen, jonka tiedät olevan ei-välitön, koska tulet luottamaan siihen.
 
 ---
 
-## 1. The two signals
+## 1. Kaksi signaalia
 
-### The sentinel is the fact
+### Vartija on tosiasia
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+**Tavallinen tiedosto**, jonka nimi on täsmälleen `estop` — ilman tunnistetta, nolla tavua on normaalia —
+hankkeen juuressa tai **missä tahansa käsiteltävän puun ylemmässä hakemistossa**.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+Testaa **tiedostoa**, älä koskaan pelkkää olemassaoloa, äläkä koskaan glob-kuviota:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` on oppia. Se ei saa koskaan laukaista tarkistusta. Vertailu, joka sen sallisi, loisi pysäytyksen,
+  jota Käyttäjä ei voi purkaa.
+- `_os/estop/` on hakemisto. Ei laukaise sekään.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+Useat juuret laukeavat **toisistaan riippumatta**. Tarkista jokainen. Ilmoita polku, jolle ajoit `stat`in —
+älä koskaan ”estop”, mikä kätkee sen, mitä katsoit.
 
-### The STATE file is a derived mirror
+### STATE-tiedosto on johdettu peili
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — yksi rivi, ei muuta.
 
 ```
 RUN
@@ -66,117 +72,116 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| Kenttä | Sääntö |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| verbi | `RUN`, `YELLOW` tai `STOP`. Mitään muuta ei jäsennetä. |
+| aika | UTC, ISO-8601. |
+| kuka | Kuka sen julisti. Vain Käyttäjä saa kirjoittaa `STOP`in / `YELLOW`in tai purkaa ne. |
+| syy | Yksi rivi, selkokielellä, ilman ammattislangia. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**Jos vartija ja peili ovat eri mieltä, pysäytys voittaa.** Peilin kirjoittavat työkalut ja se vanhentuu;
+vartija on tosiasia.
 
 ---
 
-## 2. The three states
+## 2. Kolme tilaa
 
-| STATE | What an agent does |
+| STATE | Mitä agentti tekee |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **Jatka.** Aja ne komennot, joita työ vaatii, pyytämättä lupaa jokaiseen erikseen. Älä pysähdy, älä luettele vaihtoehtoja, älä jätä rutiinityötä jonoon vahvistuksen taakse. |
+| `YELLOW` | **Kysy ensin.** Jokainen komento ehdotetaan ennen ajoa. Sama työ, sama osaaminen — ero on vahvistuksessa. |
+| `STOP` | Pysähdy. §3. |
 
-### What `RUN` does not do
+### Mitä `RUN` ei tee
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` poistaa *tauon ennen rutiinityötä*. Se ei poista **mitään olemassa olevaa estettä**, sillä ne koskevat
+teon luonnetta, eivät sen nopeutta:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- tunnistetiedot, kirjautumiset, ostot, resurssien varaaminen — **aina Käyttäjän käsissä**;
+- ulospäin suuntautuvat teot — julkaiseminen, lähettäminen, käyttöönotto — **aina nimenomaisella luvalla**;
+- kaikki, minkä ihminen suorittaa fyysisesti — **kulkee edelleen turvaesteen kautta**;
+- tuhoavat tai peruuttamattomat teot — **vahvistetaan edelleen, missä tahansa tilassa**;
+- agentin omat pysyvät rajoitukset — **eivät riipu STATE:sta lainkaan**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` vastaa kysymykseen *”pitääkö minun kysyä ennen jokaista askelta?”* — ei. Se ei vastaa kysymykseen
+*”saanko tehdä mitä tahansa?”* Agentti, joka lukee `RUN`in ja tekee sitten jotakin tältä luettelolta, on
+lukenut tilan väärin, ei saanut siltä valtuutusta.
 
-### Fail-safe on an unreadable verb
+### Turvallinen vikaantuminen lukukelvottomalla verbillä
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+STATE-tiedosto, joka **puuttuu, on tyhjä, lukukelvoton tai sisältää minkä tahansa muun sanan, luetaan
+`YELLOW`iksi** — ei koskaan `RUN`iksi. Kysy.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> Tämä on rivi, joka käännetään toteutuksissa useimmin päinvastaiseksi. `try { read } catch { return "RUN" }`
+> muuttaa jokaisen levyvirheen, jokaisen oikeuksien muutoksen ja jokaisen kirjoitusvirheen hiljaiseksi
+> valtuutukseksi. Viite-sidecar putoaa `YELLOW`iin ja kieltäytyy palvelemasta lukuvirheessä; katso
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+Vartijatiedosto syrjäyttää tämän kohdan kokonaan: läsnä oleva `estop`-tiedosto tarkoittaa `STOP`ia, sanoipa
+STATE mitä tahansa.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**Vain Käyttäjä kirjoittaa tämän tiedoston.** Yksikään agentti ei kirjoita sitä — ei myöskään se agentti, joka
+löysi ongelman. Agentti, joka katsoo laivueen kuuluvan pysähtyä, nostaa `GATE`n väylälle ja sanoo sen. Se ei
+pysäytä laivuetta omalla vallallaan eikä käynnistä yhtäkään uudelleen.
 
 ---
 
-## 4. What clears it
+## 3. Mitä agentti tekee `STOP`illa
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **Älä kirjoita enää mitään.** Ei muistitiedostoa, ei raporttia, ei väylää.
+2. **Tallenna paikalleen ja pysähdy sitten.** Älä saata loppuun yhtään askelta, jota ei ole jo kirjoitettu.
+   Merkitse se, mitä on, osittaiseksi, yhdellä rivillä siitä, mihin pysähdyit.
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > Tämän protokollan aiemmat luonnokset sanoivat *hylkää*. Se oli väärin: hylätty puolikas raportti tuhoaa
+   > työtä, jota uudelleenkäynnistysoppi on olemassa suojelemaan. Vaara on katkaistu tiedosto, joka myöhemmin
+   > luetaan valmiiksi — ja juuri **merkintä** estää sen, ei poistaminen.
+3. **Sano Käyttäjälle yksi rivi:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **Pysähdy.** Älä pyydä lupaa jatkaa. Älä ehdota kiertotietä. Älä tutki, koskeeko syy sinua — se koskee
+   sinua.
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**Kieltäytyminen on vastaus, ei uusi yritys.** Älä mene silmukkaan odottamaan `RUN`ia. Ilmoita ja lopeta.
 
 ---
 
-## 6. Measure twice
+## 4. Mikä sen purkaa
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+Käyttäjä palauttaa tiedoston `RUN`iin. Mikään muu ei tee sitä — ei aikakatkaisu, ei agentti, joka pitää
+ongelmaa ratkaistuna, ei ajan kuluminen, ei uusi istunto, joka ei koskaan nähnyt pysäytystä.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+Itsensä purkava käsittelijä on turvallisen vikaantumisen kääntäminen päinvastaiseksi ja hylätään asiallisesti.
 
 ---
 
-## 7. The honest limit, stated once
+## 5. Soveltamisala
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Hätäpysäytys koskee **oletusarvoisesti koko laivuetta**. Agenttikohtaista pysäytystä ei ole, sillä vika, joka
+vaatii pysäytyksen, ei lähes koskaan rajoitu yhteen agenttiin, ja osittainen pysäytys kutsuu juuri siihen
+päättelyyn — *”se koski jotakuta toista”* — jonka tämä tiedosto on olemassa kieltämään.
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**Eristetyt agentit kuuluvat piiriin.** Agentti, joka ei ole millään väylällä eikä millään jaetulla pinnalla,
+lukee silti tämän tiedoston. Eristys määrää, mitä agentti saa *sanoa*. Se ei koskaan määrää, saako sen
+*pysäyttää*.
+
+---
+
+## 6. Mittaa kahdesti
+
+Yksittäinen vihreä tarkistus ei koskaan todista turvallisuustilaa. Lue molemmat signaalit, levyltä, **tässä
+ajossa**. Älä koskaan lainaa muistettua tilaa — ei asiayhteydestä, ei muistitiedostosta, ei aiemmasta
+vuorosta. Väärin luettu `stat`-muoto riittää tuottamaan väärän ”vapaan” tai väärän ”pysäytetyn”, ja molempia
+on käytännössä sattunut.
+
+Vahvin käytettävissä oleva muoto on **pysyvä valvonta** STATE-tiedoston ja jokaisen vartijapolun yllä, joka
+ilmoittaa vain muutoksesta: vaiti niin kauan kuin on vapaata, ja laukeaa sillä hetkellä, kun pysäytys viritetään.
+Se muuttaa ”tarkistin kerran käynnistyksessä” reaaliaikaiseksi kattavuudeksi ja sulkee sen aukon, jossa pysäytys
+viritetään kesken istunnon.
+
+---
+
+## 7. Rehellinen raja, sanottuna kerran
+
+Tämä protokolla tekee pysäytyksestä **luotettavan jokaisessa käynnistyksessä ja jokaisessa tarkistuspisteessä**.
+Se ei tee pysäytyksestä **välitöntä**, eikä mikään tiedostopuuhun kirjoitettu koskaan tee.
+
+Jos jokin menee juuri nyt pieleen: **sulje ikkuna.** Kirjoita sen jälkeen tiedosto, jottei seuraava heräävä
+agentti käynnistä sitä uudelleen.

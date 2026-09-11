@@ -1,101 +1,105 @@
-# 07 — THE INTERFACE LAYER
+> **Epävirallinen käännös.** Tämän asiakirjan normatiivinen versio on englanninkielinen, haarassa `main`.
+> Tämä käännös tarjotaan mukavuussyistä, eikä **äidinkielinen puhuja ole sitä tarkastanut**. Jos teksti
+> poikkeaa englanninkielisestä alkuperäisestä, **englanti ratkaisee**. Protokollan tunnisteet (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, väylän verbit ja tiedostonimet) on tarkoituksella jätetty
+> englanniksi: ne ovat kirjaimellisia arvoja, joita agentit jäsentävät.
 
-**Status: normative.** This is the file the project is named for.
+# 07 — KÄYTTÖLIITTYMÄKERROS
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**Tila: normatiivinen.** Tämä on se tiedosto, jonka mukaan hanke on nimetty.
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+Jokainen pinta, johon ihminen koskee, on **Parvis**. Vain luettava hallinäkymä on *Parvis HMI*; ruutuvalikko,
+josta ohjaat laivuetta, on *Parvis Console*.
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. Sääntö, joka saa HTML:n toimimaan
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> Selainsivu on **näyttö ja näppäimistö**, ei ohjelma, jolla on levypääsy.
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+Tuo yksi tosiasia hallitsee koko kerrosta:
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **Sivu näyttää ja kerää.** Se esittää tilan ja ottaa vastaan syötettä. Tiedostopolusta avattuna se ei
+  yksinään **voi lukea puuta eikä kirjoittaa määräystä.** Selaimen hiekkalaatikko kieltää molemmat, ja se on
+  ansio.
+- **Sidecar rakentaa sillan.** Pieni takaisinkytkentäsilmukan palvelu — sidottuna osoitteeseen `127.0.0.1` eikä
+  mihinkään muuhun — on ainoa, joka lukee puun sivun puolesta ja kirjoittaa sen, minkä sivu lähettää. Sivu hakee
+  tilan `GET`illä; sivu lähettää kehotteen `POST`illa; sidecar tekee levytyön. **Ei sidecaria, ei elävää
+  Parvisia — vain tilannekuva.**
+- **Mikään ei kierrä tarkastelua.** Parvisista lähetetty kehote on **syöttö, ei suoritus.** Sidecar kirjoittaa
+  `REQ`-rivin tehtäväkirjaan ja pysähtyy. Se ei koskaan käynnistä agenttia, ei koskaan aja komentoa, ei koskaan
+  lähetä. Uuden työn vahvistaminen pysyy Käyttäjän näppäinpainalluksena.
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+Siksi sivu ”toimii”: sivu on rehellinen siitä, että se on ikkuna, sidecar tekee pienen todellisen työn reunalla,
+ja **tarkastelu seisoo yhä kehotteen ja liikkuvan koneen välissä.**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. Kovat vaatimukset — jokaiselle Parvis-pinnalle
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **Omavarainen.** Yksi HTML-tiedosto: CSS ja JS sisällytettynä, ei ulkoisia skriptejä, ei CDN:ää. Vain
+   verkkokirjasimet aidolla varaketjulla. Sen on esityttävä verkottomana tiedostopolusta.
 
-| Requirement | Why |
+2. **Värit ovat tila, luettuna elävänä, ei koskaan teeskenneltynä.** Vihreä = käynnissä, keltainen = kysy ensin,
+   punainen = pysäytetty — johdettuina STATE-tiedostosta ja elävästä kirjasta. **Arvo ilman elävää lähdettä
+   näyttää `—`, ei koskaan uskottavan näköistä lukua.** Punainen syrjäyttää jokaisen muun värin ja koko
+   käyttöliittymän.
+
+3. **Sidecar toimii vain takaisinkytkentäsilmukassa eikä säilytä salaisuutta, jonka sivu voisi nähdä.** Yksikään
+   API-avain, tunnistetieto tai arvokas token ei yllä selaimeen. Sidecar todentaa sivun paikallisella
+   istuntotokenilla ja tekee etuoikeutetun työn itse. **Sivu ei koskaan säilytä mitään varastamisen arvoista.**
+
+4. **Tilannekuva merkitään tilannekuvaksi,** lukuaikoineen. Vain sivu, joka keskustelee elävän sidecarin kanssa,
+   saa esiintyä elävänä. Vanhentunut sivu, joka näyttää elävältä, on pahempi kuin ei sivua lainkaan.
+
+5. **Hätäpysäytys syrjäyttää käyttöliittymän.** `STOP`in aikana Parvis ei syötä mitään, eikä sidecar kirjoita
+   muuta kuin uloskirjautumisrivin. **Punainen halli ei ota määräyksiä.**
+
+6. **Parvis-tuotemerkki, eikä kolmansien yritysten nimiä.** Mistä todellisista järjestelmistä kaava onkin
+   opittu, kaava on sinun ja sen nimi on Parvis. Pinta, joka levittää toisen kauppanimeä, on väärin ja
+   korjataan.
+
+---
+
+## 3. Sidecarin turvavaatimukset
+
+Takaisinkytkentäsilmukan HTTP-palvelu kehittäjän työasemalla on todellinen hyökkäyspinta. Nämä kohdat eivät ole
+valinnaisia.
+
+| Vaatimus | Miksi |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **Sido `127.0.0.1` nimenomaisesti**, ei koskaan `0.0.0.0` | Kaikkien rajapintojen sitominen julkaisee laivuekonsolisi lähiverkkoon. |
+| **Tarkista `Host`-otsake** sallittujen luetteloa `127.0.0.1:<port>` / `localhost:<port>` vastaan | Kukistaa DNS-rebindingin, jolla vierailtu verkkosivu yltää silmukan palveluun. |
+| **Hylkää pyynnöt, joissa on `Origin`, jota et ole antanut** | Sama hyökkäysluokka, eri vektori. |
+| **Vaadi istuntotoken** jokaisella muuttavalla reitillä, annettuna sivun latauksessa, ei koskaan lokiin | Sivu todistaa olevansa sinun sivusi. |
+| **Salli luettelossa jokainen polku**, jonka palvelu lukee tai kirjoittaa, ratkaise se sitten uudelleen ja vahvista sisältyvyys | Kukistaa polkujen läpikäynnin. Pelkkä sallittujen luettelo ei riitä, jos symbolisia linkkejä on. |
+| **Vikaannu turvallisesti lukukelvottomalla estopilla** — kieltäydy, älä palaa `RUN`iin | Katso [`01-ESTOP.md`](01-ESTOP.md) §2. |
+| **Ei `eval`ia, ei kuoren kutsua, ei käyttäjäsyötteen mallipohjasijoitusta** | Kehotepalkki on syöttökenttä, ei komentorivi. |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+Viitetoteutus hakemistossa [`reference/sidecar/`](../reference/sidecar/) toteuttaa kaikki nämä kohdat, ja se on
+kommentoitu kunkin kohdalla.
 
 ---
 
-## 4. What the surfaces are
+## 4. Mitä pinnat ovat
 
-| Surface | What | State |
+| Pinta | Mikä | Tila |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | Välilehtipaneelit — tila, asiakirjat, kirja, väylä, pinta, asetukset | Toimitetaan. |
+| **Parvis Floor** | Varasto-välilehti: kolmiulotteinen halli, kiertäminen ja laskeutuminen, laitteiden ohjaus | Toimitetaan. Katso [`09-FLOOR.md`](09-FLOOR.md). |
+| **Kehotepalkki** | Syöttökenttä, konsolilla ja jokaisen hallilaitteen luona | Toimitetaan. |
+| **Sidecar** | Silmukkasilta: lukee puun, kirjoittaa `REQ`-rivejä, ei säilytä salaisuuksia | Toimitetaan. |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**Toimita paneelit ensin.** Kolmiulotteinen halli on se osa, jonka kaikki haluavat rakentaa, ja se osa, joka on
+arvoton ilman kirjaa allaan — se esittää tilaa, jonka muu protokolla tuottaa, ja tyhjässä puussa se näyttää
+oikeutetusti tyhjää.
 
 ---
 
-## 5. Standing
+## 5. Kanta
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
+- **Sivu lukee. Sidecar kirjoittaa. Käyttäjä vahvistaa.**
+- Yksikään pinta ei käynnistä, lähetä, ota käyttöön eikä pura hätäpysäytystä.
+- Yksikään salaisuus ei yllä selaimeen, ei koskaan.
+- Tuotos menee tiedostoihin ja konsolille, ei keskusteluikkunaan
   ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).

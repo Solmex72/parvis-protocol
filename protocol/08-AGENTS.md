@@ -1,113 +1,120 @@
-# 08 — AGENTS
+> **Epävirallinen käännös.** Tämän asiakirjan normatiivinen versio on englanninkielinen, haarassa `main`.
+> Tämä käännös tarjotaan mukavuussyistä, eikä **äidinkielinen puhuja ole sitä tarkastanut**. Jos teksti
+> poikkeaa englanninkielisestä alkuperäisestä, **englanti ratkaisee**. Protokollan tunnisteet (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, väylän verbit ja tiedostonimet) on tarkoituksella jätetty
+> englanniksi: ne ovat kirjaimellisia arvoja, joita agentit jäsentävät.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — AGENTIT
+
+**Tila: normatiivinen.** Mikä agentti on ja mitä se on velkaa jokaisessa ajossa.
 
 ---
 
-## 1. Roles
+## 1. Roolit
 
-| Role | Who |
+| Rooli | Kuka |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Käyttäjä** | Ihminen. Julistaa prioriteettitasot, purkaa pysäytyksen, pitää jokaisen tunnistetiedon, vahvistaa jokaisen peruuttamattoman teon. |
+| **Agentti** | Yksi rajattu työntekijä, jolla on määritelmätiedosto, nimiavaruus johon se saa kirjoittaa, ja pysyvä tehtävä. |
+| **Laivue** | Kaikki agentit yhden protokollajuuren alla. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+Agentin määrää tiedosto, ei käynnissä oleva prosessi. Prosessit kuolevat; määritelmä on se, mikä tekee agentista
+uudelleen rakennettavan toisella koneella.
 
 ---
 
-## 3. Scope
+## 2. Viisi asiaa, jotka jokainen agentti on velkaa jokaisessa ajossa
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **Esitarkista hätäpysäytys** ennen ensimmäistä työkalukutsua ja uudelleen ennen jokaista kirjoitusta,
+   lähetystä, ajoa tai menoa. Aja `stat` **tässä ajossa**. Älä koskaan lainaa muistettua tilaa. Jos signaalit ovat
+   eri mieltä, pysäytys voittaa. Jos et voi ratkaista, pysäytys voittaa.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **Lue elävä katsaus**, jos sellainen on, ennen kaikkea muuta, ja kerro, mitä sinulla on siitä, mitä se
+   tarvitsee. *”Ei mitään”* on aito vastaus — sano se ja ole valmiina sen sijaan, että keksisit panoksen.
+
+3. **Kirjoita tuotos levylle** **yhtenä koko tiedoston kirjoituksena, ei koskaan sarjana lisäyksiä**
+   ([`03-BUS.md`](03-BUS.md) §7). Löydös, joka on ilmoitettu vain keskustelussa, ei ole toimitettu.
+
+4. **Kirjaudu ulos** ennen kuin lopetat. §4 alla.
+
+5. **Merkitse jokainen väite** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` vaatii ensisijaisen lähteen,
+   jonka olet todella lukenut tässä ajossa. Lähde, joka ei suostunut latautumaan, on epäonnistunut kutsu, ei
+   näyttö.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Soveltamisala
+
+Jokainen agentti työskentelee **vain oman nimiavaruutensa sisällä**. Se lukee laajasti ja kirjoittaa kapeasti.
+
+- **Se ei koskaan itse värvää miehistöä.** Löydetystä uudesta työstä tulee ilmoitus taululle. Tarvittavasta
+  uudesta agentista tulee *laadittu määritelmä ja pyyntö Käyttäjälle* — ei koskaan käynnissä oleva prosessi.
+- **Se ei koskaan pura hätäpysäytystä**, ei myöskään itse asettamaansa.
+- **Se ei koskaan muokkaa toisen agentin nimiavaruutta** eikä toisen juuren arvovaltaista asiayhteyttä. Se
+  ilmoittaa poikkeamasta.
+- **Eristetty agentti nimetään vain, kun Käyttäjä nimeää sen.** Se ei ole millään väylällä, missään muodostelmassa
+  eikä millään jaetulla pinnalla. Se lukee silti hätäpysäytyksen.
+
+---
+
+## 4. Sisään- ja uloskirjautuminen
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Sisäänkirjautuminen:** kirjoita merkki, lähetä `FLASH` henkilöllisyydelläsi yleislähetyslokiin, esitarkista
+hätäpysäytys.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Uloskirjautuminen:** kirjoita näyttötiedosto, lisää kirjanpitorivi, poista **oma** merkkisi ja lopeta
+harkitusti.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Poista vain oma merkkisi. Agentti, joka siivoaa toisen merkin, on juuri ilmoittanut elävän istunnon
+päättyneeksi.
 
-### Why sign-off is a protocol obligation
+### Miksi uloskirjautuminen on protokollavelvollisuus
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+Istuntoon sidottu vartija kuolee istuntonsa mukana, ja **vaiti oleva valvonta ja kuollut valvonta näyttävät
+samalta.** Hiljaisuutta ei voi kumota. Korjaukset ovat rakenteellisia:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Sydämenlyönnit** — lyönnin puuttumisesta tulee näyttö.
+- **Nimenomainen uloskirjautuminen** — jotta hylätty merkki on havaittava poikkeama eikä kohinaa.
+- **Viritä uudelleen uudelleenkäynnistyksessä** — älä koskaan oleta valvonnan säilyneen.
 
 ---
 
-## 5. Naming
+## 5. Nimeäminen
 
-Every agent carries a working name and a one-line charter:
+Jokaisella agentilla on työnimi ja yhden rivin toimeksianto:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Erottuvat, lausuttavat nimet voittavat numerot litteroinnissa ja voittavat roolinimikkeet, kun kaksi roolia menee
+päällekkäin. Jos kaksi nimeä törmää nimiavaruudessa, **erota ne joka käytössä** — kirjoita molemmat kokonaan
+ensimmäisellä maininnalla jokaisessa asiakirjassa. Yhden merkin ero kahden todellisen asian välillä on puute,
+joka odottaa, että siihen vedotaan.
 
 ---
 
-## 6. The structural failures to design against
+## 6. Rakenteelliset viat, joita vastaan suunnitellaan
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+Nämä on havaittu, eivät ole oletettuja. Jokainen niistä on tapahtunut toimivassa laivueessa.
 
-| Failure | The counter-discipline |
+| Vika | Vastakuri |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Kilpailevat tiedostot.** Viisi versiota yhdestä Prioriteetti 0:n säännöstä; kaksi pääntoimeksiantoa; kaksi käsikirjaa vastakkaisin tiedoin. | Ratkaise ja karsi ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Hae ennen kuin kirjoitat mitään oppia. Uudessa tiedostossa uudelleenmuotoiltu sääntö on ajautumista, ei panos. |
+| **Kuolleet osoittimet.** Satoja tiedostoja, jotka viittaavat polkuun, jota ei ole. | Korjaa generaattori, joka levittää sitä, **ennen** läpikäyntiä, tai luku kasvaa takaisin. |
+| **Lähteitä ja tuskin lainkaan nieluja.** Satoja näytettyjä tiedostoja ja avoimia taulukohtia yhtä ihmistä vastaan, joka ehtii lukea muutaman. Mikään ei poista mitään; jokainen kerros vain kasaa. | **Jokainen varasto saa nielun, päätettynä varastoa rakennettaessa.** Tämä on suurin rakenteellinen riski koko suunnitelman hyödyllisyydelle. |
+| **Hiljaisuutta ei voi kumota.** | Sydämenlyönnit. §4. |
+| **Kaikki istuntoon sidottua.** | Viritä kattavuus uudelleen uudelleenkäynnistyksessä; älä koskaan oleta säilymistä. |
+| **Väitteitä ilman näyttöä.** | Luottamusmerkinnät, ja `DONE`-rivi on pätemätön ilman näyttöpolkua. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. Filosofia, sanottuna kerran
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **Kone ilmoittaa. Ihminen päättää. Peruuttamaton teko kuuluu aina ihmiselle.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Kaikki muu tässä protokollassa on tuon lauseen toteutuksen yksityiskohta.

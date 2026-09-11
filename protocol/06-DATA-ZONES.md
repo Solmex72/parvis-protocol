@@ -1,92 +1,96 @@
-# 06 — DATA ZONES
+> **Epävirallinen käännös.** Tämän asiakirjan normatiivinen versio on englanninkielinen, haarassa `main`.
+> Tämä käännös tarjotaan mukavuussyistä, eikä **äidinkielinen puhuja ole sitä tarkastanut**. Jos teksti
+> poikkeaa englanninkielisestä alkuperäisestä, **englanti ratkaisee**. Protokollan tunnisteet (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, väylän verbit ja tiedostonimet) on tarkoituksella jätetty
+> englanniksi: ne ovat kirjaimellisia arvoja, joita agentit jäsentävät.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — TIETOVYÖHYKKEET
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Tila: normatiivinen.** Missä tiedosto saa asua.
 
 ---
 
-## 2. The two zones
+## 1. Miksi kielto ei toiminut
 
-| Zone | Property | Holds |
+Alkuperäinen sääntö kuului *”ei salaisuuksia, ei koskaan, ei missään”* — **eikä yksityisille tiedoille ollut
+mitään paikkaa sen sijaan.**
+
+Kieltoa ilman määränpäätä ei noudateta. Se kierretään, ja yksityinen aineisto päätyy vahingossa
+synkronoituun puuhun. Näin kävi toistuvasti, myös agentin toimesta, joka itse oli säännön alainen.
+
+**Sääntö on reitityspäätös, ei kielto.**
+
+---
+
+## 2. Kaksi vyöhykettä
+
+| Vyöhyke | Ominaisuus | Sisältää |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Synkronoituu pilvitallennukseen. **Käsittele jokaista tavua julkaistuna.** | Oppi, toimeksiannot, agenttimääritelmät, arkkitehtuuri, liiketoiminnan asiayhteys, tutkimus, tekninen dokumentaatio |
+| **PRIVATE** | **Jokaisen synkronointijuuren ulkopuolella** — ja käyttäjäprofiilin ulkopuolella, jottei tunnettujen kansioiden uudelleenohjauskaan yllä sinne | Salaisuudet, todelliset henkilöt ja heidän henkilötietonsa, yksityiset hankkeet ja media, kaikki, mitä olisi väärin löytää varmuuskopiosta |
 
-### The test
+### Koe
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Olisiko ongelma, jos tämä olisi vuoden päästä pilvitilannekuvassa?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Kyllä → PRIVATE. Ei → PUBLIC. Aidossa epävarmuudessa → **PRIVATE.** Yliluokittelun hinta on hankaluus.
+Aliluokittelun hintaa ei voi perua.
 
-### Know what actually syncs
+### Tiedä, mikä todella synkronoituu
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Tarkista tämä oikealla koneella, ei olettamalla. Tavallisella työasemalla voi olla käynnissä useita
+synkronointiohjelmia yhtä aikaa, ja kaikki käyttäjän asiakirja-, työpöytä- tai kuvakansioiden alla oleva poistuu
+koneelta ja säilyy versiohistoriassa viikkoja. **Paikallinen poistaminen ei kutsu sitä takaisin.**
 
-Two consequences that each cause real failures:
+Kaksi seurausta, joista kumpikin aiheuttaa todellisia vikoja:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **Käännöksen tuotos on ohjattava** ulos synkronointijuuresta, tai peili turmelee sen kesken käännöksen.
+2. **Avaimet asuvat ulkopuolella**, tarkoituksella ja oletusarvoisesti.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. Poikkeus: tunnistetiedot eivät kuulu kumpaankaan vyöhykkeeseen
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**Voimassa olevat tunnistetiedot — salasanat, API-avaimet, tokenit, lähetysavaimet — kuuluvat
+salasanojenhallintaan, eivät kumpaankaan tiedostojärjestelmään.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+Yksityinen vyöhyke sisältää *yksityisiä tietoja*. Salasanojenhallinta sisältää *tunnistetietoja*. Tämä ei ole
+saivartelua: yksityistä hakemistoa ei ole oletusarvoisesti salattu, ja tiedosto on tiedosto. Sillä hetkellä, kun
+jokin niistä kopioidaan, lainataan litteroinnissa tai liitetään johonkin, se on paljastettu.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Ilmaise yksityisen vyöhykkeen turvaominaisuus suppeasti äläkä koskaan liioittele sitä.** Sen ainoa todistettu
+ominaisuus on yleensä se, että *mikään ei kopioi sitä minnekään*. Ilman todennettua koko levyn tai
+tiedostokohtaista salausta se ei ole salattu, ei varmuuskopioitu eikä kassakaappi.
 
 ---
 
-## 6. Pruning without loss
+## 4. Luokittelu on Käyttäjän, ja se on säädettävissä
 
-Before anything leaves the working tree:
+Pidä elävä taulukko yhdessä tiedostossa — `DATA-CLASSIFICATION.md` — jossa Käyttäjä siirtää luokkia vyöhykkeiden
+välillä ja jota jokainen agentti lukee arvaamisen sijaan.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Tämä protokollatiedosto ilmaisee **mekanismin**. Tuo tiedosto ilmaisee **linjauksen**. Missä nämä kaksi ovat eri
+mieltä, linjaustiedosto voittaa.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Seuraukset agenteille
+
+- **Ei salaisuuksia missään puussa, joka paketoidaan.** Asiayhteyspaketti on olemassa liitettäväksi uuteen
+  istuntoon. Nimeä, mitä säilytetään ja missä; ei koskaan arvoa.
+- **Yksikään salaisuus ei yllä hakemistoon `surface/`.** Se näytetään näytöllä.
+- **Yksikään salaisuus ei yllä selaimeen.** Katso [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Peitä viittauksella, ei poistamalla.** `<api key — see password manager entry "acme-prod">` pitää tosiasian
+  löydettävissä paljastamatta arvoa.
+
+---
+
+## 6. Karsinta ilman menetystä
+
+Ennen kuin mikään poistuu työpuusta:
+
+1. Kopioi se sinetöityyn varastoon **juurten ulkopuolelle** — arkistotiedostoon, ei glob-haulla tavoitettavaksi.
+2. Valmistele polut tiedostoihin `marked-deletion.md` / `marked-archive.md`.
+3. **Suoritus on Käyttäjän käsi**, puun ollessa levossa.
+
+Älä koskaan poista joukoittain käynnissä olevan rinnakkaisuuden aikana.

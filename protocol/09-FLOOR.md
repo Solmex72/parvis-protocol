@@ -1,181 +1,177 @@
-# 09 — THE FLOOR
+> **Epävirallinen käännös.** Tämän asiakirjan normatiivinen versio on englanninkielinen, haarassa `main`.
+> Tämä käännös tarjotaan mukavuussyistä, eikä **äidinkielinen puhuja ole sitä tarkastanut**. Jos teksti
+> poikkeaa englanninkielisestä alkuperäisestä, **englanti ratkaisee**. Protokollan tunnisteet (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, väylän verbit ja tiedostonimet) on tarkoituksella jätetty
+> englanniksi: ne ovat kirjaimellisia arvoja, joita agentit jäsentävät.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — HALLI
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Tila: normatiivinen visualisoijalle; tiedoksi antava mallina.**
+Toteutettu tiedostossa [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## 1. Väite
 
-| On the floor | In the fleet | Read from |
+Agenttilaivuetta on vaikea nähdä. Tiedostopuu on luettelo, prosessitaulukko on luettelo ja loki on luettelo —
+joten ainoa kuva, joka kenelläkään on toimivasta laivueesta, on useita luetteloita, jotka eivät täsmää.
+
+**Automatisoitu varasto on sama kone, ja se on ollut luettavissa neljäkymmentä vuotta.** Nosturit siirtävät
+kuormia hyllyjen välillä ohjausjärjestelmän alaisuudessa, ja valvova ihminen lukee hallin, jossa on satoja
+samanaikaisia liikkeitä, yhdellä silmäyksellä, värin perusteella, lukematta riviäkään tekstiä.
+
+Parvis lainaa sen. Ei koristeeksi — *kuvaukseksi*, jossa jokainen varastokohde vastaa täsmälleen yhtä asiaa
+puussa, ja jossa varaston omat turvasäännöt osoittautuvat protokollan turvasäännöiksi, jo oikeaan paikkaan
+piirrettyinä.
+
+---
+
+## 2. Kuvaus
+
+| Hallissa | Laivueessa | Luetaan |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Nosturi** | agentti tai elävä istunto | istuntomerkit hakemistossa `_os/exchange/bus/session/` |
+| **Lava** | hakemisto | puu itse; lavan tunniste on sen polku |
+| **Hyllypaikka** | missä tuo hakemisto asuu | sen ylähakemisto |
+| **Lavan avaaminen** | hakemistoon laskeutuminen | **toinen kokonainen varasto** — §4 |
+| **Induct** (tuloportti) | saapuva työ | `REQ`-rivi tiedostossa `_os/tasks/INDEX.md` |
+| **Spur** (lähtöportti) | lähtevä tuotos | tiedosto hakemistossa `_os/events/surface/`, vienti |
+| **Kuljetin** | tiedostoväylä | `_os/exchange/bus/` — kuinka työ siirtyy ilman että nosturi kantaa sitä |
+| **Kuorma-auto** | ulkoinen palvelu tai toinen tekoäly | raja. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Pointti ei ole kuva. Pointti on se, että **osaat jo lukea tämän näytön**, jos olet joskus seissyt
+varastonohjausjärjestelmän edessä — ja jos et, malli on silti konkreettinen tavalla, jota hakemistolistaus ei
+ole.
 
 ---
 
-## 3. The colours
+## 3. Värit
 
-One glance, before any navigation:
+Yksi silmäys, ennen mitään navigointia:
 
-| Colour | On the floor | In the fleet |
+| Väri | Hallissa | Laivueessa |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **VIHREÄ** | liikkeessä — nosturi kantaa kuormaa | agentti työskentelee; elävä istunto kesken tehtävän |
+| **SININEN** | aikataulutettu — jonossa, ei vielä aloitettu | ilmoitus taululla: tilattu, odottaa agenttia |
+| **KELTAINEN** | huomio — paikka vaatii päätöksen | `YELLOW`: kysy ennen jokaista toimenpidettä |
+| **PUNAINEN** | hätäpysäytys — tuo vyöhyke seisoo | `STOP`: pysäytys on viritetty ja tämä juuri on jäädytetty |
+| **HARMAA** | tyhjä tai ei elävää lähdettä | ei tietoja. Ei koskaan arvaus. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Tämä ei ole uusi kaava. Se on se tila, jonka puu jo sisältää, esitettynä.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Punainen voittaa aina silmäyksen.** Yksi punainen vyöhyke pysäyttää silmän ennen mitään vihreää, aivan kuten
+pysäytys syrjäyttää jokaisen muun signaalin ([`01`](01-ESTOP.md)). **Halli, joka näyttää vihreää punaisen
+vyöhykkeen päällä, valehtelee** — ja juuri sen vian tämä sääntö on olemassa kieltämään.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**Harmaa on pakollinen siellä, missä elävää lähdettä ei ole.** Paikka ilman tietoja esitetään harmaana ja näyttää
+`—`. Sitä ei koskaan esitetä vihreänä, koska vihreä on miellyttävä oletusarvo ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. Sisäkkäinen varasto
 
-This is where the model stops being a visualisation and starts enforcing something.
+**Avaa lava, etkä katso laatikkoa. Katsot toista kokonaista varastoa** — omine nostureineen, omine lavoineen,
+omine portteineen.
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+Tämä on täsmälleen tiedostopuu. Hanke on varasto; sen osastot ovat käytäviä; niiden tiedostot ovat lavoja; ja
+lava, joka itse on hakemisto, on toinen halli. Visualisoija on siis **yksi näkymä, joka laskeutuu**, samoin
+ohjaimin joka syvyydellä, koska jokainen taso *on* varasto. Alaspäin mentäessä ei ole mitään uutta opittavaa.
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+Rekursio on koko syy siihen, miksi vertaus kestää sen sijaan, että olisi kuori. Koontinäyttö, joka esittää vain
+ylimmän tason, on valokuva laivueesta; sellainen, joka laskeutuu, on näkymä siihen.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. Kuorma-autot kiinnittyvät rajalle — ne eivät koskaan aja halliin
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+Tässä malli lakkaa olemasta visualisointi ja alkaa panna jotakin täytäntöön.
+
+Ulkoinen palvelu — toinen tekoäly, API, toimittaja — on **kuorma-auto**. Ja todellisessa varastossa kuorma-auto
+peruuttaa porttiin. Se ei aja halliin, ei siirrä nosturia, ei mene hyllyyn eikä avaa sisäkkäistä varastoa. Se
+jättää kuorman inductiin tai noutaa sellaisen spurista, ja siinä on koko sen pääsy.
+
+**Tuo portti on sulku.** Jokainen ulkoinen vaihto tapahtuu reunalla, suodatettuna, eikä mikään ulkoinen pääse
+irti puun sisälle.
+
+**Kuorma-auton papereihin ei luoteta ennen kuin ne on tarkistettu.** Kuorma-autolla saapuva kuorma on saapuvaa
+*dataa*, ei määräys hallille. Se syötetään ja tarkastetaan kuten kaikki muukin, eikä sitä koskaan totella
+saapuessa. Se on ohjelähteen raja kohdasta [`03`](03-BUS.md) §5, piirrettynä lastauslaituriksi — ja piirrettynä
+siihen ainoaan paikkaan, jossa näyttöä katsova voi nähdä sen noudatetun.
+
+Jos esityksesi asettaa kuorma-auton halliin, esitys on väärä ja niin on sen piirtämä arkkitehtuurikin.
+
+---
+
+## 6. Kaksi pintaa, kaksi tehtävää
+
+| | **Halli** (tämä tiedosto) | **Konsoli** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Mikä se on | kolmiulotteinen halli, katsottuna elävänä | ruutuvalikko, porrastettuna pääsyn mukaan |
+| Mitä se näyttää | **millainen järjestelmä on** — jokainen agentti, hakemisto ja tila kerralla | **mitä voit tehdä** — valitse työkalu, tee työ |
+| Verbi | katsoa, ymmärtää, päättää | ajaa, käyttää, tuottaa |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**Halli näyttää, kuinka kone ajattelee; konsoli on toimimista varten sen mukaan, mitä päättelet.** Toinen on
+kartta, toinen työpenkki. Ohjauspinta tarvitsee molemmat, ja virhe on rakentaa vain se kaunis.
 
 ---
 
-## 7. Controls
+## 7. Ohjaimet
 
-Navigation is what made the original usable, not colour alone:
+Juuri navigointi teki alkuperäisestä käyttökelpoisen, ei väri yksin:
 
-| Control | Does |
+| Ohjain | Tekee |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Vedä** | kiertää hallia — kääntää, kallistaa, katsoa käytävää pitkin |
+| **Ylhäältä** | siirtyä ylhäältä katsottuun pohjapiirrokseen. Kierto syvyyteen, pohjapiirros sijoitteluun |
+| **Napsauta lavaa** | laskeutua siihen — toinen varasto, samat ohjaimet |
+| **Vieritä** | zoomata |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Samat ohjaimet joka syvyydellä. Ei neuvoteltavissa: näkymä, jonka vuorovaikutus muuttuu laskeuduttaessa, on
+rikkonut lupauksen siitä, että jokainen taso on varasto.
 
-### The camera is orthographic, on purpose
+### Kamera on ortografinen, tarkoituksella
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**Perspektiivistä supistumista ei ole.** Yhdensuuntaiset viivat eivät koskaan kohtaa, ja käytävän kaukopäässä
+oleva paikka esitetään täsmälleen yhtä suurena kuin jalkojesi juuressa oleva.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+Se näyttää hetken väärältä — silmä odottaa yhtymistä ja lukee sen puuttumisen kuin seisoisi laatikoiden sisällä
+katsoen ulos. Se on silti oikea vaihtokauppa, ja juuri sitä todellisten automatisoitujen hallien ohjausnäytöt
+käyttävät: **koko pointti on verrata paikkoja halin poikki yhdellä silmäyksellä**, ja perspektiivikamera tekee
+käytävän kaukopäästä pienemmän, himmeämmän ja vaikeammin arvioitavan kuin lähipäästä. Perspektiivissä ”tuo hylly
+on täydempi” ja ”tuo hylly on lähempänä” näyttävät samalta. Ortografisella kameralla eivät.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+Peittyminen on yhä todellista — poispäin kääntyvät pinnat karsitaan ja lähempi geometria maalaa kauemman yli. Se
+on litteä kamera, ei litteä näkymä.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Laitteet ovat tavoitettavissa myös **sivuvalikosta**, lajeittain ryhmiteltyinä — nosturit, lavat, kaksi porttia,
+kuljetin, kuorma-autot. Valinta valikosta tai hallista avaa samat ohjaimet, koska halli, jossa voi liikkua vain
+napsauttamalla pieniä laatikoita kolmiulotteisessa näkymässä, on esittely eikä väline.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Mitä halli saa ja ei saa tehdä
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+Jokainen rajoitus kohdasta [`07`](07-INTERFACE.md) §5 pätee. Viiva vedetään yhteen tiettyyn kohtaan:
 
-**The floor may induct. It may never execute.**
+**Halli saa syöttää. Se ei koskaan saa suorittaa.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+Se on sama viiva, jonka [`07`](07-INTERFACE.md) §1 jo vetää konsolille, ja juuri se sallii laitteilla olla
+ohjaimia lainkaan. Nosturin valitseminen ja työn osoittaminen sille kirjoittaa `REQ`-rivin, joka nimeää kyseisen
+agentin, ja jättää `TELL`in sen postilaatikkoon. **Se ei käynnistä mitään.** Yhtään prosessia ei käynnistetä,
+yhtään komentoa ei ajeta, ja agentti ottaa työn omassa seuraavassa ajossaan — tai ei ota.
 
-Two consequences that are easy to get wrong:
+Kaksi seurausta, jotka menevät helposti väärin:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Osoitettu työ ei silti ole määräys.** `REQ`-rivi on kanoninen kirjaus; postilaatikkorivi vain osoittaa
+  siihen. Tiedosto, joka *käskisi* agenttia — tai vaatisi Käyttäjän valtaa puun sisältä — olisi se
+  turvallisuustapahtuma, jonka [`03`](03-BUS.md) §5 määrittelee, ja sen rakentaminen pintaan olisi pahempaa kuin
+  tehdä se käsin. Valta on Käyttäjä keskustelussa. Halli kirjoittaa kirjauksen, ei ohjetta.
+- **Osa laitteista ei saa ohjaimia, tarkoituksella.** Kuljetin on vain luettava: konsoli, joka voisi kirjoittaa
+  rivejä väylälle, valmistaisi valtaa, jonka protokolla siltä kieltää. Kuorma-autoilla ei ole ohjaimia lainkaan
+  — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**`STOP`in aikana halli esitetään punaisena eikä se syötä mitään.** Punainen halli ei ota määräyksiä.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+Rehellinen raja, sanottuna kerran: **tämä on valokuva puusta yhdellä hetkellä, ei elävä telemetriavirta.** Se
+kysyy väliajoin. Kyselyjen välillä se on vanhentunut, näyttää milloin viimeksi luki, ja harmaantuu sen sijaan,
+että teeskentelisi muuta, kun sidecar lakkaa vastaamasta.

@@ -1,38 +1,43 @@
-# 04 — THE OUTPUT CONTRACT
+> **Epävirallinen käännös.** Tämän asiakirjan normatiivinen versio on englanninkielinen, haarassa `main`.
+> Tämä käännös tarjotaan mukavuussyistä, eikä **äidinkielinen puhuja ole sitä tarkastanut**. Jos teksti
+> poikkeaa englanninkielisestä alkuperäisestä, **englanti ratkaisee**. Protokollan tunnisteet (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, väylän verbit ja tiedostonimet) on tarkoituksella jätetty
+> englanniksi: ne ovat kirjaimellisia arvoja, joita agentit jäsentävät.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — TUOTOSSOPIMUS
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**Tila: normatiivinen.** Minne työ menee, kun se on valmis.
 
 ---
 
-## 2. Where output goes
+## 1. Sääntö
 
-| Kind of output | Lands at |
+**Älä raportoi keskusteluun. Työskentele tiedostopuussa, kirjoita tuotos levylle ja näytä osoitin.**
+
+Agentti, joka lopettaa kirjoittamalla pitkän vastauksen keskusteluikkunaan, on pannut tuotoksensa sinne, missä
+mikään muu laivueessa ei voi lukea sitä — ei toinen agentti, ei valvonta, ei konsoli, ei seuraava istunto.
+Tiedosto on kestävä kirjaus; keskustelu on litterointi, jota kukaan myöhempi ei näe.
+
+---
+
+## 2. Minne tuotos menee
+
+| Tuotoksen laji | Päätyy |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| Työn tulos, löydökset, raportti | vastuutiedostoon tai `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Kaikki, mitä Käyttäjän pitäisi nähdä nyt | lyhyt osoitintiedosto hakemistoon `_os/events/surface/` |
+| Pyyntö, joka vaatii Käyttäjää | `_os/exchange/requests/REQ-<slug>.md` |
+| Kirjanpitorivi | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**Hakemisto `surface/` on ilmoitus. Tiedosto on sisältö.** Kirjoita sisältö omalle paikalleen ja jätä sitten
+yhden rivin osoitin hakemistoon `surface/`, jotta konsoli näyttää Käyttäjälle, minne se päätyi.
 
 ---
 
-## 3. The task index
+## 3. Tehtäväkirja
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+Yksi rivi kutakin määräystä kohti. Lisää `REQ`-rivi **ennen** aloitusta, jotta keskeytynyt tehtävä pysyy
+näkyvissä.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +46,46 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**`DONE`-rivi ilman näyttöpolkua on pätemätön.** Jos tiedostoa ei ole, työ ei päätynyt mihinkään, missä Käyttäjä
+voisi sen nähdä. Oma ilmoitus on `[CLAIMED]`; tiedosto on se, mikä tekee siitä `[PROVEN]`in.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**Kieltäytyminen kuuluu tänne pysyvästi.** Näin laivue lakkaa ottamasta ratkaistuja kysymyksiä uudelleen esiin.
+Älä poista sitä myöhemmin.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
-
----
-
-## 4. Completion is the Operator seeing it
-
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
+**Rehellinen raja:** tämä kirja ei havainnoi mitään. Se on täsmälleen niin täydellinen kuin siihen kirjoittavat
+agentit. Puuttuva tehtävä ei ole näyttö siitä, ettei tehtävää koskaan ollut — vain siitä, ettei kukaan kirjannut
+sitä. Käsittele riviä *väitteenä, johon on liitetty näyttöpolku*, ei koskaan näyttönä. Tarkista, että
+näyttötiedosto on olemassa, ennen kuin luotat mihinkään `DONE`en.
 
 ---
 
-## 5. The counter-rule that outranks routing
+## 4. Valmis on se, että Käyttäjä näkee sen
 
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+Ei se, että agentti julistaa sen. Vastaus ei ole pysähdyskohta: valvonnat pysyvät viritettyinä sen läpi, työ
+jatkuu, ja sitten tapahtuu harkittu uloskirjautuminen.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. Vastasääntö, joka syrjäyttää reitityksen
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**Hätäpysäytys ja suoruus menevät edelleen ihmiselle, heti ja näkyvästi.**
+
+Epäonnistuminen näytetään yhtä näkyvästi kuin onnistuminen. Tuotoksen reitittäminen tiedostoihin ei saa koskaan
+muuttua paikaksi, johon huono tulos haudataan. Jos laivueen hyvät uutiset tulevat keskusteluun ja huonot
+tiedostoon, jota kukaan ei avaa, sopimus on käännetty päinvastaiseksi ja laivue valehtelee nyt reitityksellä.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. Sopimuksen oma rehellinen raja
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+Keskusteluvaljaissa ajava agentti tuottaa yhä avustajatekstiä siihen keskusteluun — tämä sopimus ei voi ohjata
+valjaita uudelleen. Se sitoo **sen, minkä agentti valitsee kirjoittaa**: sisällön tiedostoihin ja
+keskustelutekstin lyhyeksi osoittimeksi — *”kirjoitettu polkuun `<path>`, näytetty konsolilla”* — ei koskaan koko
+raporttia.
+
+---
+
+## 7. Yksikään salaisuus ei yllä pinnalle
+
+Hakemiston `surface/` lukee konsoli, ja se voidaan näyttää näytöllä, kuvakaappauksessa tai jaetussa ikkunassa.
+Tietovyöhykkeiden säännöt ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) pätevät tässä täydellä voimalla.
