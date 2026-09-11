@@ -722,14 +722,27 @@
     return { x: view.cx + x * s, y: view.cy + y2 * s, d: depth };
   }
 
-  function shade(hex, amt){
-    var c = hex.replace("#", "");
-    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
-    var n = parseInt(c, 16);
-    var r = Math.max(0, Math.min(255, (n >> 16) + amt));
-    var g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amt));
-    var b = Math.max(0, Math.min(255, (n & 255) + amt));
-    return "rgb(" + r + "," + g + "," + b + ")";
+  function shade(color, amt){
+    // Accepts #rgb, #rrggbb OR the rgb(r,g,b) this function itself returns.
+    //
+    // THIS IS LOAD-BEARING. box() shades every face of a solid, so any colour
+    // that has already been through shade() gets shaded a second time. Before
+    // this, parseInt("rgb(100,160,213)", 16) returned NaN and the box rendered
+    // black — which is why every directory drawn with a shaded colour was a
+    // silhouette while raw-hex ones (amber, the cranes) came out fine.
+    var r, g, b, c = String(color).trim();
+    var m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (m) {
+      r = +m[1]; g = +m[2]; b = +m[3];
+    } else {
+      c = c.replace("#", "");
+      if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+      if (!/^[0-9a-f]{6}$/i.test(c)) return color;   // unknown format: pass through, never NaN
+      var n = parseInt(c, 16);
+      r = (n >> 16) & 255; g = (n >> 8) & 255; b = n & 255;
+    }
+    var cl = function(v){ return Math.max(0, Math.min(255, Math.round(v + amt))); };
+    return "rgb(" + cl(r) + "," + cl(g) + "," + cl(b) + ")";
   }
 
   // An axis-aligned box, drawn as three visible faces.  lifts it onto a
@@ -1164,6 +1177,39 @@
         ctx.globalAlpha = 0.9; ctx.fillText(lab, sc.x, sc.y); ctx.globalAlpha = 1;
       }
     }
+    // --- THE OPERATOR CRANE -------------------------------------------------
+    // The prompt bar is a crane too, and it is RED because it is the one piece
+    // of equipment on this floor that is a person. Every other crane is an
+    // agent that picked its own work up; this one only moves when a human
+    // types. It stands at the induct dock because that is where human
+    // instruction enters the floor — 07 §1, a prompt is an induction.
+    //
+    // Red is not an alarm here. It is the same convention as the estop: red is
+    // reserved for the things only a human controls.
+    (function(){
+      var opx = aisleX(0, p) - AISLE_W * 0.9;
+      var opz = dockZ0 - 0.35;
+      var pulse = 0.55 + 0.45 * Math.sin(now / 700);
+      var typing = ($("pbar-in") && $("pbar-in").value.trim()) ||
+                   ($("ctl-p") && !$("wh-ctl").hidden && $("ctl-p").value.trim());
+      var ocol = COL.red;
+      var meta = { kind: "operator" };
+      // mast
+      box(quads, opx, opz, 0.19, 0.19, frameTop + 0.70, ocol, meta, 0);
+      // base
+      box(quads, opx, opz, AISLE_W * 0.78, 0.40, 0.14, shade(ocol, -24), meta, 0);
+      // carriage — rides up while a prompt is being written, parks when empty
+      var oy = typing ? (0.5 + pulse * 1.4) : 0.22;
+      box(quads, opx, opz, AISLE_W * 0.58, 0.34, 0.24, shade(ocol, 14), meta, oy);
+      // beacon
+      box(quads, opx, opz, 0.14 + pulse * 0.11, 0.14 + pulse * 0.11, 0.11 + pulse * 0.09,
+          shade(ocol, Math.round(pulse * 70)), meta, frameTop + 0.70);
+      // the line from the operator to the induct dock: where human input lands
+      lines.push({ a:{x:opx,y:0.13,z:opz}, b:{x:aisleX(0,p),y:0.13,z:dockZ0},
+                   c: ocol, w: 2, arrow: true, flow: !!typing });
+      WH.operatorAt = { x: opx, z: opz };
+    })();
+
     // 08 §5 — where two agents share a name, disambiguate at every use. Four
     // cranes called BRIDGE are four different sessions, and a floor that draws
     // them all as "BRIDGE" is unreadable exactly when it matters.
@@ -1171,6 +1217,18 @@
     for (var nc = 0; nc < d.cranes.length; nc++) {
       nameCount[d.cranes[nc].agent] = (nameCount[d.cranes[nc].agent] || 0) + 1;
     }
+    // the operator's own label, in the same band system
+    if (WH.operatorAt) {
+      var ol = project({ x: WH.operatorAt.x, y: frameTop + 1.15, z: WH.operatorAt.z }, vp);
+      var olw = ctx.measureText("OPERATOR").width;
+      if (ol.x < olw/2 + 5) ol.x = olw/2 + 5;
+      if (ol.x > view.w - olw/2 - 5) ol.x = view.w - olw/2 - 5;
+      if (ol.y < 12) ol.y = 12;
+      ctx.save(); ctx.globalAlpha = 0.62; ctx.fillStyle = COL.bg || "#0a0f14";
+      ctx.fillRect(ol.x - olw/2 - 3, ol.y - 8, olw + 6, 11); ctx.restore();
+      ctx.fillStyle = COL.red; ctx.fillText("OPERATOR", ol.x, ol.y);
+    }
+
     var nameSeen = {};
     for (var m = 0; m < d.cranes.length; m++) {
       var c2 = d.cranes[m];

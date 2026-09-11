@@ -438,13 +438,27 @@
     // renders upside down — racks hanging below the deck.
     return { x:v.cx + x*v.scale, y:v.cy + (z*sp - pt.y*cp)*v.scale, d: pt.y*sp + z*cp };
   }
-  function shade(hex, amt){
-    var c = String(hex).trim().replace("#","");
-    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
-    if (!/^[0-9a-f]{6}$/i.test(c)) return hex;
-    var n = parseInt(c,16);
-    var r=Math.max(0,Math.min(255,(n>>16)+amt)), g=Math.max(0,Math.min(255,((n>>8)&255)+amt)), b=Math.max(0,Math.min(255,(n&255)+amt));
-    return "rgb("+r+","+g+","+b+")";
+  function shade(color, amt){
+    // Accepts #rgb, #rrggbb OR the rgb(r,g,b) this function itself returns.
+    //
+    // THIS IS LOAD-BEARING. box() shades every face of a solid, so any colour
+    // that has already been through shade() gets shaded a second time. Before
+    // this, parseInt("rgb(100,160,213)", 16) returned NaN and the box rendered
+    // black — which is why every directory drawn with a shaded colour was a
+    // silhouette while raw-hex ones (amber, the cranes) came out fine.
+    var r, g, b, c = String(color).trim();
+    var m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (m) {
+      r = +m[1]; g = +m[2]; b = +m[3];
+    } else {
+      c = c.replace("#", "");
+      if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+      if (!/^[0-9a-f]{6}$/i.test(c)) return color;   // unknown format: pass through, never NaN
+      var n = parseInt(c, 16);
+      r = (n >> 16) & 255; g = (n >> 8) & 255; b = n & 255;
+    }
+    var cl = function(v){ return Math.max(0, Math.min(255, Math.round(v + amt))); };
+    return "rgb(" + cl(r) + "," + cl(g) + "," + cl(b) + ")";
   }
   // A solid box: all six faces, wound counter-clockwise as seen from OUTSIDE.
   //
