@@ -1,92 +1,100 @@
-# 06 — DATA ZONES
+> **Tradução não oficial.** A versão normativa deste documento é a inglesa, no ramo `main`. Esta
+> tradução é fornecida por conveniência e **não foi verificada por um falante nativo**. Em caso de
+> divergência com o original em inglês, **prevalece o inglês**. Os identificadores do protocolo
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, os verbos do barramento e os nomes de ficheiros)
+> são deliberadamente mantidos em inglês: são valores literais que os agentes analisam.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — ZONAS DE DADOS
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Estado: normativo.** Onde um ficheiro tem permissão para viver.
 
 ---
 
-## 2. The two zones
+## 1. Porque é que uma proibição não resultou
 
-| Zone | Property | Holds |
+A regra original era *"sem segredos, nunca, em lado nenhum"* — **sem nenhum sítio onde pôr os dados
+privados em alternativa.**
+
+Uma proibição sem destino não é cumprida. É contornada, e material privado acaba na árvore
+sincronizada por acidente. Isso aconteceu repetidamente, inclusive por um agente que estava ele
+próprio sujeito à regra.
+
+**A regra é uma decisão de encaminhamento, não uma proibição.**
+
+---
+
+## 2. As duas zonas
+
+| Zona | Propriedade | Contém |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Sincroniza para armazenamento na nuvem. **Trate cada byte como publicado.** | Doutrina, mandatos, definições de agentes, arquitetura, contexto de negócio, investigação, documentação técnica |
+| **PRIVATE** | **Fora de todas as raízes de sincronização** — e fora do perfil de utilizador, para que o redirecionamento de pastas conhecidas também não lhe chegue | Segredos, pessoas reais e os seus dados pessoais, projetos e média privados, tudo o que seria errado encontrar numa cópia de segurança |
 
-### The test
+### O teste
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Seria um problema que isto estivesse num instantâneo na nuvem daqui a um ano?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Sim → PRIVATE. Não → PUBLIC. Em caso de dúvida genuína → **PRIVATE.** O custo de sobreclassificar é
+inconveniência. O custo de subclassificar não se pode desfazer.
 
-### Know what actually syncs
+### Saiba o que sincroniza de facto
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Verifique isto na máquina real, não por suposição. Numa estação de trabalho típica podem estar vários
+clientes de sincronização a correr ao mesmo tempo, e tudo o que esteja nas pastas de documentos,
+ambiente de trabalho ou imagens do utilizador sai da máquina e é retido no histórico de versões
+durante semanas. **Eliminá-lo localmente não o recolhe.**
 
-Two consequences that each cause real failures:
+Duas consequências que causam falhas reais, cada uma por si:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **A saída de compilação tem de ser redirecionada** para fora de uma raiz de sincronização, ou o
+   espelho corrompe-a a meio da compilação.
+2. **As chaves vivem fora**, deliberadamente e por omissão.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. A exceção: as credenciais não são de nenhuma zona
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**As credenciais ativas — palavras-passe, chaves de API, tokens, chaves de emissão — pertencem a um
+gestor de palavras-passe, não a nenhum dos sistemas de ficheiros.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+A zona privada contém *dados privados*. Um gestor de palavras-passe contém *credenciais*. Isto não é
+picuinhice: um diretório privado não está cifrado por omissão, e um ficheiro é um ficheiro. No
+momento em que um é copiado, citado numa transcrição ou anexado a seja o que for, está divulgado.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Enuncie a propriedade de segurança da zona privada de forma estreita e nunca a exagere.** A sua
+única propriedade provada costuma ser que *nada a copia para lado nenhum*. Sem cifra verificada de
+disco completo ou por ficheiro, não está cifrada, não tem cópia de segurança e não é um cofre.
 
 ---
 
-## 6. Pruning without loss
+## 4. A classificação é do Operador, e é ajustável
 
-Before anything leaves the working tree:
+Mantenha a tabela viva num único ficheiro — `DATA-CLASSIFICATION.md` — onde o Operador move categorias
+entre zonas e que cada agente lê em vez de adivinhar.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Este ficheiro de protocolo enuncia o **mecanismo**. Aquele ficheiro enuncia a **política**. Onde os
+dois discordarem, ganha o ficheiro de política.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Consequências para os agentes
+
+- **Nenhum segredo em nenhuma árvore que seja empacotada.** Um pacote de contexto existe para ser
+  colado numa sessão nova. Nomeie o que é detido e onde; nunca o valor.
+- **Nenhum segredo chega a `surface/`.** É mostrado no ecrã.
+- **Nenhum segredo chega a um navegador.** Ver [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Oculte por referência, não por eliminação.** `<api key — see password manager entry "acme-prod">`
+  mantém o facto localizável sem divulgar o valor.
+
+---
+
+## 6. Podar sem perder
+
+Antes de algo sair da árvore de trabalho:
+
+1. Copie-o para um depósito selado **fora das raízes** — um ficheiro de arquivo, não alcançável por
+   glob.
+2. Prepare os caminhos em `marked-deletion.md` / `marked-archive.md`.
+3. **A execução é a mão do Operador**, com a árvore aquietada.
+
+Nunca elimine em massa sob concorrência ativa.
