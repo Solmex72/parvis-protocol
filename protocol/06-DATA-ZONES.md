@@ -1,92 +1,100 @@
-# 06 — DATA ZONES
+> **Onofficiële vertaling.** De normatieve versie van dit document is de Engelse, in de branch `main`.
+> Deze vertaling wordt voor het gemak aangeboden en **is niet door een moedertaalspreker
+> gecontroleerd**. Bij afwijking van het Engelse origineel **geldt het Engels**. De
+> protocolaanduidingen (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, de busverba en de
+> bestandsnamen) blijven bewust in het Engels: het zijn letterlijke waarden die agents uitlezen.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — GEGEVENSZONES
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Status: normatief.** Waar een bestand mag wonen.
 
 ---
 
-## 2. The two zones
+## 1. Waarom een verbod niet werkte
 
-| Zone | Property | Holds |
+De oorspronkelijke regel luidde *"geen geheimen, nooit, nergens"* — **zonder enige plek om privégegevens in
+plaats daarvan neer te zetten.**
+
+Een verbod zonder bestemming wordt niet nageleefd. Het wordt omzeild, en privémateriaal belandt per
+ongeluk in de gesynchroniseerde boom. Dat is herhaaldelijk gebeurd, ook door een agent die zelf onder de
+regel viel.
+
+**De regel is een routeringsbeslissing, geen verbod.**
+
+---
+
+## 2. De twee zones
+
+| Zone | Eigenschap | Bevat |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Synchroniseert naar cloudopslag. **Behandel elke byte als gepubliceerd.** | Doctrine, opdrachten, agentdefinities, architectuur, bedrijfscontext, onderzoek, technische documentatie |
+| **PRIVATE** | **Buiten elke synchronisatiewortel** — en buiten het gebruikersprofiel, zodat ook omleiding van bekende mappen er niet bij kan | Geheimen, echte personen en hun persoonsgegevens, privéprojecten en -media, alles wat het verkeerd zou zijn in een back-up aan te treffen |
 
-### The test
+### De toets
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Zou het een probleem zijn als dit over een jaar in een cloudmomentopname stond?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Ja → PRIVATE. Nee → PUBLIC. Bij echte twijfel → **PRIVATE.** De prijs van te hoog indelen is ongemak. De
+prijs van te laag indelen is onomkeerbaar.
 
-### Know what actually syncs
+### Weet wat er werkelijk synchroniseert
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Controleer dit op de echte machine, niet op aanname. Op een gangbare werkplek kunnen meerdere
+synchronisatieprogramma's tegelijk draaien, en alles onder de mappen documenten, bureaublad of afbeeldingen
+van de gebruiker verlaat de machine en wordt wekenlang in de versiegeschiedenis bewaard. **Lokaal
+verwijderen haalt het niet terug.**
 
-Two consequences that each cause real failures:
+Twee gevolgen die elk echte storingen veroorzaken:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **Bouwuitvoer moet worden omgeleid** naar buiten een synchronisatiewortel, anders beschadigt de spiegel
+   haar midden in de bouw.
+2. **Sleutels wonen buiten**, bewust en standaard.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. De uitzondering: inloggegevens horen bij geen van beide zones
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**Actieve inloggegevens — wachtwoorden, API-sleutels, tokens, streamsleutels — horen in een
+wachtwoordbeheerder, niet in een van beide bestandssystemen.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+De privézone bevat *privégegevens*. Een wachtwoordbeheerder bevat *inloggegevens*. Dit is geen muggenzifterij:
+een privémap is standaard niet versleuteld, en een bestand is een bestand. Zodra er een wordt gekopieerd, in
+een transcript geciteerd of ergens aan gehecht, is het bekendgemaakt.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Formuleer de beveiligingseigenschap van de privézone eng en overschat haar nooit.** Haar enige bewezen
+eigenschap is meestal dat *niets haar ergens heen kopieert*. Zonder geverifieerde volledige-schijf- of
+per-bestandsversleuteling is zij niet versleuteld, niet geback-upt en geen kluis.
 
 ---
 
-## 6. Pruning without loss
+## 4. De indeling is van de Operator, en zij is aanpasbaar
 
-Before anything leaves the working tree:
+Houd de levende tabel in één bestand — `DATA-CLASSIFICATION.md` — waar de Operator categorieën tussen zones
+verplaatst en dat elke agent leest in plaats van te gokken.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Dit protocolbestand benoemt het **mechanisme**. Dat bestand benoemt het **beleid**. Waar de twee van elkaar
+afwijken, wint het beleidsbestand.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Gevolgen voor agents
+
+- **Geen geheim in enige boom die wordt ingepakt.** Een contextpakket bestaat om in een nieuwe sessie te
+  worden geplakt. Benoem wat er wordt bewaard en waar; nooit de waarde.
+- **Geen geheim bereikt `surface/`.** Die wordt op het scherm getoond.
+- **Geen geheim bereikt een browser.** Zie [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Onderdruk door verwijzing, niet door verwijdering.** `<api key — see password manager entry
+  "acme-prod">` houdt het feit vindbaar zonder de waarde prijs te geven.
+
+---
+
+## 6. Snoeien zonder verlies
+
+Voordat er iets de werkboom verlaat:
+
+1. Kopieer het naar een verzegelde opslag **buiten de wortels** — een archiefbestand, niet met glob
+   bereikbaar.
+2. Zet de paden klaar in `marked-deletion.md` / `marked-archive.md`.
+3. **De uitvoering is de hand van de Operator**, met de boom tot rust gebracht.
+
+Verwijder nooit massaal onder actieve gelijktijdigheid.

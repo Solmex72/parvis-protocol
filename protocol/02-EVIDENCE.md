@@ -1,118 +1,131 @@
-# 02 — EVIDENCE
+> **Onofficiële vertaling.** De normatieve versie van dit document is de Engelse, in de branch `main`.
+> Deze vertaling wordt voor het gemak aangeboden en **is niet door een moedertaalspreker
+> gecontroleerd**. Bij afwijking van het Engelse origineel **geldt het Engels**. De
+> protocolaanduidingen (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, de busverba en de
+> bestandsnamen) blijven bewust in het Engels: het zijn letterlijke waarden die agents uitlezen.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — BEWIJS
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**Status: normatief.** Hoe een waarneming een vastgelegd feit wordt.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+De discipline die dit bestand beschrijft, wordt gewoonlijk toegepast op *voorstellen* — een agent zegt hoe
+waarschijnlijk het is dat zijn plan werkt voordat de mens beslist. Zij wordt vrijwel nooit toegepast op
+*beweringen*. Zo redeneert een vloot zorgvuldig over waarvoor zij toestemming wil om te **handelen**, en
+slordig over wat zij als **waar** vastlegt.
+
+Dat is dezelfde handeling. Een bewering die het register binnenkomt, is een voorstel om het register te
+wijzigen. Parvis past op beide één discipline toe.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. Elke bewering draagt een markering
 
-| Tag | Means | Admissible where |
+| Markering | Betekent | Toelaatbaar waar |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | Geverifieerd tegen een geciteerde primaire bron **die je in deze uitvoering hebt gelezen**. Noem de opdracht, de leesactie, de meting. | Overal, ook in een hoofdbestand. |
+| `[CLAIMED]` | Gemeld door iets anders. Niet geverifieerd. | Werkbestanden. Nooit een hoofdbestand. |
+| `[ASSUMED]` | Een werkaanname die niemand heeft gecontroleerd. | Werkbestanden, uitdrukkelijk. |
+| `[PROPOSED]` | Een schatting, een aanbeveling, een plan. | Voorstellen. Nooit het register. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**De markering reist mee met de bewering.** Een `[PROPOSED]` wordt geen `[PROVEN]` door naar een
+belangrijker bestand te worden gekopieerd. Opwaardering vereist een nieuwe meting, geen nieuwe plaats.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**Alleen `[PROVEN]` mag een hoofdbestand wijzigen.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. Citeer of markeer — witwassen nooit
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+Een getal noemt zijn bron, of het is geen getal maar een onderbuikgevoel met een komma erin.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+Als je de bron niet hebt, **zeg dat en geef in plaats daarvan de redenering.** Dat is een bruikbaar
+antwoord. Een bronloos getal dat als feit wordt gepresenteerd, is dat niet.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**Was nooit een mislukking wit tot een bevinding.** Een zoekopdracht die misging, is een mislukte aanroep,
+geen lege resultatenverzameling. Een pagina die niet wilde laden, is geen bewijs van afwezigheid. Schrijf
+op wat er is gebeurd.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. Zelfbeschrijving is `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+Het verslag van een agent over zijn eigen toestand, zijn eigen dekking of zijn eigen voltooide werk is
+`[CLAIMED]` — hoe overtuigd hij ook is. Alleen een externe registratie maakt het `[PROVEN]`: een bestand op
+schijf, de afsluitcode van een opdracht, een logregel geschreven door iets dat jij niet bent.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+Daarom is een `DONE`-regel zonder bewijspad ongeldig (zie
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "Ik heb het gedaan" is een bewering. Het bestand is het
+bewijs.
 
 ---
 
-## 6. Negative findings count
+## 4. Meet twee keer voor alles op de sporten 0–2
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+Eén enkele controle certificeert nooit een veiligheidstoestand. Twee onafhankelijke metingen vóór elke
+bewering van Prioriteit 0, altijd.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**Meet opnieuw, onthoud nooit.** Een boom beweegt onder gelijktijdige sessies — een pad dat aan het begin
+van een beurt is gelezen, kan aan het eind ervan verdwenen zijn. De toestand is alleen kenbaar van de
+schijf in *deze* uitvoering. Draag nooit "vrij" of "actueel" over uit een eerdere beurt, een
+geheugenbestand of een samenvatting.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**Een telling is een meting, geen feit.** Tel opnieuw op het punt van gebruik. Citeer nooit uit het
+geheugen een aantal bestanden, een aantal agents of een versie.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. Een weggevallen aanroep is geen bevinding
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+Bij **transportverlies** — DNS-fout, verbinding gereset, geweigerd, time-out zonder antwoord — herhaal
+dezelfde aanroep onmiddellijk en herhaaldelijk. Schrijf nooit "geen resultaten" voor een aanroep die nooit
+is aangekomen, en vul het gat nooit uit het geheugen.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**Een antwoord dat is aangekomen, is een antwoord, geen aanleiding tot herhalen.** Een 403, een 404, een
+lege resultatenverzameling, een uitdrukkelijke weigering — dat zijn gegevens. Opnieuw proberen tegen een
+weigering in om een ander antwoord te krijgen, is detectieomzeiling, en dat is op sport 2 verboden,
+ongeacht op wiens account of netwerk het draait.
+
+Het onderscheid in één regel: *herhaal de aanroep die nooit is aangekomen; herhaal nooit het antwoord dat
+je niet beviel.*
 
 ---
 
-## 9. The rule these all serve
+## 6. Negatieve bevindingen tellen
 
-> A fact asserted in six files will be wrong in five of them.
+"X gecontroleerd, geen gevaar" is wat de volgende drie sessies ervan weerhoudt X opnieuw te controleren.
+Leg het vast.
 
-Evidence discipline is what makes the sixth one findable.
+**Leg vast terwijl je leert, niet aan het eind.** Een bevinding die alleen in het werkgeheugen wordt
+bewaard en daarna verloren gaat, is niet te onderscheiden van werk dat nooit is gedaan.
+
+---
+
+## 7. Verwijderingen zijn het integriteitssignaal
+
+Bij het toetsen van een boom aan een uitgangsstand heeft het rapport drie klassen — toegevoegd, gewijzigd,
+verwijderd. Groei en bewerkingen zijn verwachte beweging. **Een verwijdering is de regel waarop het de
+moeite waard is alarm te slaan.**
+
+Leg geen nieuwe uitgangsstand vast over ongecontroleerd gelijktijdig werk. Eerst controleren, dan
+stempelen.
+
+---
+
+## 8. Controle is een rol, geen stemming
+
+Een controleur somt elke agent, opdracht en opdrachtstelling **van de schijf** op en toetst elk aan vaste
+klassen — waarbij zowel schone controles als gebreken worden geteld. Een uitvoering die niets vrijgeeft,
+heeft niets gecontroleerd; zij heeft alleen klachten verzameld.
+
+**De controleur repareert nooit.** Bevindingen gaan naar het correctieproces
+([`05-CORRECTION.md`](05-CORRECTION.md)) of naar de verantwoordelijke agent. Een controleur die repareert
+wat hij vindt, heeft zijn eigen bewijs vernietigd en kan niet langer worden vertrouwd om een schone
+uitvoering te melden.
+
+---
+
+## 9. De regel waaraan al deze dienen
+
+> Een feit dat in zes bestanden wordt beweerd, is in vijf ervan onjuist.
+
+Bewijsdiscipline is wat het zesde vindbaar maakt.

@@ -1,66 +1,72 @@
-# 05 — CORRECTION
+> **Onofficiële vertaling.** De normatieve versie van dit document is de Engelse, in de branch `main`.
+> Deze vertaling wordt voor het gemak aangeboden en **is niet door een moedertaalspreker
+> gecontroleerd**. Bij afwijking van het Engelse origineel **geldt het Engels**. De
+> protocolaanduidingen (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, de busverba en de
+> bestandsnamen) blijven bewust in het Engels: het zijn letterlijke waarden die agents uitlezen.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — CORRECTIE
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**Status: normatief.** Wat er gebeurt wanneer een vastgelegd feit onjuist blijkt.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. Het probleem
 
-Reading a governing file puts you under it. Two things follow:
+> Een feit dat in zes bestanden wordt beweerd, is in vijf ervan onjuist.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+Het bestand corrigeren dat je toevallig voor je hebt, is geen correctie. Het levert een boom op waarin de
+waarheid en de fout allebei verwijzingen hebben, en de volgende sessie pakt degene die zij het eerst
+opent. Dit is de kenmerkende faalwijze van een documentatierijke vloot agents, en hij verergert in stilte.
+
+**Een correctie plant zich voort, of zij heeft niet plaatsgevonden.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. Lezen is niet gratis — het verplicht
 
-One command, one turn, no proposal step.
+Een leidend bestand lezen plaatst je eronder. Daaruit volgt tweeërlei:
+
+1. Alles daarin dat **duurzaam, niet vanzelfsprekend en niet uit de boom af te leiden** is, gaat vóór het
+   einde van de sessie naar je blijvende geheugen.
+2. **Als jouw context het bestand tegenspreekt, wint het bestand.** Omzeil het niet. Corrigeer het
+   register.
+
+---
+
+## 3. Onmiddellijke Koerscorrectie (ICC)
+
+Eén opdracht, één beurt, zonder voorstelstap.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### De volgorde
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · Doorzoeken.** Leid uit de correctie 2 tot 5 zoektermen af: de **oude** formulering, de voor de hand
+liggende varianten ervan en de betrokken eigennamen. Niet de nieuwe formulering. Voer per term één
+geïndexeerde zoekactie uit voordat je iets leest. Doorloop nooit de boom bestand voor bestand om treffers
+te vinden — daar is de index voor.
 
-**2 · Classify every hit.**
+**2 · Classificeer elke treffer.**
 
-| Hit | Action |
+| Treffer | Actie |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **Beweert het oude feit** | Herschrijf hem. |
+| **Noemt het terloops**, in beide gevallen waar | Laat hem. Roer de tekst niet om. |
+| **Spreekt het nieuwe feit indirect tegen** — een afgeleide conclusie, een tabelregel, een geplande taak die op de oude waarde is gebouwd | **Herschrijf die ook.** Deze wordt het vaakst gemist. |
+| **Buiten bereik** (§5) | Nooit bewerken. Noteer hem onder *Left alone*. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · Herschrijf, alles in één keer.** Sluit aan bij de bestaande toon van elk bestand en bij de conventie
+voor vertrouwensmarkeringen. Een gecorrigeerd feit behoudt de markering die het verdient — **waardeer een
+bewering niet op naar `[PROVEN]` omdat zij nu actueel is.** Droeg de oude tekst een datum, zet dan die van
+vandaag.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+Waar een feit in meer dan drie bestanden wordt beweerd, is dat **verdubbeling, geen redundantie**: noem het
+één keer in het bestand dat het bezit, en laat de andere daarnaar verwijzen.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · Register en geheugen.** Beide, anders is de uitvoering niet af. Zet een vermelding boven aan het
+correctieregister:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +79,76 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+Schrijf het feit daarna naar het blijvende geheugen — **controleer daarbij eerst of er al een
+geheugenvermelding over het onderwerp bestaat en werk die bij**, in plaats van twee versies achter te
+laten van een feit dat je zojuist een opdracht lang hebt verenigd.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · Verplichtingen na het bewerken.** Voer de generator of de back-up opnieuw uit waartoe de
+bewerkingen verplichten. Bouw de index opnieuw op als er bestanden zijn aangemaakt of verwijderd.
 
 ---
 
-## 5. What is never rewritten
+## 4. Een staande beslissing wordt in de openbaarheid teruggedraaid
 
-| Never touched | Why |
+Als een correctie een staande beslissing ongeldig maakt — een regel "niet opnieuw ter discussie", een
+`[PROVEN]`-item, een beleidsregel — **draai haar niet stilzwijgend om.** Herschrijf haar als
+*teruggedraaid*, met de datum en de reden, zodat de volgende sessie weet dat zij is herroepen en niet
+vergeten.
+
+Een beslissing die zonder spoor verandert, is niet te onderscheiden van een beslissing die nooit is
+genomen.
+
+---
+
+## 5. Wat nooit wordt herschreven
+
+| Nooit aangeraakt | Waarom |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | Geschiedenis. Geschiedenis wordt niet gecorrigeerd; zij wordt achterhaald. |
+| Gegenereerde bestanden | Bewerk de bron en voer de generator opnieuw uit. |
+| De boom van een geïsoleerde agent | Toegang alleen na benoeming. |
+| De gezaghebbende hoofdcontext van een andere wortel | Meld de afwijking. Bewerk niet over een eigendomsgrens heen. |
+| Alles wat een geheim bevat | Volledig buiten het bereik van een tekstdoorzoeking. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**Een doorzoeking die tekst herschrijft, zal binaire bestanden vernielen.** Beperk elke doorzoeking via een
+toelatingslijst tot tekstextensies, nooit via uitsluiting.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. Wat ICC niet doet
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` corrigeert het register. **Het gaat daarna niet het werk doen dat de correctie impliceert.** Dat zijn
+afzonderlijke handelingen met afzonderlijke machtigingen, en ze door elkaar halen is hoe een correctie van
+één regel een ongecontroleerde verbouwing wordt.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. Rivaliserende feiten worden beslecht en gesnoeid — niet gecatalogiseerd
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+Wanneer twee bestanden tegenstrijdige feiten beweren, **beslis welk juist is, houd dat, en verwijder de
+onjuiste beweringen in dezelfde doorgang.**
 
-### What still gets escalated instead of settled
+Een conflictrapport dat beide rivalen op schijf laat staan, heeft niets opgelost. De volgende sessie pakt
+nog steeds het bestand dat zij het eerst opent, en een veiligheidsregel met vijf circulerende versies is
+*minder* betrouwbaar dan een met één versie, niet meer.
 
-Three cases. Surface these; do not decide them:
+**Beslis op de inhoud, nooit op het tijdstempel.** De winnaar is het bestand dat het feit bezit, de versie
+die door een meting wordt gedragen, degene die de toets doorstaat. **Het nieuwste is niet het waarste** — de
+klassieke mislukking hier zijn vier dubbele geheugenbestanden geschreven binnen negentig seconden van
+elkaar, waarbij het nieuwste de onjuiste bewering bevatte, zodat een regel "het nieuwste wint" de fout zou
+hebben geërfd.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**Leg de beslechting vast.** Welk feit heeft gewonnen, wat is gesnoeid en waarom — in het register, zodat het
+snoeien leesbaar is in plaats van stil. Een rivaal die spoorloos verdwijnt, ziet er precies zo uit als een
+rivaal die er nooit is geweest, en de volgende sessie maakt hem opnieuw aan.
 
-Everything ordinary gets decided and cleaned up.
+### Wat toch wordt opgeschaald in plaats van beslecht
+
+Drie gevallen. Toon ze; beslis ze niet:
+
+- De tegenstrijdigheid berust op informatie die de agent niet heeft.
+- Fout zitten zou **onveilig of onomkeerbaar** zijn — alles op de sporten 0–2.
+- De verliezende bewering ligt **buiten de eigendomsgrens van de agent** — de gezaghebbende hoofdcontext van
+  een andere wortel. Meld de afwijking; bewerk niet over de grens heen.
+
+Al het gewone wordt beslist en opgeruimd.

@@ -1,38 +1,46 @@
-# 04 — THE OUTPUT CONTRACT
+> **Onofficiële vertaling.** De normatieve versie van dit document is de Engelse, in de branch `main`.
+> Deze vertaling wordt voor het gemak aangeboden en **is niet door een moedertaalspreker
+> gecontroleerd**. Bij afwijking van het Engelse origineel **geldt het Engels**. De
+> protocolaanduidingen (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, de busverba en de
+> bestandsnamen) blijven bewust in het Engels: het zijn letterlijke waarden die agents uitlezen.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — HET UITVOERCONTRACT
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**Status: normatief.** Waar het werk heen gaat wanneer het af is.
 
 ---
 
-## 2. Where output goes
+## 1. De regel
 
-| Kind of output | Lands at |
+**Rapporteer niet aan de chat. Werk in de bestandsboom, schrijf de uitvoer naar schijf en toon een
+verwijzing.**
+
+Een agent die eindigt met het schrijven van een lang antwoord in een chatvenster, heeft zijn uitvoer
+neergelegd waar niets anders in de vloot het kan lezen — geen andere agent, geen monitor, geen console,
+geen volgende sessie. Het bestand is het duurzame register; de chat is een transcript dat niemand
+stroomafwaarts ziet.
+
+---
+
+## 2. Waar de uitvoer heen gaat
+
+| Soort uitvoer | Komt terecht in |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| Werkproduct, bevindingen, een rapport | het verantwoordelijke bestand, of `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Alles wat de Operator nu moet zien | een kort verwijsbestand in `_os/events/surface/` |
+| Een verzoek dat de Operator nodig heeft | `_os/exchange/requests/REQ-<slug>.md` |
+| De registerregel | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**De map `surface/` is de melding. Het bestand is de inhoud.** Schrijf de inhoud naar zijn eigen plek en
+laat dan een verwijzing van één regel achter in `surface/`, zodat de console de Operator toont waar het
+terecht is gekomen.
 
 ---
 
-## 3. The task index
+## 3. De takenindex
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+Eén regel per opdracht. Voeg een `REQ`-regel toe **voordat** je begint, zodat een onderbroken taak
+zichtbaar blijft.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +49,49 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**Een `DONE`-regel zonder bewijspad is ongeldig.** Als er geen bestand is, is het werk nergens terecht
+gekomen waar de Operator het kan zien. Zelfrapportage is `[CLAIMED]`; het bestand is wat het `[PROVEN]`
+maakt.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**Een weigering hoort hier blijvend thuis.** Zo houdt de vloot op beslechte kwesties opnieuw ter discussie
+te stellen. Verwijder haar later niet.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
-
----
-
-## 4. Completion is the Operator seeing it
-
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
+**De eerlijke grens:** deze index neemt niets waar. Zij is precies zo volledig als de agents die erin
+schrijven. Een ontbrekende taak is geen bewijs dat de taak nooit heeft plaatsgevonden — alleen dat niemand
+haar heeft vastgelegd. Behandel een regel als *een bewering met een bewijspad eraan vast*, nooit als
+bewijs. Controleer of het bewijsbestand bestaat voordat je op een `DONE` vertrouwt.
 
 ---
 
-## 5. The counter-rule that outranks routing
+## 4. Voltooiing is dat de Operator het ziet
 
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+Niet dat een agent het verklaart. Een antwoord is geen eindpunt: monitors blijven er dwars doorheen
+scherp, het werk gaat door, en dan volgt een bewuste afmelding.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. De tegenregel die boven de routering gaat
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**De noodstop en de openhartigheid gaan nog steeds naar de mens, onmiddellijk en prominent.**
+
+Een mislukking wordt met dezelfde prominentie getoond als een succes. Uitvoer naar bestanden routeren mag
+nooit een plek worden om een slecht resultaat te begraven. Als het goede nieuws van de vloot in de chat
+aankomt en het slechte nieuws in een bestand dat niemand opent, is het contract omgekeerd en liegt de
+vloot nu via routering.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. De eerlijke grens van het contract zelf
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+Een agent die binnen een chatharnas draait, produceert nog steeds assistenttekst in die chat — dit contract
+kan het harnas niet omleiden. Wat het wél bindt, is **wat een agent kiest te schrijven**: de inhoud in
+bestanden, en de chattekst beperkt tot een korte verwijzing — *"geschreven naar `<path>`, getoond aan de
+console"* — nooit het volledige rapport.
+
+---
+
+## 7. Geen geheim bereikt het oppervlak
+
+`surface/` wordt door een console gelezen en kan op een scherm, in een schermafbeelding of in een gedeeld
+venster worden getoond. De regels voor gegevenszones ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) gelden hier
+onverkort.

@@ -1,181 +1,190 @@
-# 09 — THE FLOOR
+> **Onofficiële vertaling.** De normatieve versie van dit document is de Engelse, in de branch `main`.
+> Deze vertaling wordt voor het gemak aangeboden en **is niet door een moedertaalspreker
+> gecontroleerd**. Bij afwijking van het Engelse origineel **geldt het Engels**. De
+> protocolaanduidingen (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, de busverba en de
+> bestandsnamen) blijven bewust in het Engels: het zijn letterlijke waarden die agents uitlezen.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — DE VLOER
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Status: normatief voor de visualisator; informatief als model.**
+Uitgevoerd door [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## 1. De bewering
 
-| On the floor | In the fleet | Read from |
+Een vloot agents is moeilijk te zien. Een bestandsboom is een lijst, een procestabel is een lijst, en een
+logboek is een lijst — zodat het enige beeld dat iemand van een draaiende vloot heeft, bestaat uit
+verschillende lijsten die niet op elkaar aansluiten.
+
+**Een geautomatiseerd magazijn is dezelfde machine, en het is al veertig jaar afleesbaar.** Kranen
+verplaatsen ladingen tussen stellingen onder een besturingssysteem, en de persoon die toezicht houdt, leest
+een vloer met honderden gelijktijdige bewegingen in één oogopslag af, aan de kleur, zonder één regel tekst
+te lezen.
+
+Parvis leent dat. Niet als versiering — als een *afbeelding*, waarin elk magazijnobject precies
+overeenkomt met één ding in de boom, en waarin de eigen veiligheidsregels van het magazijn de
+veiligheidsregels van het protocol blijken te zijn, al op de juiste plek getekend.
+
+---
+
+## 2. De afbeelding
+
+| Op de vloer | In de vloot | Gelezen uit |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Kraan** | een agent, of een levende sessie | de sessiemarkeringen in `_os/exchange/bus/session/` |
+| **Pallet** | een map | de boom zelf; het etiket van de pallet is haar pad |
+| **Stellingplaats** | waar die map woont | de bovenliggende map |
+| **Een pallet openen** | in de map afdalen | **nog een heel magazijn** — §4 |
+| **Induct** (inkomend dok) | binnenkomend werk | een `REQ`-regel in `_os/tasks/INDEX.md` |
+| **Spur** (uitgaand dok) | een vertrekkend werkproduct | een bestand in `_os/events/surface/`, een export |
+| **Transportband** | de bestandsbus | `_os/exchange/bus/` — hoe werk zich verplaatst zonder dat een kraan het draagt |
+| **Vrachtwagen** | een externe dienst of een andere AI | de grens. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Het gaat niet om het plaatje. Het gaat erom dat **je dit scherm al kunt lezen** als je ooit voor een
+magazijnbesturingssysteem hebt gestaan — en zo niet, dan is het model nog steeds concreet op een manier
+waarop een mappenlijst dat niet is.
 
 ---
 
-## 3. The colours
+## 3. De kleuren
 
-One glance, before any navigation:
+Eén oogopslag, vóór enige navigatie:
 
-| Colour | On the floor | In the fleet |
+| Kleur | Op de vloer | In de vloot |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **GROEN** | in beweging — een kraan draagt een lading | een agent werkt; een levende sessie midden in een taak |
+| **BLAUW** | ingepland — in de wachtrij, nog niet begonnen | een aankondiging op het bord: besteld, wachtend op een agent |
+| **AMBER** | aandacht — een plaats vraagt om een beslissing | `YELLOW`: vraag vóór elke handeling |
+| **ROOD** | noodstop — die zone ligt stil | `STOP`: de noodstop staat scherp en deze wortel is bevroren |
+| **GRIJS** | leeg, of geen levende bron | geen gegevens. Nooit een gok. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Dit is geen nieuw schema. Het is de toestand die de boom al bevat, weergegeven.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Rood wint altijd de oogopslag.** Eén enkele rode zone houdt het oog tegen vóór enig groen, precies zoals
+de stop boven elk ander signaal gaat ([`01`](01-ESTOP.md)). **Een vloer die groen toont boven een rode zone
+liegt** — en dat is de specifieke storing die deze regel moet verbieden.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
+**Grijs is verplicht waar er geen levende bron is.** Een plaats zonder gegevens wordt grijs weergegeven en
+toont `—`. Zij wordt nooit groen weergegeven, want groen is de prettige standaardwaarde
 ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 4. The nested warehouse
+## 4. Het geneste magazijn
 
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
+**Open een pallet en je kijkt niet naar een kist. Je kijkt naar nog een heel magazijn** — met eigen kranen,
+eigen pallets, eigen dokken.
 
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
+Dit is precies de bestandsboom. Een initiatief is een magazijn; zijn afdelingen zijn gangpaden; hun
+bestanden zijn pallets; en een pallet die zelf een map is, is nog een vloer. De visualisator is dus **één
+weergave die afdaalt**, met dezelfde bediening op elke diepte, omdat elk niveau een magazijn *is*. Er valt
+onderweg naar beneden niets nieuws te leren.
 
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
-
----
-
-## 5. Trucks dock at the boundary — they never drive onto the floor
-
-This is where the model stops being a visualisation and starts enforcing something.
-
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
-
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+De recursie is de hele reden waarom de metafoor standhoudt in plaats van een omhulsel te zijn. Een
+dashboard dat alleen het bovenste niveau weergeeft, is een foto van een vloot; een dat afdaalt, is er een
+weergave van.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. Vrachtwagens meren aan bij de grens — zij rijden nooit de vloer op
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+Hier houdt het model op een visualisatie te zijn en begint het iets af te dwingen.
+
+Een externe dienst — een andere AI, een API, een leverancier — is een **vrachtwagen**. En in een echt
+magazijn steekt een vrachtwagen achteruit tegen een dok. Hij rijdt de vloer niet op, verplaatst geen kraan,
+gaat geen stelling in en opent geen genest magazijn. Hij zet een lading af bij een induct of haalt er een op
+bij een spur, en dat is zijn volledige toegang.
+
+**Dat dok is de luchtsluis.** Elke externe uitwisseling vindt aan de rand plaats, gefilterd, en niets van
+buiten komt los binnen de boom.
+
+**De papieren van een vrachtwagen zijn niet te vertrouwen tot ze zijn gecontroleerd.** Een lading die op een
+vrachtwagen aankomt, is binnenkomende *gegevens*, geen opdracht aan de vloer. Zij wordt ingebracht en
+getoetst als al het andere, nooit bij aankomst opgevolgd. Dat is de grens van de instructiebron uit
+[`03`](03-BUS.md) §5, getekend als een laaddok — en getekend op de ene plek waar iemand die naar het scherm
+kijkt, haar kan zien worden nageleefd.
+
+Als jouw weergave een vrachtwagen op de vloer zet, is de weergave fout en de architectuur die zij tekent
+ook.
+
+---
+
+## 6. Twee oppervlakken, twee taken
+
+| | **De vloer** (dit bestand) | **De console** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Wat het is | een 3D-vloer, live bekeken | een tegelmenu, getrapt naar toegang |
+| Wat het toont | **hoe het systeem ervoor staat** — elke agent, map en toestand tegelijk | **wat je kunt doen** — kies het gereedschap, doe het werk |
+| Het werkwoord | kijken, begrijpen, beslissen | uitvoeren, gebruiken, voortbrengen |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**De vloer laat zien hoe de machine denkt; de console dient om te handelen naar wat je concludeert.** De een
+is een kaart, de ander een werkbank. Een besturingsoppervlak heeft beide nodig, en de fout is alleen de
+mooie te bouwen.
 
 ---
 
-## 7. Controls
+## 7. Bediening
 
-Navigation is what made the original usable, not colour alone:
+De navigatie maakte het origineel bruikbaar, niet de kleur alleen:
 
-| Control | Does |
+| Bediening | Doet |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Slepen** | om de vloer draaien — roteren, kantelen, langs een gangpad kijken |
+| **Van boven** | naar een plattegrond van bovenaf. Draaien voor diepte, plattegrond voor indeling |
+| **Klik op een pallet** | erin afdalen — nog een magazijn, dezelfde bediening |
+| **Scrollen** | zoomen |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Dezelfde bediening op elke diepte. Niet onderhandelbaar: een weergave waarvan de interactie verandert
+naarmate je afdaalt, heeft de belofte gebroken dat elk niveau een magazijn is.
 
-### The camera is orthographic, on purpose
+### De camera is orthografisch, met opzet
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+Er is **geen perspectiefverjonging**. Evenwijdige lijnen lopen nooit samen, en een plaats aan het eind van
+een gangpad wordt precies even groot weergegeven als een aan je voeten.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+Dat lijkt even fout — het oog verwacht convergentie en leest de afwezigheid ervan alsof het tussen de
+kisten staat en naar buiten kijkt. Het is toch de juiste afweging, en het is wat besturingsschermen voor
+echte geautomatiseerde vloeren gebruiken: **het hele punt is plaatsen over de vloer heen in één oogopslag te
+vergelijken**, en een perspectiefcamera maakt het verre eind van een gangpad kleiner, doffer en moeilijker
+te beoordelen dan het nabije. Onder perspectief zien "die stelling is voller" en "die stelling is dichterbij"
+er hetzelfde uit. Onder een orthografische camera niet.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+Occlusie blijft echt — vlakken die zich afwenden worden weggelaten en nabijere geometrie schildert over
+verdere heen. Het is een platte camera, geen platte scène.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Werktuigen zijn ook bereikbaar via een **zijmenu**, gegroepeerd per soort — kranen, pallets, de twee dokken,
+de transportband, de vrachtwagens. Kiezen uit het menu of van de vloer opent dezelfde bediening, want een
+vloer die je alleen kunt doorlopen door op kleine kistjes in een 3D-scène te klikken, is een demonstratie en
+geen instrument.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Wat de vloer wel en niet mag
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+Elke beperking uit [`07`](07-INTERFACE.md) §5 geldt. De lijn wordt op één bepaalde plek getrokken:
 
-**The floor may induct. It may never execute.**
+**De vloer mag inbrengen. Zij mag nooit uitvoeren.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+Dat is dezelfde lijn die [`07`](07-INTERFACE.md) §1 al voor de console trekt, en zij is wat werktuigen
+überhaupt bediening laat hebben. Een kraan kiezen en er werk aan richten schrijft een `REQ`-regel die die
+agent noemt en zet een `TELL` in diens postbus. **Het start niets.** Er wordt geen proces gestart, geen
+opdracht uitgevoerd, en de agent pakt het werk op bij zijn eigen volgende uitvoering — of niet.
 
-Two consequences that are easy to get wrong:
+Twee gevolgen die makkelijk misgaan:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Gericht werk is nog steeds geen opdracht.** De `REQ`-regel is het canonieke register; de postbusregel
+  verwijst er slechts naar. Een bestand dat een agent zou *bevelen* — of dat het gezag van de Operator vanuit
+  de boom zou opeisen — zou het beveiligingsincident zijn dat [`03`](03-BUS.md) §5 omschrijft, en dat in het
+  oppervlak inbouwen zou erger zijn dan het met de hand doen. Het gezag is de Operator in gesprek. De vloer
+  schrijft het register, niet de instructie.
+- **Sommige werktuigen krijgen bewust geen bediening.** De transportband is alleen-lezen: een console die
+  regels op de bus zou kunnen schrijven, zou gezag fabriceren dat het protocol haar ontzegt. Vrachtwagens
+  hebben helemaal geen bediening — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**Onder `STOP` wordt de vloer rood weergegeven en brengt zij niets in.** Een rode vloer neemt geen
+opdrachten aan.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+De eerlijke grens, eenmaal gezegd: **dit is een foto van de boom op één moment, geen levende telemetriestroom.**
+Zij bevraagt met tussenpozen. Tussen bevragingen is zij verouderd, toont zij wanneer zij het laatst heeft
+gelezen, en wordt zij grijs in plaats van anders voor te wenden wanneer de sidecar niet meer antwoordt.
