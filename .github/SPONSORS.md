@@ -1,24 +1,39 @@
 # Enabling GitHub Sponsors
 
-Everything here is written and ready. **One step is left and only you can do it** — enabling
-Sponsors requires signing in and onboarding a payout account, which is exactly the class of act
-the protocol reserves for the Operator ([`00`](../protocol/00-PRECEDENCE.md): *credentials,
-sign-ins, purchases and provisioning are always the Operator's hands*).
+**Status: submitted, awaiting GitHub approval.** `[CLAIMED]` — the application is in; the public
+profile has not published yet. Verified 2026-09-11: `github.com/sponsors/Solmex72` still redirects
+to the plain profile page, which is what GitHub serves before a sponsors profile goes live.
 
-Until it is enabled, the README carries the PayPal button only. A sponsor badge pointing at a
-profile that does not exist is a value with no live source behind it, which this project's own
-rules forbid shipping.
+Until it publishes, the README carries the PayPal button only. A sponsor badge pointing at a
+profile that does not resolve is a value with no live source behind it, which this project's own
+rules forbid shipping. The moment it resolves, it is two edits — both below.
+
+Enabling Sponsors is the Operator's act by definition: it needs a sign-in and a payout account,
+which [`00`](../protocol/00-PRECEDENCE.md) puts permanently in the Operator's hands.
 
 ---
 
-## The one step
+## Checking whether it has published
 
-1. Go to **[github.com/sponsors](https://github.com/sponsors)** and join the program as
-   **@Solmex72** (a personal account, not the repo).
-2. Complete Stripe Connect onboarding — bank details and ID verification. This is the part that
-   takes a day or two on GitHub's side.
-3. Paste the profile copy and tiers below into the sponsor profile editor.
-4. Come back and run the two edits in [Once it is live](#once-it-is-live).
+A 200 proves nothing — GitHub returns 200 and redirects to the ordinary profile while the
+application is pending. **Check the title, not the status code:**
+
+```bash
+curl -sL https://github.com/sponsors/Solmex72 | grep -oE '<title>[^<]*</title>'
+#  pending  -> <title>Solmex72 · GitHub</title>                       (redirected)
+#  live     -> <title>Sponsor @Solmex72 on GitHub Sponsors</title>
+```
+
+This is a live example of a check that looks like it passed and has not.
+
+---
+
+## Remaining steps
+
+1. ~~Join the program at [github.com/sponsors](https://github.com/sponsors) as **@Solmex72**.~~ Done.
+2. ~~Complete Stripe Connect onboarding.~~ Done — awaiting GitHub's review.
+3. When the title check above flips, paste the profile copy and tiers below into the profile editor.
+4. Make the two edits in [Once it is live](#once-it-is-live).
 
 ---
 
