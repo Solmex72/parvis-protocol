@@ -128,6 +128,21 @@ Navigation is what made the original usable, not colour alone:
 Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
 broken the promise that every level is a warehouse.
 
+### The camera is orthographic, on purpose
+
+There is **no perspective divide**. Parallel lines never converge, and a location at the far end
+of an aisle renders exactly the same size as one at your feet.
+
+This looks wrong for a moment — the eye expects convergence and reads its absence as though it
+were standing inside the boxes looking out. It is the right trade anyway, and it is what control
+screens for real automated floors use: **the whole point is comparing locations across the floor
+at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
+to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
+look the same. Under an orthographic camera they do not.
+
+Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
+It is a flat camera, not a flat scene.
+
 Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
 docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
 controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo

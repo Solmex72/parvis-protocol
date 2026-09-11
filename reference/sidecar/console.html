@@ -719,15 +719,46 @@
 
   // An axis-aligned box, drawn as three visible faces.  lifts it onto a
   // rack level — a stored load is not on the ground, it is in a location.
+  // A solid box: all six faces, wound counter-clockwise as seen from OUTSIDE.
+  //
+  // Emitting only the three faces an isometric camera can see is the usual
+  // shortcut, and it is wrong the moment the camera orbits — swing past 90°
+  // and you are looking into the open back of a shell. So all six are emitted
+  // and the renderer culls whichever face turns away, which is correct at
+  // every angle for the cost of a signed area per quad.
+  //
+  // `y0` lifts the box onto a rack level: a stored load is not on the ground,
+  // it is in a location.
   function box(out, cxw, czw, w, d, h, color, meta, y0){
     y0 = y0 || 0;
     var x0 = cxw - w/2, x1 = cxw + w/2, z0 = czw - d/2, z1 = czw + d/2, y1 = y0 + h;
+    var P = function(x,y,z){ return {x:x,y:y,z:z}; };
+    // Shading by facing axis, so a cube still reads as a solid rather than a
+    // flat silhouette once every face is drawn.
     var faces = [
-      { pts: [{x:x0,y:y1,z:z0},{x:x1,y:y1,z:z0},{x:x1,y:y1,z:z1},{x:x0,y:y1,z:z1}], c: shade(color, 26) },
-      { pts: [{x:x0,y:y0,z:z1},{x:x1,y:y0,z:z1},{x:x1,y:y1,z:z1},{x:x0,y:y1,z:z1}], c: shade(color, -16) },
-      { pts: [{x:x1,y:y0,z:z0},{x:x1,y:y0,z:z1},{x:x1,y:y1,z:z1},{x:x1,y:y1,z:z0}], c: shade(color, -38) }
+      { p:[P(x0,y1,z0),P(x0,y1,z1),P(x1,y1,z1),P(x1,y1,z0)], c: shade(color,  26) }, // top    +Y
+      { p:[P(x0,y0,z0),P(x1,y0,z0),P(x1,y0,z1),P(x0,y0,z1)], c: shade(color, -54) }, // bottom -Y
+      { p:[P(x0,y0,z1),P(x1,y0,z1),P(x1,y1,z1),P(x0,y1,z1)], c: shade(color, -16) }, // front  +Z
+      { p:[P(x1,y0,z0),P(x0,y0,z0),P(x0,y1,z0),P(x1,y1,z0)], c: shade(color, -30) }, // back   -Z
+      { p:[P(x1,y0,z1),P(x1,y0,z0),P(x1,y1,z0),P(x1,y1,z1)], c: shade(color, -38) }, // right  +X
+      { p:[P(x0,y0,z0),P(x0,y0,z1),P(x0,y1,z1),P(x0,y1,z0)], c: shade(color, -44) }  // left   -X
     ];
-    for (var i = 0; i < faces.length; i++) out.push({ pts: faces[i].pts, c: faces[i].c, meta: meta });
+    for (var i = 0; i < faces.length; i++) out.push({ pts: faces[i].p, c: faces[i].c, meta: meta, solid: true });
+  }
+
+  // Signed area of the projected polygon decides whether a face points at the
+  // camera. Canvas Y grows downward, which flips the winding, so a face we are
+  // looking at ends up with POSITIVE area here — verified by sweeping a cube
+  // through the whole orbit rather than reasoned about, because getting this
+  // sign backwards renders the box inside-out and still looks plausible.
+  //
+  // The epsilon culls faces that are exactly edge-on. Without it an
+  // axis-aligned view keeps a zero-area sliver and four faces draw instead of
+  // three.
+  function facingAway(sp){
+    var a = 0;
+    for (var i = 0, j = sp.length - 1; i < sp.length; j = i++) a += (sp[j].x * sp[i].y) - (sp[i].x * sp[j].y);
+    return a <= 1e-9;
   }
 
   // --- AS/RS geometry -------------------------------------------------------
@@ -920,6 +951,10 @@
     for (var f = 0; f < quads.length; f++) {
       var qd = quads[f], sp = [], dsum = 0;
       for (var v = 0; v < qd.pts.length; v++) { var s = project(qd.pts[v], vp); sp.push(s); dsum += s.d; }
+      // Backface cull, but only for closed solids. The deck and the aisle
+      // lanes are single-sided planes and must draw from underneath too,
+      // or the floor vanishes when you orbit below the horizon.
+      if (qd.solid && facingAway(sp)) continue;
       tris.push({ sp: sp, c: qd.c, d: dsum / qd.pts.length, meta: qd.meta });
     }
     tris.sort(function(x, y){ return y.d - x.d; });
