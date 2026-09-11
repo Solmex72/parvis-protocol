@@ -243,7 +243,9 @@ export function createServer(cfg) {
       if (!ROW_RE.test(l)) continue;
       const p = l.split("|").map((s) => s.trim());
       if (!DATE_RE.test(p[1] || "")) continue;
-      rows.push({ status: p[0] || "", date: p[1], who: p[2] || "", what: p[3] || "", evidence: p[4] || "" });
+      // raw is what /tasks/amend must be pinned to: a client can only amend a row
+      // it actually read, so it sends this back verbatim.
+      rows.push({ status: p[0] || "", date: p[1], who: p[2] || "", what: p[3] || "", evidence: p[4] || "", raw: l });
     }
     return rows.slice(-limit).reverse();
   }
@@ -629,6 +631,76 @@ export function createServer(cfg) {
           fs.writeFileSync(real, content, "utf8");   // 03 §7: full write, idempotent
           return json(res, { ok: true, backup: path.basename(real) + ".bak" });
         } catch (e) { return json(res, { error: String(e.message) }, 500); }
+      }
+
+      // --- amend an open REQ row -------------------------------------------
+      // NARROW ON PURPOSE. _os is not in editableDirs and must not become so:
+      // the governance tree is what constrains the fleet, and a surface able to
+      // rewrite it could rewrite its own constraints. This route does exactly
+      // two things, and only to rows whose status is REQ: change the text, or
+      // cancel.
+      //
+      // Cancelling does NOT delete. 04 section 3: a refusal belongs in the index
+      // permanently, because that is how the fleet stops re-litigating settled
+      // questions. A cancelled row becomes REFUSED and stays.
+      //
+      // The caller must send the row exactly as it last read it. If the file has
+      // changed underneath, the match fails and nothing is written - the same
+      // pin-to-what-you-read rule 11 section 4 applies to money, for the same
+      // reason: amending a row you have not actually seen edits the wrong one.
+      if (url.pathname === "/tasks/amend" && POST) {
+        const g = gate();
+        if (g.verb !== "RUN") return json(res, { error: "estop " + g.verb + " - no writes", reason: g.reason }, 423);
+
+        const payload = await readJson(req);
+        const original = payload.original, action = payload.action, text = payload.text;
+        if (typeof original !== "string" || !original.trim()) {
+          return json(res, { error: "original row required" }, 400);
+        }
+        if (action !== "edit" && action !== "cancel") {
+          return json(res, { error: "action must be edit or cancel" }, 400);
+        }
+
+        const LF = String.fromCharCode(10), CR = String.fromCharCode(13);
+        let bodyText;
+        try { bodyText = fs.readFileSync(TASK_INDEX, "utf8"); }
+        catch { return json(res, { error: "task index unreadable" }, 500); }
+
+        const lines = bodyText.split(LF).map((l) => l.split(CR).join(""));
+        const want = original.trim();
+        const hits = [];
+        for (let i = 0; i < lines.length; i++) if (lines[i].trim() === want) hits.push(i);
+        if (hits.length === 0) return json(res, { error: "row not found - it may have changed since you read it" }, 409);
+        if (hits.length > 1) return json(res, { error: "row is not unique; refusing to guess" }, 409);
+
+        const at = hits[0];
+        const parts = lines[at].split("|").map((x) => x.trim());
+        if (parts[0] !== "REQ") {
+          return json(res, { error: "only REQ rows may be amended; this row is " + parts[0] }, 423);
+        }
+
+        const pad = (v) => (v + "       ").slice(0, 7);
+        const who = cfg.operator || "parvis-console";
+        let rebuilt;
+        if (action === "cancel") {
+          rebuilt = pad("REFUSED") + " | " + parts[1] + " | " + parts[2] + " | " + parts[3] +
+                    " | cancelled from the console by " + who;
+        } else {
+          const oneLine = String(text || "").split(CR).join(" ").split(LF).join(" ").trim().slice(0, 500);
+          if (!oneLine) return json(res, { error: "empty text" }, 400);
+          rebuilt = pad("REQ") + " | " + parts[1] + " | " + parts[2] + " | " + oneLine +
+                    " | " + (parts[4] || ("amended from the console by " + who));
+        }
+
+        lines[at] = rebuilt;
+        try {
+          fs.copyFileSync(TASK_INDEX, TASK_INDEX + ".bak");
+          fs.writeFileSync(TASK_INDEX, lines.join(LF), "utf8");
+        } catch (e) {
+          return json(res, { error: "write failed: " + e.message }, 500);
+        }
+        // Nothing is executed here either. This edits a record, not a machine.
+        return json(res, { ok: true, action: action, line: at + 1, row: rebuilt, executed: false });
       }
 
       if (url.pathname === "/induct" && POST) {

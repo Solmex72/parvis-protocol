@@ -108,7 +108,7 @@
 
   /* --- lists --- */
   .list{background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:22px}
-  .row{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .row{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .row:last-child{border-bottom:0}
   .row.click{cursor:pointer}
   .row.click:hover{background:var(--raised)}
@@ -155,6 +155,15 @@
 
   /* --- warehouse floor --- */
   .btn.armed,.pbar button.armed{background:var(--amber);color:#151a21;font-weight:700}
+  .amend{display:inline-flex;gap:5px;margin-left:8px}
+  .mini{background:var(--panel2);border:1px solid var(--line2);color:var(--ink2);
+    font:inherit;font-size:11px;padding:2px 8px;border-radius:5px;cursor:pointer}
+  .mini:hover{color:var(--ink);border-color:var(--ink3)}
+  .mini.armed{background:var(--red);color:#fff;border-color:var(--red)}
+  .amend-in{display:flex;gap:6px;align-items:center;margin:6px 0 2px 0;flex:0 0 100%}
+  .amend-in input{flex:1;background:var(--bg);border:1px solid var(--line2);color:var(--ink);
+    font:inherit;font-size:12px;padding:4px 8px;border-radius:6px}
+  .amend-msg{font-size:11px;color:var(--ink3)}
   .whbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   /* Persistent. The floor is tall enough that you scroll past this bar to
      drag the warehouse, and it holds the only way back up a level — losing
@@ -613,7 +622,54 @@
             (t.evidence ? ' <span style="color:var(--ink3)">— ' + esc(t.evidence) + '</span>' : '') +
             (bad ? ' <span class="tag t-bad">NO EVIDENCE — INVALID</span>' : '') +
           '</span>' +
-          '<span class="meta">' + esc(t.who) + ' · ' + esc(t.date) + '</span>';
+          '<span class="meta">' + esc(t.who) + ' · ' + esc(t.date) + '</span>' +
+          // The pick list. An open REQ is a proposal, and a proposal you cannot
+          // change before it is picked up is not much of a review. Only REQ rows
+          // get controls: DONE, BLOCKED and REFUSED are history (05 section 5).
+          (t.status === 'REQ'
+            ? '<span class="amend">' +
+                '<button class="mini" data-act="edit">modify</button>' +
+                '<button class="mini" data-act="cancel">cancel</button>' +
+              '</span>'
+            : '');
+        if (t.status === 'REQ' && t.raw) {
+          el.querySelector('[data-act=edit]').addEventListener('click', function(){
+            var cur = el.querySelector('.nm');
+            if (el.querySelector('.amend-in')) return;
+            var box2 = document.createElement('div');
+            box2.className = 'amend-in';
+            box2.innerHTML = '<input value="' + esc(t.what) + '">' +
+                             '<button class="mini go">save</button>' +
+                             '<button class="mini">discard</button>' +
+                             '<span class="amend-msg"></span>';
+            el.appendChild(box2);
+            var inp2 = box2.querySelector('input');
+            inp2.focus();
+            box2.querySelectorAll('button')[1].addEventListener('click', function(){ box2.remove(); });
+            box2.querySelector('.go').addEventListener('click', function(){
+              var v = inp2.value.trim();
+              if (!v) return;
+              box2.querySelector('.amend-msg').textContent = 'saving…';
+              api('/tasks/amend', { method:'POST', headers:{'content-type':'application/json'},
+                                    body: JSON.stringify({ original: t.raw, action: 'edit', text: v }) })
+                .then(function(rr){
+                  if (rr.ok) { loadTasks(); }
+                  else { box2.querySelector('.amend-msg').textContent = rr.body.error || 'refused'; }
+                });
+            });
+          });
+          el.querySelector('[data-act=cancel]').addEventListener('click', function(){
+            var btn = el.querySelector('[data-act=cancel]');
+            if (btn.dataset.armed !== '1') {
+              btn.dataset.armed = '1'; btn.textContent = 'confirm cancel';
+              btn.classList.add('armed');
+              return;
+            }
+            api('/tasks/amend', { method:'POST', headers:{'content-type':'application/json'},
+                                  body: JSON.stringify({ original: t.raw, action: 'cancel' }) })
+              .then(function(rr){ if (rr.ok) loadTasks(); else btn.textContent = rr.body.error || 'refused'; });
+          });
+        }
         box.appendChild(el);
       });
     }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
