@@ -122,8 +122,8 @@ not actually checked — and this is a live example of a check that looks like i
 
 ## Why PayPal is live and Sponsors is not
 
-PayPal's donate link works from an email address with no account setup on the receiving end, so it
-could ship immediately. GitHub Sponsors cannot: the URL 404s until the program is joined and
+The PayPal donation is a hosted donate button on the Woods Wiring LLC account, so it could ship
+immediately. GitHub Sponsors cannot: the URL 404s until the program is joined and
 onboarding completes.
 
 Shipping both would have meant shipping one dead link. The protocol's own rule decided it —

@@ -5,8 +5,9 @@
 # rule, a value with no live source behind it should not be shown at all.
 #
 #   github -> requires enabling at https://github.com/sponsors (Stripe onboarding)
-#   custom -> any URL. The PayPal donate form below works from an email address
-#             with no PayPal.me handle needed.
+#   custom -> any URL. The PayPal link below is a hosted donate button on the
+#             Woods Wiring LLC account. The button id carries the amount and
+#             currency settings, so no address appears in this file.
 
 custom: ["https://www.paypal.com/donate/?hosted_button_id=KU3RLVTG3NGW8"]
 
