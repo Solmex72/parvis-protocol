@@ -1,113 +1,130 @@
+> **Traduction non officielle.** La version normative de ce document est l'anglaise, sur la branche
+> `main`. Cette traduction est fournie par commodité et **n'a pas été vérifiée par un locuteur
+> natif**. En cas de divergence avec l'original anglais, **l'anglais prévaut**. Les identifiants du
+> protocole (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, les verbes du bus et les noms de
+> fichiers) sont délibérément conservés en anglais : ce sont des valeurs littérales que les agents
+> analysent.
+
 # 08 — AGENTS
 
-**Status: normative.** What an agent is, and what it owes every run.
+**Statut : normatif.** Ce qu'est un agent, et ce qu'il doit à chaque exécution.
 
 ---
 
-## 1. Roles
+## 1. Rôles
 
-| Role | Who |
+| Rôle | Qui |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Opérateur** | L'humain. Déclare les niveaux de priorité, lève l'arrêt, détient chaque identifiant, engage chaque acte irréversible. |
+| **Agent** | Un travailleur unique et cantonné, doté d'un fichier de définition, d'un espace de noms où il peut écrire, et d'une tâche permanente. |
+| **Flotte** | Tous les agents sous une même racine de protocole. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+Un agent est défini par un fichier, non par un processus en cours. Les processus meurent ; la
+définition est ce qui rend l'agent reconstructible sur une autre machine.
 
 ---
 
-## 3. Scope
+## 2. Les cinq choses que tout agent doit, à chaque exécution
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **Contrôlez l'arrêt d'urgence** avant le premier appel d'outil, et de nouveau avant chaque
+   écriture, envoi, exécution ou dépense. Faites `stat` **lors de cette exécution**. Ne citez jamais
+   un état mémorisé. Si les signaux divergent, l'arrêt l'emporte. Si vous ne pouvez pas trancher,
+   l'arrêt l'emporte.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **Lisez le briefing en direct** s'il en existe un, avant toute chose, et dites ce que vous
+   détenez dont il a besoin. *« Rien »* est une vraie réponse — dites-le et tenez-vous prêt, plutôt
+   que d'inventer une contribution.
+
+3. **Écrivez le livrable sur disque** en **une écriture de fichier entier, jamais une série
+   d'ajouts** ([`03-BUS.md`](03-BUS.md) §7). Un constat rapporté seulement en conversation n'a pas
+   été livré.
+
+4. **Déconnectez-vous** avant de terminer. §4 ci-dessous.
+
+5. **Étiquetez chaque affirmation** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` exige une
+   source primaire que vous avez réellement lue lors de cette exécution. Une source qui n'a pas
+   voulu se charger est un appel raté, pas une preuve.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Portée
+
+Chaque agent travaille **uniquement dans son propre espace de noms**. Il lit largement et écrit
+étroitement.
+
+- **Il ne recrute jamais lui-même d'équipage.** Un nouveau travail trouvé devient une annonce au
+  tableau. Un nouvel agent nécessaire devient une *définition rédigée assortie d'une demande à
+  l'Opérateur* — jamais un processus en cours.
+- **Il ne lève jamais un arrêt d'urgence**, y compris celui qu'il a posé.
+- **Il ne modifie jamais l'espace de noms d'un autre agent**, ni le contexte faisant autorité d'une
+  autre racine. Il signale la dérive.
+- **Un agent isolé n'est nommé que lorsque l'Opérateur le nomme.** Il n'est sur aucun bus, dans
+  aucune formation, sur aucune surface partagée. Il lit tout de même l'arrêt d'urgence.
+
+---
+
+## 4. Connexion et déconnexion
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Connexion :** écrivez le marqueur, faites un `FLASH` de votre identité vers le journal de
+diffusion, contrôlez l'arrêt d'urgence.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Déconnexion :** écrivez le fichier de preuve, ajoutez la ligne au registre, supprimez **votre
+propre** marqueur, et terminez délibérément.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Ne supprimez que votre propre marqueur. Un agent qui range celui d'un autre vient de déclarer
+terminée une session vivante.
 
-### Why sign-off is a protocol obligation
+### Pourquoi la déconnexion est une obligation du protocole
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+Un veilleur cantonné à une session meurt avec sa session, et **un moniteur silencieux et un
+moniteur mort se ressemblent exactement.** Le silence est infalsifiable. Les correctifs sont
+structurels :
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Battements de cœur** — l'absence d'un battement devient une preuve.
+- **Déconnexion explicite** — pour qu'un marqueur abandonné soit une anomalie détectable plutôt que
+  du bruit.
+- **Réarmement au redémarrage** — ne supposez jamais qu'un moniteur a survécu.
 
 ---
 
-## 5. Naming
+## 5. Nommage
 
-Every agent carries a working name and a one-line charter:
+Chaque agent porte un nom de travail et une charte d'une ligne :
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Des noms distincts et prononçables valent mieux que des numéros dans une transcription, et mieux
+que des intitulés de rôle quand deux rôles se recouvrent. Si deux noms se heurtent dans l'espace de
+noms, **désambiguïsez à chaque usage** — écrivez les deux en toutes lettres à la première mention
+de chaque document. Une différence d'un seul caractère entre deux choses réelles est un défaut qui
+attend d'être invoqué.
 
 ---
 
-## 6. The structural failures to design against
+## 6. Les défaillances structurelles contre lesquelles concevoir
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+Elles sont observées, non hypothétiques. Chacune s'est produite dans une flotte en marche.
 
-| Failure | The counter-discipline |
+| Défaillance | La contre-discipline |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Fichiers rivaux.** Cinq versions d'une règle de Priorité 0 ; deux mandats maîtres ; deux manuels aux vérités opposées. | Trancher et élaguer ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Cherchez avant d'écrire toute doctrine. Une règle reformulée dans un nouveau fichier est une dérive, pas une contribution. |
+| **Pointeurs morts.** Des centaines de fichiers citant un chemin qui n'existe pas. | Réparez le générateur qui le propage **avant** le balayage, sinon le compte repousse. |
+| **Des sources et presque aucun puits.** Des centaines de fichiers exposés et d'éléments ouverts au tableau face à un humain qui peut en lire quelques-uns. Rien ne retire rien ; chaque couche ne fait qu'accumuler. | **Tout dépôt reçoit un puits, décidé au moment où le dépôt est construit.** C'est le plus grand risque structural pesant sur l'utilité de toute la conception. |
+| **Le silence est infalsifiable.** | Battements de cœur. §4. |
+| **Tout cantonné à la session.** | Réarmez la couverture au redémarrage ; ne supposez jamais la survie. |
+| **Affirmations sans preuve.** | Étiquettes de confiance, et une ligne `DONE` est invalide sans chemin de preuve. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. La philosophie, énoncée une fois
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **La machine rend compte. L'humain décide. L'acte irréversible appartient toujours à une
+> personne.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Tout le reste de ce protocole est un détail d'implémentation de cette phrase.
