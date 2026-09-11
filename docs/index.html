@@ -520,7 +520,7 @@
 
   function draw(){
     if (!WH.data) return;
-    var view = fitCanvas();
+    var view = fit();
     var d = WH.data;
     var stopped = d.estop === "STOP";
     var COL = {
@@ -812,6 +812,17 @@
 
   // --- equipment menu ------------------------------------------------------
   var SEL = null;
+
+  // Crane colour is the fleet state rendered, never a guess — 09 §3.
+  // Red outranks everything, and anything with no live state falls to grey
+  // rather than to the pleasant default.
+  function craneColour(c, stopped){
+    return stopped || c.state === "stopped" ? "var(--red)"
+         : c.state === "moving"    ? "var(--green)"
+         : c.state === "gated"     ? "var(--amber)"
+         : c.state === "scheduled" ? "var(--blue)" : "var(--ink3)";
+  }
+
   function buildEquip(d){
     var stopped = d.estop==="STOP", h="";
     h += '<div class="grp">Cranes<span>'+d.cranes.length+'</span></div>';
