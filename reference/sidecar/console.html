@@ -154,6 +154,7 @@
   dialog textarea:focus{outline:none}
 
   /* --- warehouse floor --- */
+  .btn.armed,.pbar button.armed{background:var(--amber);color:#151a21;font-weight:700}
   .whbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   /* Persistent. The floor is tall enough that you scroll past this bar to
      drag the warehouse, and it holds the only way back up a level — losing
@@ -901,17 +902,31 @@
       // AS/RS screen and it is not the same as busy — so it gets its own
       // colour rather than being folded into green.
       var full = load !== null && load >= 30;
+      // A stored location should be legible as a SOLID, not a silhouette. The
+      // old -22 shade rendered an ordinary directory as near-black against a
+      // dark deck, so the floor looked empty when it was full. Brightness now
+      // tracks how loaded the location is: a fuller rack reads lighter.
+      var lift = load === null ? 0 : Math.round(26 + Math.min(1, load / 40) * 40);
       var col = stopped ? COL.red
               : load === null ? COL.grey
               : pal.hot ? COL.green
               : full ? COL.amber
-              : shade(COL.blue, -22);
+              : shade(COL.blue, lift);
 
       var fill = load === null ? 0.30 : Math.max(0.34, Math.min(1, 0.34 + Math.log10(1 + load) * 0.42));
       var hgt = LEVEL_H * 0.74 * fill;
       var hov = WH.hover && WH.hover.kind === "pallet" && WH.hover.name === pal.name;
-      box(quads, x, z, RACK_W * 0.82, RACK_D * 0.8, hgt, hov ? shade(col, 42) : col,
+      box(quads, x, z, RACK_W * 0.82, RACK_D * 0.8, hgt, hov ? shade(col, 86) : col,
           { kind: "pallet", name: pal.name, rel: pal.rel, p: pal }, y);
+      // A hovered location gets an outline as well as a lift, so the highlight
+      // survives on a bright rack where a shade change alone would be subtle.
+      if (hov) {
+        var hw = RACK_W * 0.82 / 2, hd = RACK_D * 0.8 / 2, ht = y + hgt + 0.04;
+        lines.push({ a:{x:x-hw,y:ht,z:z-hd}, b:{x:x+hw,y:ht,z:z-hd}, c: COL.ink, w: 2 });
+        lines.push({ a:{x:x+hw,y:ht,z:z-hd}, b:{x:x+hw,y:ht,z:z+hd}, c: COL.ink, w: 2 });
+        lines.push({ a:{x:x+hw,y:ht,z:z+hd}, b:{x:x-hw,y:ht,z:z+hd}, c: COL.ink, w: 2 });
+        lines.push({ a:{x:x-hw,y:ht,z:z+hd}, b:{x:x-hw,y:ht,z:z-hd}, c: COL.ink, w: 2 });
+      }
       WH.layout.push({ name: pal.name, rel: pal.rel, x: x, z: z, y: y, h: hgt, sl: sl, p: pal });
     }
 
@@ -1042,7 +1057,7 @@
                : cr.state === "scheduled" ? COL.blue
                : COL.grey;
       var hovC = WH.hover && WH.hover.kind === "crane" && WH.hover.name === cr.agent;
-      var cc = hovC ? shade(ccol, 45) : ccol;
+      var cc = hovC ? shade(ccol, 86) : ccol;
 
       // mast, from the rail to above the top level
       box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, { kind: "crane", name: cr.agent, cr: cr }, drop);
@@ -1563,9 +1578,41 @@
   // The source design puts an input along the bottom of every surface: you are
   // never only watching. What you type is an induction — it becomes a REQ row
   // at the dock, and nothing moves without the review.
+  // Two stages: SUMMARISE, then WRITE. The first press states exactly what is
+  // about to happen and arms the button; the second performs it. 07 §1 is the
+  // reason the second stage still only writes a REQ row — the review stands
+  // between a prompt and a moving machine, and a button that spawned an agent
+  // would remove the only thing holding that line.
+  var PEND = null;
+
+  function pbarSummary(v){
+    var where = WH.path ? "/" + WH.path : "/";
+    return '<b>About to induct</b> — nothing runs yet.' +
+      '<br>· write a <code>REQ</code> row to <code>_os/tasks/INDEX.md</code>' +
+      '<br>· scope <code>' + esc(where) + '</code>' +
+      (SEL && SEL.kind === "crane" ? '<br>· address it to <b>' + esc(SEL.id) + '</b> and drop a <code>TELL</code> in its inbox' : '') +
+      '<br>· drop a pointer in <code>_os/events/surface/</code>' +
+      '<br>· text: “' + esc(v.length > 90 ? v.slice(0, 89) + "…" : v) + '”' +
+      '<br><b>No agent is spawned and no command runs.</b> An agent picks this up on its own next run — press again to confirm.';
+  }
+
   function pbarInduct(){
     var el = $("pbar-in"), v = el.value.trim();
     if (!v) return;
+
+    // Stage one: show what this will do, and arm.
+    if (PEND !== v) {
+      PEND = v;
+      $("pbar-msg").innerHTML = pbarSummary(v);
+      $("pbar-go").textContent = "Confirm";
+      $("pbar-go").classList.add("armed");
+      return;
+    }
+
+    // Stage two: the operator has read the summary and pressed again.
+    PEND = null;
+    $("pbar-go").textContent = "Induct";
+    $("pbar-go").classList.remove("armed");
     $("pbar-msg").textContent = "inducting…";
     api("/induct", { method:"POST", headers:{"content-type":"application/json"},
                      body: JSON.stringify({ prompt: v }) })
@@ -1583,6 +1630,16 @@
   }
   $("pbar-go").addEventListener("click", pbarInduct);
   $("pbar-in").addEventListener("keydown", function(e){ if (e.key === "Enter") pbarInduct(); });
+  // Editing the text disarms: the summary you confirmed must be the summary you
+  // read. Otherwise a changed prompt could ride a confirmation given for another.
+  $("pbar-in").addEventListener("input", function(){
+    if (PEND !== null && $("pbar-in").value.trim() !== PEND) {
+      PEND = null;
+      $("pbar-go").textContent = "Induct";
+      $("pbar-go").classList.remove("armed");
+      $("pbar-msg").textContent = "";
+    }
+  });
 
   function loadFloor(rel){
     if (rel === null || rel === undefined) rel = WH.path;
