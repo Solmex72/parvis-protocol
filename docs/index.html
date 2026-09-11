@@ -77,7 +77,11 @@
   h2{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
      color:var(--ink3);margin:26px 0 9px;font-weight:600}
 
-  .whbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .whbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  /* Persistent: the floor is tall enough to scroll the bar off, and the bar
+     holds the only way back up a level. Losing it means no way out. */
+  position:sticky;top:0;z-index:30;background:var(--bg);
+  padding:8px 0 10px;margin-bottom:0}
   .crumb{font-family:var(--mono);font-size:12px;color:var(--ink2)}
   .crumb b{color:var(--ink)} .crumb span{cursor:pointer;color:var(--blue)}
   .crumb span:hover{text-decoration:underline}
@@ -430,7 +434,9 @@
     var cy=Math.cos(WH.yaw), sy=Math.sin(WH.yaw);
     var x=pt.x*cy - pt.z*sy, z=pt.x*sy + pt.z*cy;
     var cp=Math.cos(WH.pitch), sp=Math.sin(WH.pitch);
-    return { x:v.cx + x*v.scale, y:v.cy + (pt.y*cp - z*sp)*v.scale, d: pt.y*sp + z*cp };
+    // Canvas Y grows DOWNWARD, so world height must be negated or the floor
+    // renders upside down — racks hanging below the deck.
+    return { x:v.cx + x*v.scale, y:v.cy + (z*sp - pt.y*cp)*v.scale, d: pt.y*sp + z*cp };
   }
   function shade(hex, amt){
     var c = String(hex).trim().replace("#","");
