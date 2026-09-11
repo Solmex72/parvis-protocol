@@ -148,7 +148,13 @@
   dialog textarea:focus{outline:none}
 
   /* --- warehouse floor --- */
-  .whbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .whbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  /* Persistent. The floor is tall enough that you scroll past this bar to
+     drag the warehouse, and it holds the only way back up a level — losing
+     it means no way out. Sticks BELOW .bar, whose height is measured at
+     runtime because it wraps on narrow viewports. */
+  position:sticky;top:var(--barh,46px);z-index:15;background:var(--bg);
+  padding:8px 0 10px;margin-bottom:0}
   .crumb{font-family:var(--mono);font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
   .crumb b{color:var(--ink)}
   .crumb span{cursor:pointer;color:var(--blue)}
@@ -1415,6 +1421,15 @@
       drawFloor();
     }).catch(function(){ $("wh-equip").innerHTML = '<div class="empty">sidecar unreachable</div>'; });
   }
+
+  // Keep the sticky warehouse bar parked directly under the tab strip.
+  // .bar wraps on narrow viewports, so its height is measured, not assumed.
+  function syncBarOffset(){
+    var b = document.querySelector('.bar');
+    if (b) document.documentElement.style.setProperty('--barh', b.offsetHeight + 'px');
+  }
+  syncBarOffset();
+  window.addEventListener('resize', syncBarOffset);
 
   window.addEventListener("resize", function(){ if (WH.data) drawFloor(); });
   WH.raf = requestAnimationFrame(loop);
