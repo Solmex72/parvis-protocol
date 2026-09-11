@@ -31,6 +31,7 @@
     "bin/",
     "sidecar/",
     "airlock/",
+    "credentials/",
     "stress.mjs",
     "README.md"
   ],
@@ -47,7 +48,8 @@
     "check": "node bin/parvis.mjs check",
     "test": "node bin/parvis.mjs selftest",
     "redteam": "node airlock/redteam.mjs",
-    "stress": "node stress.mjs"
+    "stress": "node stress.mjs",
+    "leakcheck": "node credentials/leakcheck.mjs .."
   },
   "dependencies": {},
   "devDependencies": {}
