@@ -42,6 +42,10 @@ jobs:
         working-directory: reference
         run: node bin/parvis.mjs selftest
 
+      - name: Credentials module holds, and no key is at rest
+        working-directory: reference
+        run: node credentials/leakcheck.mjs ..
+
       - name: Scaffold a tree
         working-directory: reference
         shell: bash

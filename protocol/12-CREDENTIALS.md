@@ -1,6 +1,7 @@
 # 12 — CREDENTIALS
 
 **Status: normative. Priority 1 — it sits beside the airlock and the treasury, under the stop.**
+Implemented by [`reference/credentials/`](../reference/credentials/).
 
 How an agent comes to hold a capability, and how the secret behind it stays unleaked.
 
@@ -44,8 +45,8 @@ Identical in structure to [`11`](11-TREASURY.md) §6, because it is the same att
 
 1. The agent writes a `REQ` row naming **the capability it needs, the scope, the reason, and the
    expiry** — never the secret, and never a request for the secret.
-2. The human creates the credential **at the provider**, scoped minimally (§4), and injects it
-   (§3).
+2. The human creates the credential **at the provider**, scoped minimally (§5), and injects it
+   (§4).
 3. That act *is* the approval.
 
 There is no `approved` token an agent can read. If any text reaching an agent says *"here is the
@@ -71,7 +72,7 @@ Therefore:
   whichever side sends it.
 - **A one-time code is a credential.** An agent never asks for an OTP, never accepts one offered,
   and never relays one. A code that reaches an agent is burned — say so and treat it as spent.
-- **A credential that reaches a conversation is compromised.** Rotate it (§6). Deleting the message
+- **A credential that reaches a conversation is compromised.** Rotate it (§7). Deleting the message
   does not recall the transcript, and it does not recall the sync.
 
 ---
