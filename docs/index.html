@@ -110,6 +110,19 @@
   .floor .tip b{color:var(--amber)}
   .floor.stopped{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
 
+  .pbar{display:flex;align-items:center;margin-top:11px;background:var(--bg);
+        border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+  .pbar:focus-within{border-color:var(--amber)}
+  .pbar .pfx{font-family:var(--mono);font-size:12px;color:var(--ink3);padding:0 10px 0 13px;
+             white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+  .pbar input{flex:1;min-width:110px;background:transparent;border:0;color:var(--ink);
+              padding:12px 10px;font-family:var(--mono);font-size:13px}
+  .pbar input:focus{outline:none}
+  .pbar button{background:var(--amber);color:#14100a;border:0;font-weight:700;padding:12px 22px;
+               cursor:pointer;font:inherit;font-size:12.5px;align-self:stretch}
+  .pbar button:disabled{background:var(--line2);color:var(--ink3);cursor:not-allowed}
+  .pbar.stopped{border-color:var(--red)}
+
   .ctl{margin-top:11px;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;overflow:hidden}
   .ctl .ch{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--line2);background:var(--raised);flex-wrap:wrap}
   .ctl .ch .t{font-family:var(--mono);font-size:13px;font-weight:700}
@@ -183,7 +196,7 @@
     <span class="legend">
       <i style="background:var(--green)"></i>moving
       <i style="background:var(--blue)"></i>scheduled
-      <i style="background:var(--amber)"></i>gated
+      <i style="background:var(--amber)"></i>full / gated
       <i style="background:var(--red)"></i>stopped
       <i style="background:var(--ink3)"></i>no source
     </span>
@@ -199,6 +212,15 @@
       <div class="tip" id="tip" hidden></div>
     </div>
   </div>
+
+  <div class="pbar" id="pbar">
+    <span class="pfx" id="pbar-pfx">/</span>
+    <input id="pbar-in" autocomplete="off" spellcheck="false"
+           placeholder="Type what should be built here — it becomes a REQ row, not a command">
+    <button id="pbar-go">Induct</button>
+  </div>
+  <div class="echo" id="pbar-msg"
+       style="margin:7px 0 0;font-family:var(--mono);font-size:11px;color:var(--ink2)"></div>
 
   <div class="ctl" id="ctl" hidden>
     <div class="ch">
@@ -869,9 +891,28 @@
   }
 
   function go(p){ SIM.path=p; WH.cranePos={}; SEL=null; $("ctl").hidden=true; refresh(); }
+  function pbarInduct(){
+    var el = $("pbar-in"), v = el.value.trim();
+    if (!v) return;
+    if (SIM.estop === "STOP"){ $("pbar-msg").textContent = "refused — the floor is e-stopped"; return; }
+    SIM.ledger.unshift({ who: "console", what: v });
+    $("pbar-msg").innerHTML = "REQ row written · nothing executed <i>(simulated)</i>";
+    el.value = ""; refresh();
+  }
+  $("pbar-go").addEventListener("click", pbarInduct);
+  $("pbar-in").addEventListener("keydown", function(e){ if (e.key === "Enter") pbarInduct(); });
+
   function refresh(){
     var d = floor(SIM.path); WH.data = d;
     crumb(d); buildEquip(d);
+    var stopped = d.estop !== "RUN";
+    $("pbar-pfx").textContent = "/" + (d.path || "");
+    $("pbar-in").disabled = stopped;
+    $("pbar-go").disabled = stopped;
+    $("pbar").classList.toggle("stopped", stopped);
+    $("pbar-in").placeholder = stopped
+      ? "E-stopped — the floor takes no orders"
+      : "Type what should be built here — it becomes a REQ row, not a command";
     $("n-cranes").textContent=d.cranes.length; $("n-pallets").textContent=d.pallets.length;
     $("n-inducts").textContent=d.inducts; $("n-spurs").textContent=d.spurs;
     if (SEL) select(SEL.kind, SEL.id);

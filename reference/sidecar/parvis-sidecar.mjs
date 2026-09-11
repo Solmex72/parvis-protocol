@@ -397,9 +397,17 @@ export function createServer(cfg) {
 
     // Agents with queued work but no session marker: scheduled, not on the
     // floor. Drawn blue at the induct dock.
+    //
+    // 09 §3 — red outranks the glance, so a stop applies here too. An agent
+    // showing blue on a red floor would be the exact lie the rule forbids:
+    // "a floor that shows green over a red zone is lying."
     for (const [who, n] of openByAgent) {
       if (cranes.some((cr) => cr.agent === who)) continue;
-      cranes.push({ agent: who, session: null, signedOn: null, at: null, state: "scheduled", last: null, note: null, scheduled: n });
+      cranes.push({
+        agent: who, session: null, signedOn: null, at: null,
+        state: g.verb === "STOP" ? "stopped" : "scheduled",
+        last: null, note: null, scheduled: n,
+      });
     }
 
     const spurs = (surfaceFeed(500) || []).length;
