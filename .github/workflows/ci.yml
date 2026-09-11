@@ -115,7 +115,7 @@ jobs:
           # match. Anything else is a leak: a contributor's address, or a third
           # party's, which is the case that actually matters.
           if grep -rIn --exclude-dir=.git -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' . \
-             | grep -vE '(example\.com|noreply@|connor@woodswiring\.com|connorgwoods@gmail\.com)' ; then
+             | grep -vE '(example\.com|noreply@|connor@woodswiring\.com)' ; then
             echo "::error::an unexpected email address is present"; fail=1
           fi
           exit $fail

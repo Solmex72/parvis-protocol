@@ -266,7 +266,7 @@ afternoon of arguing with your own documentation, you can put something back:
 
 <div align="center">
 
-[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457c?logo=paypal&logoColor=white)](https://www.paypal.com/donate/?business=connorgwoods%40gmail.com&item_name=Parvis+Protocol&currency_code=USD)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457c?logo=paypal&logoColor=white)](https://www.paypal.com/donate/?hosted_button_id=KU3RLVTG3NGW8)
 
 </div>
 

@@ -8,7 +8,7 @@
 #   custom -> any URL. The PayPal donate form below works from an email address
 #             with no PayPal.me handle needed.
 
-custom: ["https://www.paypal.com/donate/?business=connorgwoods%40gmail.com&item_name=Parvis+Protocol&currency_code=USD"]
+custom: ["https://www.paypal.com/donate/?hosted_button_id=KU3RLVTG3NGW8"]
 
 # Uncomment once GitHub Sponsors is actually enabled on the account:
 # github: [Solmex72]

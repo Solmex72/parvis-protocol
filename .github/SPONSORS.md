@@ -96,7 +96,7 @@ Two edits, both small:
 
 ```yaml
 github: [Solmex72]
-custom: ["https://www.paypal.com/donate/?business=connorgwoods%40gmail.com&item_name=Parvis+Protocol&currency_code=USD"]
+custom: ["https://www.paypal.com/donate/?hosted_button_id=KU3RLVTG3NGW8"]
 ```
 
 **2. `README.md`** — put the badge back beside the PayPal one:
