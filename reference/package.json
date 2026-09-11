@@ -1,0 +1,38 @@
+{
+  "name": "parvis-protocol",
+  "version": "1.0.0",
+  "description": "Reference implementation for the Parvis protocol — a loopback sidecar and console for file-based agent fleets.",
+  "keywords": ["agents", "governance", "estop", "protocol", "sidecar", "llm"],
+  "homepage": "https://github.com/Solmex72/parvis-protocol",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Solmex72/parvis-protocol.git"
+  },
+  "bugs": "https://github.com/Solmex72/parvis-protocol/issues",
+  "author": "Connor Woods",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "parvis": "bin/parvis.mjs"
+  },
+  "main": "sidecar/parvis-sidecar.mjs",
+  "exports": {
+    ".": "./sidecar/parvis-sidecar.mjs"
+  },
+  "files": [
+    "bin/",
+    "sidecar/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": ["win32", "darwin", "linux"],
+  "scripts": {
+    "start": "node bin/parvis.mjs serve",
+    "check": "node bin/parvis.mjs check",
+    "test": "node bin/parvis.mjs selftest"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

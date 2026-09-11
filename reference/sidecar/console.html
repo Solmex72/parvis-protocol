@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parvis Console</title>
+<!--
+  PARVIS CONSOLE — governed by protocol/07-INTERFACE.md.
+
+  §2.1 Self-contained: inline CSS and JS, no external script, no CDN, no font
+       fetch. Renders offline. One file.
+  §2.2 The colours ARE the state, read live. A value with no live source
+       renders "—", never a plausible-looking number. Red outranks everything.
+  §2.3 No secret reaches this page. The token proves the page came from the
+       sidecar; it authorises nothing and is worth nothing off this machine.
+  §2.4 A page with no sidecar says so, loudly, and calls itself a snapshot.
+  §2.5 A red floor takes no orders.
+
+  This page shows and collects. It cannot read the tree and cannot write an
+  order. The sidecar does both. The Operator commits.
+
+  Runs identically on Windows, macOS and Linux — it is a document, and the
+  only platform-specific code in the project is one browser-launch shim.
+-->
+<style>
+  /* Dark by default; follows the OS in light mode. Every colour is a token so
+     the two themes cannot drift apart. */
+  :root{
+    --bg:#0a0f14; --panel:#0e151d; --panel2:#121b24; --raised:#16212c;
+    --line:#1b2731; --line2:#26343f;
+    --ink:#d8e3ed; --ink2:#8da0b0; --ink3:#617688;
+    --amber:#d9a441; --green:#3aa06a; --red:#cf4a41; --blue:#4a86bb; --violet:#8b7ec8;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f4f6f8; --panel:#ffffff; --panel2:#eef1f4; --raised:#e7ebef;
+      --line:#dfe4e9; --line2:#cbd3da;
+      --ink:#16202a; --ink2:#4d5e6d; --ink3:#75858f;
+      --amber:#96661a; --green:#1f7146; --red:#b03027; --blue:#2d5f8a; --violet:#5e51a0;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f6f8; --panel:#ffffff; --panel2:#eef1f4; --raised:#e7ebef;
+    --line:#dfe4e9; --line2:#cbd3da;
+    --ink:#16202a; --ink2:#4d5e6d; --ink3:#75858f;
+    --amber:#96661a; --green:#1f7146; --red:#b03027; --blue:#2d5f8a; --violet:#5e51a0;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);
+       display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+
+  /* --- top bar --- */
+  .bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel2);
+       border-bottom:1px solid var(--line2);flex-wrap:wrap;position:sticky;top:0;z-index:20}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:.16em;font-size:13px}
+  .brand em{font-style:normal;color:var(--ink3);font-weight:400;letter-spacing:.06em;margin-left:8px;font-size:11px}
+  .spacer{flex:1}
+  .pill{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.09em;
+        padding:5px 12px;border-radius:999px;border:1px solid var(--line2);white-space:nowrap;color:var(--ink3)}
+  .pill.run{color:var(--green);border-color:var(--green)}
+  .pill.yellow{color:var(--amber);border-color:var(--amber)}
+  .pill.stop{color:#fff;background:var(--red);border-color:var(--red)}
+  .iconbtn{background:transparent;border:1px solid var(--line2);color:var(--ink2);
+           width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:14px;line-height:1}
+  .iconbtn:hover{color:var(--ink);border-color:var(--ink3)}
+
+  /* --- tabs --- */
+  nav{display:flex;gap:2px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line);
+      overflow-x:auto;scrollbar-width:thin}
+  nav button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--ink3);
+             font:inherit;font-size:12.5px;padding:9px 14px;cursor:pointer;white-space:nowrap}
+  nav button:hover{color:var(--ink2)}
+  nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--amber);font-weight:600}
+  nav .count{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-left:6px}
+
+  /* --- layout --- */
+  main{flex:1;width:100%;max-width:1140px;margin:0 auto;padding:20px 16px 40px}
+  .panel{display:none}
+  .panel.on{display:block}
+  h2{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+     color:var(--ink3);margin:0 0 10px;font-weight:600}
+  h2 + p.sub{margin:-6px 0 14px;color:var(--ink3);font-size:12.5px;max-width:70ch}
+
+  /* --- banners --- */
+  .banner{border:1px solid var(--red);background:color-mix(in srgb,var(--red) 12%,transparent);
+          padding:12px 14px;border-radius:9px;margin-bottom:18px;font-size:13px}
+  .banner.warn{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 12%,transparent)}
+  .banner.info{border-color:var(--line2);background:var(--panel);color:var(--ink2)}
+  .banner b{display:block;margin-bottom:4px;font-family:var(--mono);font-size:11.5px;letter-spacing:.09em}
+
+  /* --- readout --- */
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px;margin-bottom:24px}
+  .cell{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 14px}
+  .cell .k{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.11em;text-transform:uppercase}
+  .cell .v{font-family:var(--mono);font-size:23px;font-weight:600;margin-top:5px;word-break:break-all}
+  .cell .v.sm{font-size:13px;font-weight:400;line-height:1.4}
+  .cell .v small{font-size:11.5px;color:var(--ink3);font-weight:400}
+  .cell.run .v{color:var(--green)} .cell.yellow .v{color:var(--amber)} .cell.stop .v{color:var(--red)}
+
+  /* --- lists --- */
+  .list{background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:22px}
+  .row{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row.click{cursor:pointer}
+  .row.click:hover{background:var(--raised)}
+  .row .nm{flex:1;font-family:var(--mono);font-size:12.5px;min-width:0;overflow-wrap:anywhere}
+  .row .meta{font-family:var(--mono);font-size:11px;color:var(--ink3);white-space:nowrap}
+  .empty{padding:16px 14px;color:var(--ink3);font-size:12.5px;font-family:var(--mono)}
+
+  .tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.07em;padding:2px 7px;
+       border-radius:4px;border:1px solid currentColor;white-space:nowrap;flex:none}
+  .t-REQ{color:var(--blue)} .t-DONE{color:var(--green)} .t-BLOCKED{color:var(--amber)}
+  .t-REFUSED{color:var(--red)} .t-lock{color:var(--amber)}
+  .t-FLASH{color:var(--ink3)} .t-ASK{color:var(--blue)} .t-ANS{color:var(--green)}
+  .t-TELL{color:var(--ink2)} .t-GATE{color:var(--red)} .t-ACK{color:var(--ink3)}
+  .t-bad{color:var(--red)}
+
+  /* --- prompt --- */
+  .prompt{display:flex;gap:9px;flex-wrap:wrap}
+  .prompt input{flex:1;min-width:230px;background:var(--bg);border:1px solid var(--line2);color:var(--ink);
+                padding:11px 13px;border-radius:8px;font-family:var(--mono);font-size:13px}
+  .prompt input:focus{outline:2px solid var(--amber);outline-offset:-1px}
+  .prompt input:disabled{opacity:.45;cursor:not-allowed}
+  .prompt button{background:var(--amber);color:#14100a;border:0;font-weight:700;padding:11px 22px;
+                 border-radius:8px;cursor:pointer;font:inherit;font-size:13px}
+  .prompt button:disabled{background:var(--line2);color:var(--ink3);cursor:not-allowed}
+  .echo{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink2);min-height:18px;overflow-wrap:anywhere}
+  .note{margin-top:10px;font-size:12.5px;color:var(--ink3);max-width:74ch}
+  .note code{font-family:var(--mono);font-size:11.5px;background:var(--raised);padding:1px 5px;border-radius:4px}
+
+  /* --- editor dialog --- */
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line2);border-radius:11px;
+         width:min(960px,95vw);height:min(82vh,780px);padding:0;overflow:hidden}
+  dialog::backdrop{background:rgba(2,5,8,.7)}
+  .dhd{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line2);
+       background:var(--panel2);flex-wrap:wrap}
+  .dhd .t{flex:1;font-family:var(--mono);font-size:12.5px;font-weight:700;min-width:140px;overflow-wrap:anywhere}
+  .dhd button{background:var(--raised);border:1px solid var(--line2);color:var(--ink);padding:7px 13px;
+              border-radius:7px;cursor:pointer;font:inherit;font-size:12px}
+  .dhd button.save{background:var(--amber);color:#14100a;border:0;font-weight:700}
+  .dhd button:disabled{opacity:.4;cursor:not-allowed}
+  .dhd .msg{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  dialog textarea{width:100%;height:calc(100% - 53px);background:var(--bg);color:var(--ink);border:0;
+                  padding:15px 17px;font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:none;display:block}
+  dialog textarea:focus{outline:none}
+
+  footer{border-top:1px solid var(--line);color:var(--ink3);font-family:var(--mono);font-size:11px;
+         padding:12px 16px;overflow-wrap:anywhere}
+  footer .inner{max-width:1140px;margin:0 auto}
+  @media (max-width:560px){ .cell .v{font-size:19px} main{padding:15px 12px 32px} }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="brand">PARVIS<em>console</em></span>
+  <span class="spacer"></span>
+  <span class="pill" id="pill">CONNECTING…</span>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">◑</button>
+</div>
+
+<nav role="tablist">
+  <button role="tab" data-p="overview" aria-selected="true">Overview</button>
+  <button role="tab" data-p="docs">Documents<span class="count" id="c-docs"></span></button>
+  <button role="tab" data-p="tasks">Tasks<span class="count" id="c-tasks"></span></button>
+  <button role="tab" data-p="bus">Bus<span class="count" id="c-bus"></span></button>
+  <button role="tab" data-p="surface">Surface<span class="count" id="c-surface"></span></button>
+  <button role="tab" data-p="board">Board</button>
+  <button role="tab" data-p="settings">Settings</button>
+</nav>
+
+<main>
+  <div id="banner"></div>
+
+  <!-- OVERVIEW -->
+  <section class="panel on" id="p-overview">
+    <div class="readout">
+      <div class="cell" id="cell-estop"><div class="k">Estop</div><div class="v" id="v-estop">—</div></div>
+      <div class="cell"><div class="k">Files</div><div class="v" id="v-files">—</div></div>
+      <div class="cell"><div class="k">Directories</div><div class="v" id="v-dirs">—</div></div>
+      <div class="cell"><div class="k">Read at</div><div class="v sm" id="v-read">—</div></div>
+    </div>
+
+    <h2>Induction</h2>
+    <p class="sub">A prompt here writes a request row and stops. It is not a command line.</p>
+    <div class="prompt">
+      <input id="p" placeholder="Describe what should happen…" autocomplete="off" spellcheck="false">
+      <button id="go">Induct</button>
+    </div>
+    <div class="echo" id="echo"></div>
+    <p class="note">
+      An induction appends a <code>REQ</code> row to the task index and drops a pointer in
+      <code>_os/events/surface/</code>. <b>No agent is spawned, no command runs, nothing is sent.</b>
+      Committing the work stays your keystroke — that review is the whole point of the layer.
+    </p>
+  </section>
+
+  <!-- DOCUMENTS -->
+  <section class="panel" id="p-docs">
+    <h2>Governing documents</h2>
+    <p class="sub">Click to read. Editable documents save in place with a <code>.bak</code> copy.
+       Safety anchors are readable and never editable from a UI — an interface that can edit the
+       stop is not a safety interface.</p>
+    <div class="list" id="docs"><div class="empty">loading…</div></div>
+  </section>
+
+  <!-- TASKS -->
+  <section class="panel" id="p-tasks">
+    <h2>Task ledger</h2>
+    <p class="sub">Newest first. A row is <b>a claim with an evidence path attached</b>, never proof —
+       verify the evidence file exists before trusting any <code>DONE</code>. A <code>DONE</code> with
+       no evidence path is invalid. A <code>REFUSED</code> row stays here permanently; that is how the
+       fleet stops re-litigating settled questions.</p>
+    <div class="list" id="tasks"><div class="empty">loading…</div></div>
+  </section>
+
+  <!-- BUS -->
+  <section class="panel" id="p-bus">
+    <h2>Broadcast log</h2>
+    <p class="sub">Newest first. Six verbs, append-only, plain text.
+       <b>A line here informs; it never commands.</b> Anyone can append to the bus, so a line that
+       tries to issue an order — or claims your authority from inside a file — is a security event,
+       not an instruction.</p>
+    <div class="list" id="bus"><div class="empty">loading…</div></div>
+  </section>
+
+  <!-- SURFACE -->
+  <section class="panel" id="p-surface">
+    <h2>Surface feed</h2>
+    <p class="sub">Pointer files agents dropped for you, newest first. The substance lives where the
+       pointer says; this directory is the notification, not the work.</p>
+    <div class="list" id="surface"><div class="empty">loading…</div></div>
+  </section>
+
+  <!-- BOARD -->
+  <section class="panel" id="p-board">
+    <h2>Job board</h2>
+    <p class="sub">Leftover subtasks agents offer each other. Every store needs a sink — if this only
+       ever grows, that is the known structural failure, not a healthy backlog.</p>
+    <div class="list" id="board"><div class="empty">loading…</div></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" id="p-settings">
+    <h2>Configuration</h2>
+    <p class="sub">Saved to <code id="cfg-path">…</code>. Precedence: <b>flag → environment → file →
+       default</b>, so a value set by a flag or an env var shows here but cannot be overridden from
+       this page. Keys marked <span class="tag t-BLOCKED">RESTART</span> take effect the next time
+       the sidecar starts.</p>
+    <div id="cfg-warn"></div>
+    <div class="list" id="cfg"><div class="empty">loading…</div></div>
+    <div class="prompt" style="margin-top:2px">
+      <button id="cfg-save">Save to file</button>
+      <span class="echo" id="cfg-msg" style="margin:0;align-self:center"></span>
+    </div>
+    <p class="note">
+      <b>On the bind address.</b> <code>host</code> defaults to <code>127.0.0.1</code> and
+      <a href="#" id="lnk7">protocol 07 §3</a> requires it. Binding anywhere else publishes this
+      console — and edit access to your unlocked governing documents — to every machine that can
+      route here. There is <b>no user authentication</b>; the session token only proves a request
+      came from this page. Changing it needs <code>allowNonLoopback</code> set too, so it cannot
+      happen by a single slip.
+    </p>
+  </section>
+</main>
+
+<footer><div class="inner" id="foot">—</div></footer>
+
+<dialog id="dlg">
+  <div class="dhd">
+    <span class="t" id="d-title">—</span>
+    <span class="msg" id="d-msg"></span>
+    <button class="save" id="d-save">Save</button>
+    <button id="d-close">Close</button>
+  </div>
+  <textarea id="d-body" spellcheck="false"></textarea>
+</dialog>
+
+<script>
+(function(){
+  "use strict";
+
+  // Injected by the sidecar into the document it served. Proves this page is
+  // the page that process handed out. Worth nothing off this machine, and it
+  // is never written to disk or to storage.
+  var TOKEN = "__PARVIS_TOKEN__";
+
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(t){ var d = document.createElement("span"); d.textContent = (t == null ? "" : String(t)); return d.innerHTML; }
+
+  // --- theme ---------------------------------------------------------------
+  try {
+    var saved = localStorage.getItem("parvis-theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  } catch (e) { /* private window, blocked storage — the OS default is fine */ }
+  $("theme").addEventListener("click", function(){
+    var cur = document.documentElement.getAttribute("data-theme");
+    var next = cur === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("parvis-theme", next); } catch (e) {}
+  });
+
+  // --- transport -----------------------------------------------------------
+  function api(pathname, opts){
+    opts = opts || {};
+    opts.headers = Object.assign({"x-parvis-token": TOKEN}, opts.headers || {});
+    return fetch(pathname, opts).then(function(r){
+      return r.json().then(function(j){ return {ok: r.ok, status: r.status, body: j}; },
+                           function(){ return {ok: false, status: r.status, body: {}}; });
+    });
+  }
+
+  // §2.2 — no live source renders "—". Never invent a number.
+  function show(el, value, unit){
+    if (value === null || value === undefined) { el.textContent = "—"; return; }
+    el.innerHTML = esc(value) + (unit ? ' <small>' + esc(unit) + '</small>' : '');
+  }
+
+  // --- tabs ----------------------------------------------------------------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav button'));
+  tabs.forEach(function(b){
+    b.addEventListener("click", function(){
+      tabs.forEach(function(x){ x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("on"); });
+      $("p-" + b.dataset.p).classList.add("on");
+      loaders[b.dataset.p] && loaders[b.dataset.p]();
+    });
+  });
+
+  // --- state ---------------------------------------------------------------
+  var LIVE = false;
+
+  function paintState(s){
+    var pill = $("pill"), b = $("banner"), cell = $("cell-estop");
+    var verb = s ? s.estop : null;
+    var cls = verb === "RUN" ? "run" : verb === "STOP" ? "stop" : verb === "YELLOW" ? "yellow" : "";
+    pill.className = "pill " + cls;
+    pill.textContent = verb ? ("STATE: " + verb) : "SIDECAR UNREACHABLE";
+    cell.className = "cell " + cls;
+
+    b.innerHTML = "";
+    if (!s) {
+      // §2.4 — a page with no sidecar is a snapshot and must say so.
+      b.innerHTML = '<div class="banner"><b>NO SIDECAR — THIS IS NOT LIVE</b>' +
+        'Nothing on this page reflects the tree. Start the sidecar and reload.</div>';
+      return;
+    }
+    // A non-loopback bind is announced on every page view, not just at startup
+    // where it scrolls away. 07 §3.
+    if (s.exposed) {
+      b.innerHTML += '<div class="banner"><b>EXPOSED — NOT LOOPBACK</b>' +
+        'Bound to <code>' + esc(s.host) + ':' + esc(s.port) + '</code>. Anyone who can reach this ' +
+        'host and port can read the tree and edit unlocked documents. There is no user ' +
+        'authentication here.</div>';
+    }
+    if (verb === "STOP") {
+      b.innerHTML += '<div class="banner"><b>ESTOP — STOPPED</b>' +
+        (s.sentinel ? 'Sentinel present at <code>' + esc(s.sentinel) + '</code>. ' : '') +
+        esc(s.reason || '') +
+        '<br>The console takes no orders and writes nothing. Only you clear it.</div>';
+    } else if (verb === "YELLOW") {
+      b.innerHTML += '<div class="banner warn"><b>ESTOP — YELLOW</b>' +
+        esc(s.reason || 'Confirm before each action.') +
+        '<br>The console refuses writes at YELLOW: it has nowhere to hold a confirmation.</div>';
+    }
+  }
+
+  function lock(stopped){
+    $("p").disabled = stopped;
+    $("go").disabled = stopped;
+    $("d-save").disabled = stopped;
+  }
+
+  function refresh(){
+    return api("/state").then(function(r){
+      if (!r.ok) throw new Error("state");
+      var s = r.body; LIVE = true;
+      paintState(s);
+      show($("v-estop"), s.estop);
+      show($("v-files"), s.files, "files");
+      show($("v-dirs"), s.dirs, "dirs");
+      $("v-read").textContent = s.readAt ? s.readAt.replace("T", " ").slice(0, 19) + "Z" : "—";
+      $("foot").textContent = "root " + s.root + "   ·   live   ·   read " + s.readAt;
+      lock(s.estop !== "RUN");
+    }).catch(function(){
+      LIVE = false; paintState(null);
+      show($("v-estop"), null); show($("v-files"), null); show($("v-dirs"), null);
+      $("v-read").textContent = "—";
+      $("foot").textContent = "sidecar unreachable — nothing on this page is live";
+      lock(true);
+    });
+  }
+
+  // --- panels --------------------------------------------------------------
+  function emptyRow(box, msg){ box.innerHTML = '<div class="empty">' + esc(msg) + '</div>'; }
+
+  var CURRENT = null;
+
+  function loadDocs(){
+    var box = $("docs");
+    api("/docs").then(function(r){
+      if (!r.ok || !Array.isArray(r.body)) return emptyRow(box, "sidecar unreachable");
+      $("c-docs").textContent = r.body.length ? r.body.length : "";
+      if (!r.body.length) return emptyRow(box, "no .md documents under the configured root");
+      box.innerHTML = "";
+      r.body.forEach(function(d){
+        var row = document.createElement("div");
+        row.className = "row click";
+        row.innerHTML = '<span class="nm">' + esc(d.file) + '</span>' +
+          (d.locked ? '<span class="tag t-lock">SAFETY ANCHOR</span>' : '');
+        row.addEventListener("click", function(){ openDoc(d); });
+        box.appendChild(row);
+      });
+    }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  function loadTasks(){
+    var box = $("tasks");
+    api("/tasks").then(function(r){
+      if (!r.ok) return emptyRow(box, "sidecar unreachable");
+      if (!r.body.present) return emptyRow(box, "no task index at " + r.body.path + " — nothing has been inducted yet");
+      var rows = r.body.rows || [];
+      $("c-tasks").textContent = rows.length ? rows.length : "";
+      if (!rows.length) return emptyRow(box, "task index exists but holds no rows");
+      box.innerHTML = "";
+      rows.forEach(function(t){
+        var el = document.createElement("div");
+        el.className = "row";
+        // 04 §3: a DONE with no evidence path is invalid — surface that, do not hide it.
+        var bad = (t.status === "DONE" && !t.evidence);
+        el.innerHTML =
+          '<span class="tag t-' + esc(t.status) + '">' + esc(t.status) + '</span>' +
+          '<span class="nm">' + esc(t.what) +
+            (t.evidence ? ' <span style="color:var(--ink3)">— ' + esc(t.evidence) + '</span>' : '') +
+            (bad ? ' <span class="tag t-bad">NO EVIDENCE — INVALID</span>' : '') +
+          '</span>' +
+          '<span class="meta">' + esc(t.who) + ' · ' + esc(t.date) + '</span>';
+        box.appendChild(el);
+      });
+    }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  function loadBus(){
+    var box = $("bus");
+    api("/bus").then(function(r){
+      if (!r.ok) return emptyRow(box, "sidecar unreachable");
+      if (!r.body.present) return emptyRow(box, "no broadcast log at " + r.body.path);
+      var lines = r.body.lines || [];
+      $("c-bus").textContent = lines.length ? lines.length : "";
+      if (!lines.length) return emptyRow(box, "broadcast log is empty");
+      box.innerHTML = "";
+      lines.forEach(function(l){
+        var el = document.createElement("div");
+        el.className = "row";
+        if (l.malformed) {
+          // 03 §1: if you cannot read it with cat, it is malformed. Say so.
+          el.innerHTML = '<span class="tag t-bad">MALFORMED</span><span class="nm">' + esc(l.raw) + '</span>';
+        } else {
+          el.innerHTML =
+            '<span class="tag t-' + esc(l.verb) + '">' + esc(l.verb) + '</span>' +
+            '<span class="nm"><b>' + esc(l.from) + ' &rsaquo; ' + esc(l.to) + '</b> ' + esc(l.text) + '</span>' +
+            '<span class="meta">' + esc(String(l.time).replace("T", " ").replace("Z", "")) + '</span>';
+        }
+        box.appendChild(el);
+      });
+    }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  function loadSurface(){
+    var box = $("surface");
+    api("/surface").then(function(r){
+      if (!r.ok) return emptyRow(box, "sidecar unreachable");
+      if (!r.body.present) return emptyRow(box, "no surface directory at " + r.body.path);
+      var files = r.body.files || [];
+      $("c-surface").textContent = files.length ? files.length : "";
+      if (!files.length) return emptyRow(box, "surface is clear — nothing waiting for you");
+      box.innerHTML = "";
+      files.forEach(function(f){
+        var el = document.createElement("div");
+        el.className = "row";
+        el.innerHTML = '<span class="nm">' + esc(f.name) + '</span>' +
+          '<span class="meta">' + esc(f.mtime ? f.mtime.replace("T", " ").slice(0, 19) : "—") + '</span>';
+        box.appendChild(el);
+      });
+    }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  function loadBoard(){
+    var box = $("board");
+    api("/board").then(function(r){
+      if (!r.ok) return emptyRow(box, "sidecar unreachable");
+      if (!r.body.present) return emptyRow(box, "no job board at " + r.body.path);
+      var pre = document.createElement("pre");
+      pre.style.cssText = "margin:0;padding:15px;font-family:var(--mono);font-size:12px;" +
+                          "line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere";
+      pre.textContent = r.body.content || "";
+      box.innerHTML = ""; box.appendChild(pre);
+    }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  // --- settings ------------------------------------------------------------
+  var CFG = null;
+
+  function inputFor(key, value, editable){
+    var id = "cfg-f-" + key;
+    if (typeof value === "boolean") {
+      return '<input type="checkbox" id="' + id + '"' + (value ? " checked" : "") +
+             (editable ? "" : " disabled") + ' style="width:18px;height:18px;accent-color:var(--amber)">';
+    }
+    if (Array.isArray(value)) {
+      return '<input id="' + id + '" value="' + esc(value.join(", ")) + '"' + (editable ? "" : " disabled") +
+             ' style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--line2);' +
+             'color:var(--ink);padding:6px 9px;border-radius:6px;font-family:var(--mono);font-size:12px">';
+    }
+    return '<input id="' + id + '" value="' + esc(value === null ? "" : value) + '"' + (editable ? "" : " disabled") +
+           ' style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--line2);' +
+           'color:var(--ink);padding:6px 9px;border-radius:6px;font-family:var(--mono);font-size:12px">';
+  }
+
+  function loadConfig(){
+    var box = $("cfg");
+    api("/config").then(function(r){
+      if (!r.ok) return emptyRow(box, "sidecar unreachable");
+      CFG = r.body;
+      $("cfg-path").textContent = CFG.configPath + (CFG.configFound ? "" : "  (not created yet)");
+
+      var warn = $("cfg-warn");
+      warn.innerHTML = "";
+      (CFG.warnings || []).forEach(function(w){
+        warn.innerHTML += '<div class="banner warn"><b>CONFIG</b>' + esc(w) + '</div>';
+      });
+
+      box.innerHTML = "";
+      Object.keys(CFG.values).forEach(function(k){
+        var v = CFG.values[k];
+        var src = CFG.sources[k];
+        // A value pinned by a flag or the environment cannot be changed from
+        // here — showing it as editable would be a lie the next restart exposes.
+        var editable = (src === "file" || src === "default");
+        var needsRestart = (CFG.restartRequired || []).indexOf(k) !== -1;
+        var row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML =
+          '<span class="nm" style="flex:0 0 150px">' + esc(k) + '</span>' +
+          inputFor(k, v, editable) +
+          (needsRestart ? '<span class="tag t-BLOCKED">RESTART</span>' : '') +
+          '<span class="meta">' + esc(src) + (editable ? '' : ' · pinned') + '</span>';
+        box.appendChild(row);
+      });
+    }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  $("cfg-save").addEventListener("click", function(){
+    if (!CFG) return;
+    var patch = {};
+    Object.keys(CFG.values).forEach(function(k){
+      var src = CFG.sources[k];
+      if (src !== "file" && src !== "default") return;     // pinned elsewhere
+      var el = $("cfg-f-" + k);
+      if (!el) return;
+      var orig = CFG.values[k];
+      if (typeof orig === "boolean") patch[k] = el.checked;
+      else if (Array.isArray(orig)) {
+        patch[k] = el.value.split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+      } else if (typeof orig === "number") {
+        var n = Number(el.value);
+        if (!isNaN(n)) patch[k] = n;
+      } else {
+        patch[k] = el.value === "" ? null : el.value;
+      }
+    });
+    $("cfg-msg").textContent = "saving…";
+    api("/config/save", {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify(patch)
+    }).then(function(r){
+      if (r.ok) {
+        $("cfg-msg").innerHTML = "written to <code>" + esc(r.body.path) + "</code> · restart the sidecar to apply";
+        loadConfig();
+      } else {
+        $("cfg-msg").textContent = r.body.error || "refused";
+      }
+    });
+  });
+
+  $("lnk7").addEventListener("click", function(e){
+    e.preventDefault();
+    tabs.forEach(function(x){ x.setAttribute("aria-selected", x.dataset.p === "docs" ? "true" : "false"); });
+    document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("on"); });
+    $("p-docs").classList.add("on");
+    loadDocs();
+  });
+
+  var loaders = { overview: refresh, docs: loadDocs, tasks: loadTasks, bus: loadBus,
+                  surface: loadSurface, board: loadBoard, settings: loadConfig };
+
+  // --- editor --------------------------------------------------------------
+  function openDoc(d){
+    CURRENT = d;
+    $("d-title").textContent = d.file + (d.locked ? "   (view only)" : "");
+    $("d-msg").textContent = d.locked ? "safety anchor — not editable from a UI" : "";
+    $("d-save").style.display = d.locked ? "none" : "inline-block";
+    $("d-body").readOnly = !!d.locked;
+    $("d-body").value = "loading…";
+    $("dlg").showModal();
+    api("/doc?f=" + encodeURIComponent(d.file)).then(function(r){
+      $("d-body").value = r.ok ? (r.body.content || "") : ("could not read: " + (r.body.error || r.status));
+    });
+  }
+
+  $("d-close").addEventListener("click", function(){ $("dlg").close(); });
+  $("d-save").addEventListener("click", function(){
+    if (!CURRENT) return;
+    $("d-msg").textContent = "saving…";
+    api("/doc/save", {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({file: CURRENT.file, content: $("d-body").value})
+    }).then(function(r){
+      $("d-msg").textContent = r.ok ? ("saved · backup " + r.body.backup)
+                                    : ((r.body.error || "blocked") + (r.body.reason ? " — " + r.body.reason : ""));
+      refresh();
+    });
+  });
+
+  // --- induction -----------------------------------------------------------
+  function induct(){
+    var input = $("p"), v = input.value.trim();
+    if (!v) return;
+    $("echo").textContent = "inducting…";
+    api("/induct", {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({prompt: v})
+    }).then(function(r){
+      if (r.ok) {
+        $("echo").innerHTML = "REQ row written · pointer <code>" + esc(r.body.pointer) + "</code> · nothing executed";
+        input.value = "";
+        loadTasks();
+      } else {
+        $("echo").textContent = (r.body.error || "refused") + (r.body.reason ? " — " + r.body.reason : "");
+      }
+      refresh();
+    }).catch(function(){ $("echo").textContent = "sidecar unreachable — start it and reload"; });
+  }
+
+  $("go").addEventListener("click", induct);
+  $("p").addEventListener("keydown", function(e){ if (e.key === "Enter") induct(); });
+
+  // --- boot ----------------------------------------------------------------
+  refresh().then(function(){ loadDocs(); loadTasks(); loadBus(); loadSurface(); });
+  setInterval(refresh, 5000);   // the colours are the state — keep them live
+})();
+</script>
+</body>
+</html>

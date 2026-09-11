@@ -1,0 +1,22 @@
+{
+  "//": "Copy to parvis.config.json next to the tree you want governed. Every key is optional; precedence is flag > env > this file > default. Read protocol/07-INTERFACE.md section 3 before changing host.",
+
+  "root": ".",
+  "host": "127.0.0.1",
+  "port": 7843,
+
+  "//allowNonLoopback": "Binding a non-loopback address publishes the console, and edit access to your unlocked documents, to your network. There is no user authentication. Requires this second opt-in so it cannot happen by a single slip.",
+  "allowNonLoopback": false,
+
+  "openBrowser": true,
+  "refreshMs": 5000,
+
+  "//editableDirs": "Relative to root. Only .md files directly inside these directories are listed and editable. Must not be absolute and must not escape the root.",
+  "editableDirs": ["_os", "_os/protocol"],
+
+  "//lockedFiles": "Readable in the UI, never writable through it, at any estop state. An interface that can edit the stop is not a safety interface.",
+  "lockedFiles": ["01-ESTOP.md", "00-PRECEDENCE.md", "COVENANT.md", "ESTOP.md"],
+
+  "//operator": "Name written into REQ rows and stop reasons. null falls back to the OS username.",
+  "operator": null
+}

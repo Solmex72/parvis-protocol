@@ -1,0 +1,119 @@
+name: ci
+
+# The cross-platform claim in the README is only worth what this matrix proves.
+# Three operating systems, three Node versions, every push.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  selftest:
+    name: ${{ matrix.os }} · node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['18', '20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No dependencies by design, so there is nothing to install and no
+      # lockfile to trust. If this ever needs an `npm ci`, something has gone
+      # wrong with the premise.
+      - name: Assert zero dependencies
+        shell: bash
+        run: |
+          deps=$(node -e "const p=require('./reference/package.json');console.log(Object.keys(p.dependencies||{}).length+Object.keys(p.devDependencies||{}).length)")
+          test "$deps" -eq 0 || { echo "::error::reference/package.json grew a dependency"; exit 1; }
+
+      - name: Selftest
+        working-directory: reference
+        run: node bin/parvis.mjs selftest
+
+      - name: Scaffold a tree
+        working-directory: reference
+        shell: bash
+        run: |
+          node bin/parvis.mjs init "$RUNNER_TEMP/tree"
+          test -f "$RUNNER_TEMP/tree/_os/estop/STATE"
+
+      - name: Preflight passes at RUN
+        working-directory: reference
+        shell: bash
+        env:
+          PARVIS_ROOT: ${{ runner.temp }}/tree
+        run: node bin/parvis.mjs check
+
+      - name: Preflight fails at STOP
+        working-directory: reference
+        shell: bash
+        env:
+          PARVIS_ROOT: ${{ runner.temp }}/tree
+        run: |
+          node bin/parvis.mjs estop "ci is asserting the fail-safe direction"
+          if node bin/parvis.mjs check; then
+            echo "::error::check exited 0 while stopped — the fail-safe is inverted"
+            exit 1
+          fi
+          node bin/parvis.mjs clear
+
+      - name: Config loads and validates
+        working-directory: reference
+        shell: bash
+        env:
+          PARVIS_ROOT: ${{ runner.temp }}/tree
+        run: |
+          node bin/parvis.mjs config
+          # A non-loopback bind without the second opt-in must be refused.
+          if PARVIS_HOST=0.0.0.0 node bin/parvis.mjs config; then
+            echo "::error::a public bind was accepted without allowNonLoopback"
+            exit 1
+          fi
+
+  hygiene:
+    name: hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The release scrubbed private data once. This keeps it scrubbed.
+      - name: No private identifiers
+        shell: bash
+        run: |
+          fail=0
+          # Absolute Windows user paths from any contributor's machine.
+          if grep -rIn --exclude-dir=.git -E 'C:\\+Users\\+[A-Za-z0-9._-]+' . ; then
+            echo "::error::an absolute user path leaked into the repo"; fail=1
+          fi
+          # Any IPv4 that is not loopback or an RFC 5737 documentation range.
+          if grep -rIn --exclude-dir=.git -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' . \
+             | grep -vE '(127\.0\.0\.1|0\.0\.0\.0|255\.255\.255\.255|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.)' ; then
+            echo "::error::a real-looking IP address is present"; fail=1
+          fi
+          # Email addresses.
+          if grep -rIn --exclude-dir=.git -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' . \
+             | grep -vE '(example\.com|noreply@)' ; then
+            echo "::error::an email address is present"; fail=1
+          fi
+          exit $fail
+
+      - name: Protocol files are all present and linked
+        shell: bash
+        run: |
+          for f in 00-PRECEDENCE 01-ESTOP 02-EVIDENCE 03-BUS 04-OUTPUT-CONTRACT \
+                   05-CORRECTION 06-DATA-ZONES 07-INTERFACE 08-AGENTS; do
+            test -f "protocol/$f.md" || { echo "::error::protocol/$f.md missing"; exit 1; }
+            grep -q "$f" README.md || { echo "::error::$f not linked from README"; exit 1; }
+          done

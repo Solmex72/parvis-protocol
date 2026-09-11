@@ -1,0 +1,33 @@
+# Parvis runtime residue — never commit the output of a running fleet.
+parvis.config.json
+_os/estop/STATE
+_os/tasks/INDEX.md
+_os/events/surface/
+_os/exchange/bus/*.log
+_os/exchange/bus/in/
+_os/exchange/bus/session/
+_os/exchange/requests/
+*.bak
+*.pv.bak
+
+# The stop sentinel is machine state, not source.
+/estop
+
+# Node
+node_modules/
+npm-debug.log*
+.npm/
+*.tgz
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# ...but templates/ ships a starter tree on purpose. These are source, not
+# residue, so the patterns above must not swallow them.
+!templates/**

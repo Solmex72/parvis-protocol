@@ -1,0 +1,17 @@
+# GitHub renders this as a "Sponsor" button at the top of the repository.
+#
+# BEFORE THIS WORKS you must actually enable each platform — a link to a
+# profile that does not exist is worse than no link. Delete any line you have
+# not set up. Per the protocol's own rule: do not ship a value with no live
+# source behind it.
+#
+#   github     -> enable at https://github.com/sponsors  (requires Stripe onboarding)
+#   ko_fi      -> create the page at https://ko-fi.com
+#   custom     -> any URL, e.g. PayPal.me
+
+github: [Solmex72]
+
+# Uncomment once the account exists:
+# ko_fi: solmex72
+# buy_me_a_coffee: solmex72
+# custom: ["https://paypal.me/solmex72"]
