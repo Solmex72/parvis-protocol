@@ -1,39 +1,44 @@
-# 01 — ESTOP
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP (비상 정지)
+
+**상태: 규범. 우선도 0. 모든 사업의 모든 에이전트를 구속합니다.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. 이것이 할 수 있는 일과 할 수 없는 일 — 먼저 읽으십시오
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**실행 중인 세션을 멈출 수는 없습니다.** 어떤 파일도 그렇게 하지 못합니다. 응답 도중의 에이전트는 디스크를 읽고 있지
+않고, 인터럽트 선도 없으며, 하던 일을 끝까지 마칩니다. 플래그 파일이 선단을 멈춘다고 말하는 사람은 바람을 이야기하는
+것입니다.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**실행 중인 에이전트를 멈출 수 있는 것은 운영자가 그 창을 닫는 일뿐입니다.** 그것이 진짜 비상 정지이며, 지금껏 다른
+무엇이었던 적이 없습니다.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+이 파일이 하는 일은, 에이전트가 *실제로* 디스크를 읽는 두 순간에 그것을 구속하는 것입니다.
 
-| Moment | Obligation |
+| 순간 | 의무 |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **시작 시** | 자신의 교리보다, 자신의 기억보다, 그 무엇보다 먼저 상태를 읽을 것. |
+| **모든 검사점** | 모든 쓰기, 모든 메시지, 부작용이 있는 모든 도구 호출, 모든 지출에 앞서. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+`STOP`을 보고도 계속하는 에이전트는 결함이 있는 에이전트입니다. 집행 모형은 그것이 전부입니다 — 장치가 아니라, 자주
+점검되는 의무입니다.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+한계를 정직하게 밝히는 것도 프로토콜의 일부입니다. 즉시 멈춘다고 믿는 정지는, 즉시가 아님을 아는 정지보다 위험합니다.
+당신이 그것에 기대게 되기 때문입니다.
 
 ---
 
-## 1. The two signals
+## 1. 두 가지 신호
 
-### The sentinel is the fact
+### 파수꾼이 곧 사실이다
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+이름이 정확히 `estop`인 **일반 파일** — 확장자 없이, 0바이트가 정상 — 이 사업 루트나, 작업 대상 트리의 **어느
+상위 디렉터리**에든 있는 것.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +48,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+**파일**을 검사하십시오. 단순한 존재 여부로도, 글롭으로도 결코 검사하지 마십시오.
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md`는 교리입니다. 검사를 발동시켜서는 안 됩니다. 그것을 허용하는 대조 방식은 운영자가 풀 수 없는 정지를
+  만들어 냅니다.
+- `_os/estop/`는 디렉터리입니다. 이것도 발동시키지 않습니다.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+여러 루트는 **각각 독립적으로** 발동합니다. 하나하나 확인하십시오. `stat`을 실행한 경로를 보고하십시오 — 결코 "그
+estop"이라고 하지 마십시오. 그러면 어느 것을 보았는지가 가려집니다.
 
-### The STATE file is a derived mirror
+### STATE 파일은 파생된 거울이다
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — 한 줄, 그 외에는 없음.
 
 ```
 RUN
@@ -66,117 +71,109 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| 항목 | 규칙 |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| 동사 | `RUN`, `YELLOW`, `STOP` 중 하나. 그 밖의 것은 해석되지 않습니다. |
+| 시각 | UTC, ISO-8601. |
+| 누가 | 누가 발했는지. `STOP` / `YELLOW`를 쓰거나 푸는 것은 운영자만 할 수 있습니다. |
+| 사유 | 한 줄, 쉬운 말로, 전문 용어 없이. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**파수꾼과 거울이 어긋나면 정지가 이깁니다.** 거울은 도구가 쓰는 것이라 낡습니다. 파수꾼이 사실입니다.
 
 ---
 
-## 2. The three states
+## 2. 세 가지 상태
 
-| STATE | What an agent does |
+| STATE | 에이전트가 하는 일 |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **진행하십시오.** 일에 필요한 명령을 하나하나 허락을 구하지 않고 실행합니다. 멈춰 서지 말고, 선택지를 늘어놓지 말고, 통상의 작업을 확인 뒤로 줄 세우지 마십시오. |
+| `YELLOW` | **먼저 물으십시오.** 모든 명령은 실행 전에 제안됩니다. 같은 일, 같은 역량 — 차이는 확인 한 번입니다. |
+| `STOP` | 멈추십시오. §3. |
 
-### What `RUN` does not do
+### `RUN`이 하지 않는 일
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN`이 없애는 것은 *통상 작업 앞의 한 박자*입니다. **기존의 관문은 하나도 없애지 않습니다.** 관문은 행위의 속도가
+아니라 성격에 관한 것이기 때문입니다.
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- 자격 증명, 로그인, 구매, 자원 발급 — **언제나 운영자의 손에**;
+- 바깥을 향한 행위 — 게시, 전송, 배포 — **언제나 명시적인 승낙과 함께**;
+- 사람이 물리적으로 수행할 모든 것 — **여전히 안전 관문을 거칩니다**;
+- 파괴적이거나 되돌릴 수 없는 행위 — **어떤 상태에서도 여전히 확인을 받습니다**;
+- 에이전트 자신의 상시 제한 — **STATE와 전혀 무관합니다**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN`이 답하는 물음은 *"매 단계마다 물어야 하는가"*이고, 답은 "아니요"입니다. *"무엇이든 해도 되는가"*에는 답하지
+않습니다. `RUN`을 읽고 이 목록의 일을 하는 에이전트는 상태를 잘못 읽은 것이지, 상태로부터 권한을 받은 것이 아닙니다.
 
-### Fail-safe on an unreadable verb
+### 읽을 수 없는 동사에 대한 안전 실패
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+**없거나, 비어 있거나, 읽을 수 없거나, 다른 어떤 낱말이 들어 있는 STATE 파일은 `YELLOW`로 읽습니다** — 결코 `RUN`으로
+읽지 않습니다. 물으십시오.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> 이것은 구현에서 가장 자주 뒤집히는 한 줄입니다. `try { read } catch { return "RUN" }`은 모든 디스크 오류, 모든 권한
+> 변경, 모든 오타를 조용한 허가로 바꿔 버립니다. 참조 sidecar는 읽기 오류 시 `YELLOW`로 떨어지고 응답을 거부합니다.
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs) 참조.
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+파수꾼 파일은 이 절 전체를 능가합니다. `estop` 파일이 있으면 STATE가 무어라 하든 `STOP`입니다.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
+**이 파일을 쓰는 것은 운영자뿐입니다.** 어떤 에이전트도 쓰지 않습니다 — 문제를 발견한 에이전트도 마찬가지입니다.
+선단이 멈춰야 한다고 판단한 에이전트는 버스에 `GATE`를 세우고 그렇게 말합니다. 자기 권한으로 선단을 멈추지 않으며,
+다시 시작시키지도 않습니다.
 
 ---
 
-## 3. What an agent does on `STOP`
+## 3. `STOP`일 때 에이전트가 하는 일
 
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
+1. **더 이상 아무것도 쓰지 마십시오.** 기억 파일도, 보고서도, 버스도.
+2. **그 자리에 저장하고, 그런 다음 멈추십시오.** 아직 쓰이지 않은 단계를 마저 끝내지 마십시오. 있는 것은 미완으로
+   표시하고, 어디에서 멈췄는지 한 줄 덧붙이십시오.
 
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
+   > 이 프로토콜의 이전 초안은 *폐기하라*고 했습니다. 그것은 틀렸습니다. 폐기된 절반짜리 보고서는 재시작 교리가
+   > 지키려던 바로 그 작업을 없앱니다. 위험한 것은 잘린 파일이 나중에 완성본으로 읽히는 일이며, 그것을 막는 것은
+   > 삭제가 아니라 **표시**입니다.
+3. **운영자에게 한 줄만 말하십시오:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **멈추십시오.** 계속할 허락을 구하지 마십시오. 우회책을 제안하지 마십시오. 그 사유가 자신에게 해당하는지 따지지
+   마십시오 — 해당합니다.
 
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
-
----
-
-## 4. What clears it
-
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
-
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+**거부는 답변이지 재시도가 아닙니다.** `RUN`을 기다리는 고리에 들어가지 마십시오. 보고하고 끝내십시오.
 
 ---
 
-## 5. Scope
+## 4. 무엇이 이를 푸는가
 
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
+운영자가 파일을 `RUN`으로 되돌립니다. 그 밖에는 아무것도 풀지 못합니다 — 시간 초과도, 문제가 해결되었다고 여기는
+에이전트도, 시간의 경과도, 그 정지를 본 적 없는 새 세션도.
 
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+스스로 풀리는 처리기는 안전 실패 원칙의 전도이며, 내용상 거부됩니다.
 
 ---
 
-## 6. Measure twice
+## 5. 적용 범위
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+비상 정지는 **기본적으로 선단 전체에 미칩니다.** 에이전트별 정지는 없습니다. 정지를 요하는 고장이 한 에이전트에
+머무는 일은 거의 없고, 부분 정지는 바로 그 추론 — *"그건 다른 누군가 이야기였다"* — 을 불러들이는데, 이 문서는 그것을
+금하기 위해 있습니다.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+**격리된 에이전트도 포함됩니다.** 어떤 버스에도, 어떤 공유 표면에도 없는 에이전트라도 이 파일은 읽습니다. 격리가
+정하는 것은 에이전트가 무엇을 *말할* 수 있는가입니다. 에이전트가 *멈춰질* 수 있는가를 정하는 일은 결코 없습니다.
 
 ---
 
-## 7. The honest limit, stated once
+## 6. 두 번 재라
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+한 번의 녹색 확인으로 안전 상태가 증명되는 일은 결코 없습니다. 두 신호 모두를, 디스크에서, **이번 실행에서**
+읽으십시오. 기억한 상태를 인용하지 마십시오 — 문맥에서도, 기억 파일에서도, 이전 차례에서도. `stat` 출력 형식을 잘못
+읽은 것만으로도 거짓 "이상 없음"이나 거짓 "정지됨"이 만들어지며, 둘 다 실제로 일어난 일입니다.
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+쓸 수 있는 가장 강한 형태는 STATE 파일과 모든 파수꾼 경로에 대한 **상시 감시**로, 변화가 있을 때만 알리는 것입니다.
+이상이 없는 동안은 조용하고, 정지가 걸리는 순간 즉시 울립니다. 이는 "시작할 때 한 번 미리 확인했다"를 실시간 감시로
+바꾸고, 세션 도중에 정지가 걸리는 틈을 메웁니다.
+
+---
+
+## 7. 정직한 한계, 한 번만
+
+이 프로토콜은 정지를 **모든 시작과 모든 검사점에서 믿을 만한 것**으로 만듭니다. 정지를 **즉시**로 만들지는 않으며,
+파일 트리에 적힌 그 무엇도 앞으로 그렇게 만들지 못합니다.
+
+지금 무언가 잘못되어 가고 있다면 — **창을 닫으십시오.** 그런 다음 파일을 써서, 다음에 깨어나는 에이전트가 그것을 다시
+시작시키지 않도록 하십시오.

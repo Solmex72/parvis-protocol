@@ -1,101 +1,100 @@
-# 07 — THE INTERFACE LAYER
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative.** This is the file the project is named for.
+# 07 — 인터페이스 계층
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**상태: 규범.** 이 프로젝트의 이름이 유래한 파일입니다.
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+사람이 닿는 모든 표면이 **Parvis**입니다. 읽기 전용의 작업장 화면이 *Parvis HMI*이고, 선단을 몰아가는 타일 메뉴가
+*Parvis Console*입니다.
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. 이 HTML을 성립하게 하는 규칙
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> 브라우저 페이지는 **화면과 키보드**이지, 디스크에 접근하는 프로그램이 아닙니다.
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+이 한 가지 사실이 계층 전체를 다스립니다.
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **페이지는 보여 주고 받아들입니다.** 상태를 그리고 입력을 받습니다. 파일 경로에서 연 것만으로는 그 자체로 **트리를
+  읽을 수도, 지시를 쓸 수도 없습니다.** 브라우저 샌드박스가 둘 다 금하며, 그것이 바로 장점입니다.
+- **sidecar가 다리를 놓습니다.** 루프백에만 — `127.0.0.1`에만 묶이고 그 밖에는 어디에도 묶이지 않는 — 작은 서비스가,
+  페이지를 대신해 트리를 읽고 페이지가 보낸 것을 쓰는 유일한 존재입니다. 페이지는 상태를 `GET`으로 가져오고,
+  프롬프트를 `POST`로 보내며, 디스크 일은 sidecar가 합니다. **sidecar가 없으면 살아 있는 Parvis도 없고, 스냅숏만
+  있습니다.**
+- **무엇도 검토를 우회하지 않습니다.** Parvis에서 보낸 프롬프트는 **투입이지 실행이 아닙니다.** sidecar는 작업 대장에
+  `REQ` 줄을 쓰고 거기서 멈춥니다. 에이전트를 띄우지도, 명령을 돌리지도, 보내지도 않습니다. 새 일을 확정하는 것은
+  여전히 운영자의 키 입력입니다.
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+그래서 페이지가 "돌아가는" 것입니다. 페이지는 자신이 창이라는 데 정직하고, sidecar는 가장자리에서 작은 실무를 하며,
+그리고 **검토는 여전히 프롬프트와 움직이는 기계 사이에 서 있습니다.**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. 엄격한 요건 — 모든 Parvis 표면
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **자족적일 것.** HTML 한 장: CSS와 JS를 안에 넣고, 외부 스크립트 없이, CDN 없이. 웹 폰트만 쓰되 실재하는 대체 글꼴
+   목록을 갖출 것. 파일 경로에서 오프라인으로 그려져야 합니다.
 
-| Requirement | Why |
+2. **색이 곧 상태이며, 실시간으로 읽고 결코 꾸미지 않습니다.** 초록=가동, 호박=먼저 묻기, 빨강=정지 — 모두 STATE
+   파일과 살아 있는 대장에서 이끌어 냅니다. **살아 있는 출처가 없는 값은 `—`를 보이며, 그럴듯한 숫자를 결코 보이지
+   않습니다.** 빨강은 다른 어떤 색도, 화면 전체도 능가합니다.
+
+3. **sidecar는 루프백 전용이며, 페이지가 볼 수 있는 비밀을 하나도 쥐지 않습니다.** API 키도, 자격 증명도, 값나가는
+   토큰도 브라우저에 닿지 않습니다. sidecar는 지역 세션 토큰으로 페이지를 인증하고, 특권이 필요한 일은 스스로 합니다.
+   **페이지는 훔칠 가치가 있는 것을 결코 쥐지 않습니다.**
+
+4. **스냅숏은 스냅숏으로 표시하고**, 읽은 시각을 붙입니다. 살아 있는 sidecar와 통하는 페이지만 자신을 실시간이라 내세울
+   수 있습니다. 낡았는데 살아 있어 보이는 페이지는 페이지가 없는 것보다 나쁩니다.
+
+5. **비상 정지는 화면을 능가합니다.** `STOP` 아래에서 Parvis는 아무것도 투입하지 않고, sidecar는 종료 한 줄 외에는
+   아무것도 쓰지 않습니다. **빨간 작업장은 어떤 지시도 받지 않습니다.**
+
+6. **Parvis의 이름으로, 제삼자 회사명은 넣지 말 것.** 어떤 실제 시스템에서 그 방식을 배웠든, 그 방식은 당신의 것이고
+   이름은 Parvis입니다. 남의 상호를 실어 나르는 표면은 잘못된 것이며 바로잡습니다.
+
+---
+
+## 3. sidecar에 대한 보안 요건
+
+개발용 컴퓨터의 루프백 HTTP 서비스는 실재하는 공격 표면입니다. 아래는 선택 사항이 아닙니다.
+
+| 요건 | 이유 |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **`127.0.0.1`을 명시적으로 묶을 것**, 결코 `0.0.0.0`으로 하지 말 것 | 모든 인터페이스에 묶는 것은 선단 콘솔을 근거리망에 공개하는 일입니다. |
+| **`Host` 헤더를 `127.0.0.1:<port>` / `localhost:<port>` 허용 목록에 대조해 검증할 것** | DNS 리바인딩을 막습니다. 방문한 웹 페이지가 루프백 서비스에 닿는 수법이 그것입니다. |
+| **자신이 발급하지 않은 `Origin`을 실은 요청은 거절할 것** | 같은 부류의 공격, 다른 경로입니다. |
+| **상태를 바꾸는 모든 경로에 세션 토큰을 요구할 것.** 페이지를 불러올 때 발급하고, 결코 로그에 남기지 말 것 | 페이지가 "내가 당신의 페이지다"를 증명합니다. |
+| **서비스가 읽거나 쓸 모든 경로를 허용 목록에 넣고**, 그런 다음 다시 해석해 범위 안에 있음을 확인할 것 | 경로 횡단을 막습니다. 심볼릭 링크가 있다면 허용 목록만으로는 부족합니다. |
+| **estop을 읽을 수 없을 때는 안전한 쪽으로 실패할 것** — 거절하고, `RUN`으로 되돌아가지 말 것 | [`01-ESTOP.md`](01-ESTOP.md) §2 참조. |
+| **`eval` 금지, 셸 호출 금지, 사용자 입력의 템플릿 삽입 금지** | 프롬프트 줄은 투입용 입력란이지 명령줄이 아닙니다. |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+[`reference/sidecar/`](../reference/sidecar/)의 참조 구현은 이 모두를 실현하며, 각 항목이 나오는 자리마다 주석이
+붙어 있습니다.
 
 ---
 
-## 4. What the surfaces are
+## 4. 표면은 무엇인가
 
-| Surface | What | State |
+| 표면 | 내용 | 상태 |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | 탭 패널 — 상태, 문서, 대장, 버스, 표면, 설정 | 제공됨. |
+| **Parvis Floor** | 창고 탭: 3차원 작업장, 선회와 파고들기, 장비 조작 | 제공됨. [`09-FLOOR.md`](09-FLOOR.md) 참조. |
+| **프롬프트 줄** | 투입용 입력란. 콘솔과 각 작업장 장비에 | 제공됨. |
+| **sidecar** | 루프백 다리: 트리를 읽고, `REQ` 줄을 쓰며, 비밀을 쥐지 않음 | 제공됨. |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**패널을 먼저 내놓으십시오.** 3차원 작업장은 누구나 만들고 싶어 하는 부분이면서, 그 아래 대장이 없으면 아무 값어치도
+없는 부분입니다 — 그것은 프로토콜의 나머지가 만들어 내는 상태를 그리는 것이고, 빈 트리 위에서는 마땅히 아무것도 보이지
+않습니다.
 
 ---
 
-## 5. Standing
+## 5. 입장
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
+- **페이지는 읽는다. sidecar는 쓴다. 운영자가 확정한다.**
+- 어떤 표면도 띄우거나, 보내거나, 배포하거나, 비상 정지를 풀지 않습니다.
+- 어떤 비밀도 결코 브라우저에 닿지 않습니다.
+- 산출물은 파일과 콘솔로 가고, 대화창으로 가지 않습니다
   ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).

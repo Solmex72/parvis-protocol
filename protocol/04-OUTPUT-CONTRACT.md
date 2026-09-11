@@ -1,38 +1,40 @@
-# 04 — THE OUTPUT CONTRACT
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — 산출 계약
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**상태: 규범.** 일이 끝나면 그것은 어디로 가는가.
 
 ---
 
-## 2. Where output goes
+## 1. 규칙
 
-| Kind of output | Lands at |
+**대화창에 보고하지 마십시오. 파일 트리에서 일하고, 산출물을 디스크에 쓰고, 가리키는 표지 하나를 내놓으십시오.**
+
+대화창에 긴 답변을 쓰는 것으로 끝맺는 에이전트는, 자기 산출물을 선단의 그 무엇도 읽을 수 없는 곳에 둔 것입니다 —
+다른 에이전트도, 감시기도, 콘솔도, 다음 세션도. 파일이 오래가는 기록이며, 대화는 아래로 아무도 보지 않는 속기록입니다.
+
+---
+
+## 2. 산출물이 가는 곳
+
+| 산출물의 종류 | 놓이는 곳 |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| 작업 결과, 발견, 보고서 | 담당 파일, 또는 `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| 운영자가 지금 보아야 할 모든 것 | `_os/events/surface/` 안의 짧은 표지 파일 |
+| 운영자가 있어야 하는 요청 | `_os/exchange/requests/REQ-<slug>.md` |
+| 대장의 한 줄 | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**`surface/` 디렉터리는 알림입니다. 파일이 알맹이입니다.** 알맹이를 제자리에 쓰고, 그런 다음 `surface/`에 한 줄짜리
+표지를 남겨, 콘솔이 운영자에게 그것이 어디에 놓였는지 보여 주게 하십시오.
 
 ---
 
-## 3. The task index
+## 3. 작업 대장
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+지시 하나에 한 줄. 시작하기 **전에** `REQ` 줄을 덧붙여, 중단된 작업도 계속 보이게 하십시오.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +43,44 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**증거 경로가 없는 `DONE` 줄은 무효입니다.** 파일이 없다면 그 일은 운영자가 볼 수 있는 어디에도 놓이지 않은 것입니다.
+자기 보고는 `[CLAIMED]`이고, 그것을 `[PROVEN]`으로 만드는 것은 파일입니다.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**거부는 여기에 영구히 남습니다.** 선단이 이미 결론 난 물음을 다시 들추지 않게 되는 것이 그 덕분입니다. 나중에 지우지
+마십시오.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
+**정직한 한계:** 이 대장은 아무것도 관찰하지 않습니다. 여기에 쓰는 에이전트들만큼만 완전합니다. 어떤 작업이 빠져 있다는
+것은 그 작업이 없었다는 증거가 아니라, 아무도 적지 않았다는 증거일 뿐입니다. 한 줄은 *증거 경로가 붙은 주장*으로
+다루되, 결코 증거로 다루지 마십시오. 어떤 `DONE`에 기대기 전에 그 증거 파일이 실제로 있는지 확인하십시오.
 
 ---
 
-## 4. Completion is the Operator seeing it
+## 4. 완료란 운영자가 그것을 본 것이다
 
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
-
----
-
-## 5. The counter-rule that outranks routing
-
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+에이전트가 선언하는 것이 아닙니다. 답변은 멈춤 지점이 아닙니다 — 감시는 그것을 가로질러 계속 걸려 있고, 일은 이어지며,
+그런 다음에야 의도된 종료가 옵니다.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. 경로 배정을 능가하는 반대 규칙
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**비상 정지와 솔직함은 여전히 사람에게, 즉시, 눈에 띄게 갑니다.**
+
+실패는 성공과 똑같이 눈에 띄게 드러냅니다. 산출물을 파일로 보내는 일이 나쁜 결과를 묻는 자리가 되어서는 결코 안 됩니다.
+선단의 좋은 소식은 대화창으로 오고 나쁜 소식은 아무도 열지 않는 파일로 온다면, 계약은 뒤집힌 것이고 선단은 지금 경로
+배정으로 거짓말을 하고 있는 것입니다.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. 계약 자체의 정직한 한계
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+대화 틀 안에서 도는 에이전트는 여전히 그 대화창에 보조자 텍스트를 냅니다 — 이 계약이 그 틀을 돌릴 수는 없습니다. 이
+계약이 묶는 것은 **에이전트가 무엇을 쓰기로 택하는가**입니다. 알맹이는 파일로, 대화 텍스트는 짧은 표지로만 —
+*"`<path>`에 썼고, 콘솔에 올렸습니다"* — 결코 보고서 전문이 아니라.
+
+---
+
+## 7. 어떤 비밀도 표면에 닿지 않는다
+
+`surface/`는 콘솔이 읽으며, 화면이나 화면 갈무리, 공유 창에 보일 수 있습니다. 데이터 구역 규칙
+([`06-DATA-ZONES.md`](06-DATA-ZONES.md))이 여기서도 온전히 적용됩니다.

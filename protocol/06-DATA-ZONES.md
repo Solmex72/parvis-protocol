@@ -1,92 +1,95 @@
-# 06 — DATA ZONES
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — 데이터 구역
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**상태: 규범.** 파일이 어디에 머물러도 되는가.
 
 ---
 
-## 2. The two zones
+## 1. 왜 금지만으로는 되지 않았나
 
-| Zone | Property | Holds |
+원래 규칙은 *"비밀은 언제 어디서도 두지 말 것"*이었습니다 — **그러면서 사적인 데이터를 대신 둘 곳은 어디에도 없었
+습니다.**
+
+갈 곳 없는 금지는 지켜지지 않습니다. 우회되고, 사적인 자료가 동기화되는 트리에 사고처럼 들어갑니다. 그런 일이 거듭
+있었고, 그중에는 그 규칙의 적용을 받던 에이전트 자신이 저지른 경우도 있었습니다.
+
+**이 규칙은 금지가 아니라 경로 배정의 결정입니다.**
+
+---
+
+## 2. 두 구역
+
+| 구역 | 성질 | 담는 것 |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | 클라우드 저장소로 동기화됩니다. **모든 바이트를 이미 공개된 것으로 여기십시오.** | 교리, 지시, 에이전트 정의, 설계, 업무 맥락, 조사, 기술 문서 |
+| **PRIVATE** | **모든 동기화 루트의 바깥** — 그리고 사용자 프로필 바깥. 알려진 폴더 리디렉션도 닿지 못하도록 | 비밀, 실재하는 사람과 그들의 개인정보, 사적인 프로젝트와 매체, 백업에서 발견되면 곤란한 모든 것 |
 
-### The test
+### 판별
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *이것이 일 년 뒤 클라우드 스냅숏에 들어 있다면 문제가 되겠는가?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+된다 → PRIVATE. 아니다 → PUBLIC. 정말로 갈피를 못 잡겠다면 → **PRIVATE.** 높게 분류한 대가는 불편입니다. 낮게 분류한
+대가는 되돌릴 수 없습니다.
 
-### Know what actually syncs
+### 실제로 무엇이 동기화되는지 알 것
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+이것은 짐작이 아니라 실제 기계에서 확인하십시오. 흔한 작업용 컴퓨터에서는 동기화 클라이언트가 동시에 여럿 돌 수 있고,
+사용자의 문서·바탕화면·사진 폴더 아래에 있는 것은 기계를 떠나 버전 기록에 몇 주씩 남습니다. **로컬에서 지워도 되돌려
+부를 수 없습니다.**
 
-Two consequences that each cause real failures:
+각각 실제 고장을 일으키는 두 가지 귀결이 있습니다.
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **빌드 산출물은 동기화 루트 밖으로 돌려야** 합니다. 그러지 않으면 미러가 빌드 도중에 그것을 망가뜨립니다.
+2. **키는 바깥에 둡니다** — 의도적으로, 기본값으로.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. 예외: 자격 증명은 어느 구역에도 속하지 않는다
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**살아 있는 자격 증명 — 비밀번호, API 키, 토큰, 송출 키 — 는 비밀번호 관리자에 속하며, 두 파일 시스템 어느 쪽에도
+속하지 않습니다.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+사적 구역이 담는 것은 *사적인 데이터*입니다. 비밀번호 관리자가 담는 것은 *자격 증명*입니다. 이것은 말장난이 아닙니다.
+사적 디렉터리는 기본적으로 암호화되어 있지 않고, 파일은 어디까지나 파일입니다. 하나가 복사되거나, 속기록에 인용되거나,
+무언가에 첨부되는 순간 그것은 이미 드러난 것입니다.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**사적 구역의 보안 성질은 좁게 말하고, 결코 부풀리지 마십시오.** 입증된 성질은 대개 *아무것도 그것을 어디로도 복사하지
+않는다*는 한 가지뿐입니다. 검증된 전체 디스크 암호화나 파일 단위 암호화가 없다면, 그것은 암호화되어 있지 않고,
+백업되지도 않으며, 금고도 아닙니다.
 
 ---
 
-## 6. Pruning without loss
+## 4. 분류는 운영자의 것이며, 조정할 수 있다
 
-Before anything leaves the working tree:
+살아 있는 표는 한 파일에 두십시오 — `DATA-CLASSIFICATION.md`. 거기서 운영자가 분류를 구역 사이로 옮기고, 모든
+에이전트는 짐작하는 대신 그것을 읽습니다.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+이 프로토콜 문서가 말하는 것은 **구조**입니다. 그 파일이 말하는 것은 **방침**입니다. 둘이 어긋나면 방침 파일이
+이깁니다.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. 에이전트에게 미치는 결과
+
+- **묶여 나가는 어떤 트리에도 비밀을 두지 마십시오.** 맥락 꾸러미는 새 세션에 붙여 넣기 위해 있습니다. 무엇을 어디에
+  들고 있는지는 적되, 값 자체는 결코 적지 마십시오.
+- **어떤 비밀도 `surface/`에 닿지 않습니다.** 그곳은 화면에 표시됩니다.
+- **어떤 비밀도 브라우저에 닿지 않습니다.** [`07-INTERFACE.md`](07-INTERFACE.md) §3 참조.
+- **삭제가 아니라 참조로 가리십시오.** `<api key — see password manager entry "acme-prod">`라면 값은 드러내지 않으면서
+  사실은 찾아갈 수 있게 남습니다.
+
+---
+
+## 6. 잃지 않고 쳐내기
+
+무엇이든 작업 트리를 떠나기 전에:
+
+1. **루트 바깥**의 봉인된 보관소로 복사하십시오 — 글롭으로 닿지 않는 보관 파일로.
+2. 경로를 `marked-deletion.md` / `marked-archive.md`에 적어 두십시오.
+3. **실행은 운영자의 손으로**, 트리를 가라앉힌 상태에서.
+
+동시 작업이 도는 중에는 결코 일괄 삭제하지 마십시오.

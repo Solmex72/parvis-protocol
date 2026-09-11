@@ -1,118 +1,117 @@
-# 02 — EVIDENCE
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — 증거
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**상태: 규범.** 관찰이 어떻게 기록된 사실이 되는가.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+이 문서가 말하는 규율은 보통 *제안*에 적용됩니다 — 사람이 결정하기 전에 에이전트가 자기 계획의 성공 가능성을 말하는
+식으로요. *주장*에 적용되는 일은 거의 없습니다. 그래서 선단은 무엇을 **해도** 되는지에 대해서는 신중히 따지고, 무엇을
+**참으로** 적어 두는지에 대해서는 소홀해집니다.
+
+이 둘은 같은 행위입니다. 기록에 들어가는 주장은 기록을 바꾸자는 제안입니다. Parvis는 둘 모두에 하나의 규율을
+적용합니다.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. 모든 주장은 표시를 단다
 
-| Tag | Means | Admissible where |
+| 표시 | 뜻 | 허용되는 곳 |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | **이번 실행에서 직접 읽은** 일차 출처를 인용해 확인함. 명령, 읽기, 측정을 명시할 것. | 어디든. 주 파일도 포함. |
+| `[CLAIMED]` | 다른 무언가가 전한 것. 확인되지 않음. | 작업 파일. 주 파일에는 결코 넣지 않음. |
+| `[ASSUMED]` | 아무도 확인하지 않은 작업상의 전제. | 작업 파일에, 명시적으로. |
+| `[PROPOSED]` | 추정, 권고, 계획. | 제안. 기록에는 결코 넣지 않음. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**표시는 주장과 함께 움직입니다.** `[PROPOSED]`가 더 중요한 파일로 복사되었다고 해서 `[PROVEN]`이 되지는 않습니다.
+승격에 필요한 것은 새 측정이지, 새 위치가 아닙니다.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**주 파일을 바꿀 수 있는 것은 `[PROVEN]`뿐입니다.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. 출처를 대거나 표시하라 — 결코 세탁하지 말 것
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+숫자는 출처를 밝힙니다. 그렇지 않다면 그것은 숫자가 아니라 소수점을 단 직감입니다.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+출처가 없다면 **그렇다고 말하고, 대신 논거를 제시하십시오.** 그것은 쓸모 있는 답변입니다. 출처 없는 숫자를 사실처럼
+내놓는 것은 그렇지 않습니다.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**실패를 발견으로 세탁하지 마십시오.** 오류가 난 검색은 실패한 호출이지, 빈 결과 집합이 아닙니다. 불러오지 못한
+페이지는 부재의 증거가 아닙니다. 실제로 일어난 일을 쓰십시오.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. 자기 기술은 `[CLAIMED]`이다
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+자신의 상태, 자신의 적용 범위, 자신이 끝낸 일에 대한 에이전트의 설명은 아무리 확신하더라도 `[CLAIMED]`입니다. 그것을
+`[PROVEN]`으로 만드는 것은 외부 기록뿐입니다 — 디스크의 파일, 명령의 종료 코드, 자신이 아닌 무언가가 쓴 로그 줄.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+그래서 증거 경로가 없는 `DONE` 줄은 무효입니다([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md) 참조). "했습니다"는
+주장입니다. 파일이 증거입니다.
 
 ---
 
-## 6. Negative findings count
+## 4. 가로대 0–2에 걸린 것은 모두 두 번 재라
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+한 번의 확인으로 안전 상태가 증명되는 일은 결코 없습니다. 우선도 0의 주장 앞에는 언제나 독립된 두 번의 측정을.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**다시 재십시오, 결코 기억에 의존하지 마십시오.** 트리는 동시에 도는 세션들 아래에서 움직입니다 — 차례를 시작할 때 읽은
+경로가 끝날 때는 사라져 있을 수 있습니다. 상태는 *이번* 실행에서 디스크로부터만 알 수 있습니다. "이상 없음"이나 "최신"을
+이전 차례, 기억 파일, 요약에서 가져오지 마십시오.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**세는 것은 측정이지 사실이 아닙니다.** 쓰는 자리에서 다시 세십시오. 파일 수, 에이전트 수, 판 번호를 기억에서 대지
+마십시오.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. 끊긴 호출은 발견이 아니다
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+**전송이 끊겼을 때** — DNS 실패, 연결 재설정, 거절, 응답 없는 시간 초과 — 같은 호출을 즉시, 그리고 거듭 다시
+보내십시오. 도달하지 못한 호출에 대해 "결과 없음"이라고 쓰지 마십시오. 그 빈자리를 기억으로 메우지 마십시오.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**도달한 응답은 답변이지 재시도의 이유가 아닙니다.** 403, 404, 빈 결과 집합, 명시적 거절 — 이것들은 데이터입니다. 다른
+답을 얻으려고 거절에 대고 재시도를 거듭하는 것은 탐지 회피이며, 누구의 계정에서 어느 망으로 돌아가든 가로대 2에서
+금지됩니다.
+
+한 줄로 가르면 — *도달하지 못한 호출은 다시 보내고, 마음에 들지 않은 답변은 결코 다시 보내지 않는다.*
 
 ---
 
-## 9. The rule these all serve
+## 6. 부정적 발견도 값어치가 있다
 
-> A fact asserted in six files will be wrong in five of them.
+"X 확인함, 위험 아님" — 바로 이것이 다음 세 세션이 X를 다시 확인하지 않게 합니다. 기록하십시오.
 
-Evidence discipline is what makes the sixth one findable.
+**배우는 대로 기록하십시오, 끝에 몰아서가 아니라.** 작업 기억에만 있다가 사라진 발견은, 아예 하지 않은 일과 구별되지
+않습니다.
+
+---
+
+## 7. 삭제가 무결성의 신호다
+
+기준에 견주어 트리를 검증할 때 보고는 세 갈래입니다 — 추가, 변경, 삭제. 증가와 편집은 예상되는 움직임입니다.
+**경보를 울릴 값어치가 있는 줄은 삭제입니다.**
+
+감사하지 않은 동시 작업 위에 기준을 새로 잡지 마십시오. 먼저 감사하고, 그다음에 도장을 찍으십시오.
+
+---
+
+## 8. 감사는 역할이지 기분이 아니다
+
+감사자는 모든 에이전트, 명령, 지시를 **디스크로부터** 하나하나 열거하고, 고정된 분류에 견주어 각각을 확인합니다 —
+결함뿐 아니라 이상 없던 확인도 셉니다. 아무것도 통과시키지 않은 실행은 아무것도 감사하지 않은 것입니다. 불평을 모았을
+뿐입니다.
+
+**감사자는 결코 고치지 않습니다.** 발견은 정정 절차([`05-CORRECTION.md`](05-CORRECTION.md))나 담당 에이전트에게
+넘어갑니다. 자기가 찾은 것을 고쳐 버린 감사자는 자신의 증거를 없앤 것이며, 이후 "이상 없는 실행이었다"는 보고를 믿어
+줄 수 없습니다.
+
+---
+
+## 9. 이 모든 것이 섬기는 규칙
+
+> 여섯 파일에서 주장된 사실은 그중 다섯에서 틀려 있다.
+
+증거의 규율이란, 여섯 번째를 찾을 수 있게 만드는 것입니다.

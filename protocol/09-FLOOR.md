@@ -1,181 +1,171 @@
-# 09 — THE FLOOR
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — 작업장
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**상태: 시각화기에 대해서는 규범, 모형으로서는 참고.**
+[`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html)가 구현합니다.
 
 ---
 
-## 2. The mapping
+## 1. 주장
 
-| On the floor | In the fleet | Read from |
+에이전트 선단은 눈에 잘 보이지 않습니다. 파일 트리도 목록, 프로세스 표도 목록, 로그도 목록 — 그래서 돌아가는 선단에
+대해 누구든 가질 수 있는 유일한 그림은, 서로 맞물리지 않는 여러 목록뿐입니다.
+
+**자동화된 창고는 같은 기계이며, 사십 년 동안 읽혀 왔습니다.** 제어 시스템 아래에서 크레인이 선반 사이로 짐을 옮기고,
+이를 지켜보는 사람은 수백 개의 동시 움직임으로 이루어진 작업장을 글자 한 줄 읽지 않고 색만으로 한눈에 읽어 냅니다.
+
+Parvis는 그것을 빌려옵니다. 장식으로서가 아니라 *대응*으로서 — 창고의 각 대상이 트리의 정확히 한 가지에 맞물리고,
+창고 자신의 안전 규칙이 알고 보니 이 프로토콜의 안전 규칙을, 이미 제자리에 그려 놓은 것이더라는 식으로.
+
+---
+
+## 2. 대응
+
+| 작업장에서 | 선단에서 | 읽어 오는 곳 |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **크레인** | 에이전트, 또는 살아 있는 세션 | `_os/exchange/bus/session/`의 세션 표식 |
+| **팔레트** | 디렉터리 | 트리 자체. 팔레트의 이름표가 곧 그 경로 |
+| **선반 자리** | 그 디렉터리가 사는 곳 | 그 상위 |
+| **팔레트를 연다** | 그 디렉터리로 내려간다 | **또 하나의 창고 전체** — §4 |
+| **Induct**(입고구) | 들어오는 일 | `_os/tasks/INDEX.md`의 `REQ` 줄 |
+| **Spur**(출고구) | 나가는 산출물 | `_os/events/surface/`의 파일, 내보내기 |
+| **컨베이어** | 파일 버스 | `_os/exchange/bus/` — 크레인이 나르지 않고도 일이 옮겨 가는 길 |
+| **트럭** | 외부 서비스, 또는 다른 AI | 경계. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+요점은 그림이 아닙니다. 요점은, 창고 제어 시스템 앞에 서 본 적이 있다면 **당신은 이미 이 화면을 읽을 줄 안다**는
+것입니다 — 그런 적이 없더라도, 이 모형은 디렉터리 목록에는 없는 구체성을 지닙니다.
 
 ---
 
-## 3. The colours
+## 3. 색
 
-One glance, before any navigation:
+무엇을 조작하기 전에, 한눈에:
 
-| Colour | On the floor | In the fleet |
+| 색 | 작업장에서 | 선단에서 |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **초록** | 움직이는 중 — 크레인이 짐을 나르고 있음 | 에이전트가 일하는 중. 살아 있는 세션이 작업 도중 |
+| **파랑** | 예정됨 — 줄 서 있고 아직 시작 전 | 게시판의 공고: 발주됨, 에이전트를 기다림 |
+| **호박** | 주의 — 그 자리는 결정이 필요함 | `YELLOW`: 행동마다 먼저 물을 것 |
+| **빨강** | 비상 정지 — 그 구역은 멈춰 있음 | `STOP`: 정지가 걸렸고 이 루트는 얼어 있음 |
+| **회색** | 비었거나, 살아 있는 출처가 없음 | 데이터 없음. 결코 짐작이 아님. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+이것은 새로운 배색이 아닙니다. 트리가 이미 지니고 있는 상태를 그려 낸 것입니다.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**빨강은 언제나 한눈을 먼저 붙듭니다.** 빨간 구역이 하나 있으면 어떤 초록보다 먼저 눈을 멈추게 합니다. 정지가 다른
+모든 신호를 능가하는 것과 같습니다([`01`](01-ESTOP.md)). **빨간 구역 위에 초록을 보이는 작업장은 거짓말을 하고
+있습니다** — 그리고 그것이야말로 이 규칙이 금하려는 바로 그 실패입니다.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**살아 있는 출처가 없는 곳에서는 회색이 필수입니다.** 데이터가 없는 자리는 회색으로 그려지고 `—`를 보입니다. 결코
+초록으로 그려지지 않습니다. 초록은 기분 좋은 기본값이기 때문입니다([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. 겹쳐 든 창고
 
-This is where the model stops being a visualisation and starts enforcing something.
+**팔레트를 열면 상자가 보이는 것이 아닙니다. 또 하나의 창고 전체가 보입니다** — 자기 크레인, 자기 팔레트, 자기 출입구를
+지닌 창고가.
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+이것은 파일 트리 그대로입니다. 사업은 창고, 그 부서는 통로, 부서의 파일은 팔레트, 그리고 그 자체가 디렉터리인 팔레트는
+또 하나의 작업장입니다. 그래서 시각화기는 **내려가는 하나의 화면**이며, 어느 깊이에서도 조작은 같습니다. 모든 층이
+창고*이기* 때문입니다. 내려가는 길에 새로 배울 것은 없습니다.
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+이 되돌이야말로 이 비유가 겉치레가 아니라 버텨 내는 이유 전부입니다. 맨 위층만 그리는 대시보드는 선단의 사진이고,
+내려가는 것은 선단의 화면입니다.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. 트럭은 경계에 댄다 — 결코 작업장으로 들어오지 않는다
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+여기서 모형은 시각화이기를 그치고 무언가를 강제하기 시작합니다.
+
+외부 서비스 — 다른 AI, API, 공급사 — 는 **트럭**입니다. 그리고 실제 창고에서 트럭은 출입구에 후진해 댑니다. 작업장으로
+들어오지 않고, 크레인을 움직이지 않으며, 선반에 들어가지도, 겹쳐 든 창고를 열지도 않습니다. induct에 짐을 내리거나
+spur에서 받아 가는 것, 그것이 그 접근 권한의 전부입니다.
+
+**그 출입구가 곧 에어록입니다.** 모든 외부와의 주고받음은 가장자리에서, 걸러진 채로 일어나며, 외부의 무엇도 트리 안쪽에
+풀려나지 않습니다.
+
+**트럭의 서류는 확인하기 전에는 믿지 않습니다.** 트럭으로 들어오는 짐은 들어오는 *데이터*이지 작업장에 대한 명령이
+아닙니다. 다른 모든 것과 똑같이 투입되고 검토되며, 도착했다고 해서 따르는 일은 결코 없습니다. 그것이 [`03`](03-BUS.md)
+§5의 지시 출처 경계를 하역장으로 그린 것이며, 화면을 보는 사람이 그것이 지켜지는 모습을 볼 수 있는 유일한 자리에
+그려져 있습니다.
+
+당신의 그림이 트럭을 작업장 안에 두었다면, 그 그림은 틀렸고 그것이 그리는 설계도 틀렸습니다.
+
+---
+
+## 6. 두 표면, 두 가지 일
+
+| | **작업장**(이 문서) | **콘솔**([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| 무엇인가 | 3차원 작업장을 실시간으로 보는 것 | 타일 메뉴, 권한에 따라 단계를 둠 |
+| 무엇을 보이는가 | **시스템이 지금 어떤가** — 모든 에이전트·디렉터리·상태를 한꺼번에 | **무엇을 할 수 있는가** — 도구를 고르고 일을 함 |
+| 동사 | 보다, 이해하다, 정하다 | 돌리다, 쓰다, 만들어 내다 |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**작업장은 기계가 어떻게 생각하는지를 보이고, 콘솔은 거기서 내린 결론대로 움직이기 위한 것입니다.** 하나는 지도, 다른
+하나는 작업대입니다. 관리용 표면에는 둘 다 필요하며, 예쁜 쪽만 만드는 것이 흔한 잘못입니다.
 
 ---
 
-## 7. Controls
+## 7. 조작
 
-Navigation is what made the original usable, not colour alone:
+원래 것을 쓸 만하게 만든 것은 조작이었지, 색만이 아니었습니다.
 
-| Control | Does |
+| 조작 | 하는 일 |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **끌기** | 작업장을 선회 — 돌리기, 기울이기, 통로를 따라 바라보기 |
+| **위에서** | 위에서 내려다보는 평면도로 전환. 선회는 깊이, 평면은 배치를 위해 |
+| **팔레트 클릭** | 그 안으로 내려가기 — 또 하나의 창고, 같은 조작 |
+| **스크롤** | 확대·축소 |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+어느 깊이에서도 조작은 같습니다. 여기에는 타협이 없습니다. 내려갈수록 조작 방식이 달라지는 화면은, 모든 층이 창고라는
+약속을 깬 것입니다.
 
-### The camera is orthographic, on purpose
+### 카메라는 의도적으로 정사입니다
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**원근에 따른 줄어듦이 없습니다.** 평행선은 결코 만나지 않고, 통로 저 끝의 자리도 발밑의 자리와 정확히 같은 크기로
+그려집니다.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+한순간 이것은 틀려 보입니다 — 눈은 수렴을 기대하고, 그 부재를 마치 자기가 상자 안에서 바깥을 보는 것처럼 읽습니다.
+그래도 이것이 옳은 맞바꿈이며, 실제 자동화 작업장의 제어 화면이 쓰는 방식입니다. **요점은 작업장 전체의 자리들을 한눈에
+견주는 것**인데, 원근 카메라는 통로 저 끝을 더 작고, 더 흐리고, 가늠하기 어렵게 만듭니다. 원근에서는 "저 선반이 더 찼다"와
+"저 선반이 더 가깝다"가 똑같아 보입니다. 정사 카메라에서는 그렇지 않습니다.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+가림은 여전히 실제입니다 — 등을 돌린 면은 걸러지고, 가까운 형상이 먼 것을 덮어 그립니다. 평평한 것은 카메라이지 장면이
+아닙니다.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+장비는 **옆 메뉴**에서도 닿을 수 있고, 종류별로 묶여 있습니다 — 크레인, 팔레트, 두 출입구, 컨베이어, 트럭. 메뉴에서
+고르든 작업장에서 고르든 같은 조작이 열립니다. 3차원 장면에서 작은 상자를 클릭해야만 다닐 수 있는 작업장은 도구가 아니라
+시연이기 때문입니다.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. 작업장이 할 수 있는 일과 할 수 없는 일
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+[`07`](07-INTERFACE.md) §5의 모든 제약이 적용됩니다. 선은 한 지점에 분명히 그어집니다.
 
-**The floor may induct. It may never execute.**
+**작업장은 투입해도 된다. 결코 실행해서는 안 된다.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+이것은 [`07`](07-INTERFACE.md) §1이 콘솔에 대해 이미 그은 것과 같은 선이며, 애초에 장비가 조작 수단을 가질 수 있게
+하는 것도 이 선입니다. 크레인을 골라 일을 지정하면 그 에이전트를 지목하는 `REQ` 줄이 쓰이고, 그 받은 편지함에 `TELL`이
+놓입니다. **아무것도 시작되지 않습니다.** 프로세스도 뜨지 않고, 명령도 돌지 않으며, 그 에이전트는 자기 다음 실행에서
+그 일을 집어 듭니다 — 또는 집지 않습니다.
 
-Two consequences that are easy to get wrong:
+잘못 알기 쉬운 귀결이 둘 있습니다.
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **지정된 일도 여전히 명령이 아닙니다.** 규범이 되는 기록은 `REQ` 줄이고, 받은 편지함의 줄은 그것을 가리킬 뿐입니다.
+  에이전트에게 *명령하는* 파일 — 또는 트리 안쪽에서 운영자의 권한을 주장하는 파일 — 은 [`03`](03-BUS.md) §5가 규정하는
+  보안 사건 그 자체이며, 그것을 표면에 짜 넣는 것은 손으로 하는 것보다 나쁩니다. 권한은 대화 속의 운영자에게 있습니다.
+  작업장은 기록을 쓰지, 지시를 쓰지 않습니다.
+- **일부 장비는 의도적으로 조작 수단을 갖지 않습니다.** 컨베이어는 읽기 전용입니다. 버스에 줄을 쓸 수 있는 콘솔은
+  프로토콜이 주지 않은 권한을 만들어 내는 셈입니다. 트럭에는 조작 수단이 아예 없습니다 — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**`STOP` 아래에서 작업장은 빨강으로 그려지고 아무것도 투입하지 않습니다.** 빨간 작업장은 어떤 지시도 받지 않습니다.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+정직한 한계, 한 번만: **이것은 어느 한때의 트리 사진이지 살아 있는 원격 측정 흐름이 아닙니다.** 일정 간격으로 물어
+봅니다. 물음과 물음 사이에는 낡아 있고, 마지막으로 읽은 때를 보이며, sidecar가 응답을 멈추면 딴청을 부리지 않고 회색으로
+바뀝니다.

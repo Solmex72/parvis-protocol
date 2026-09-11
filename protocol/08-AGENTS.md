@@ -1,113 +1,114 @@
-# 08 — AGENTS
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — 에이전트
+
+**상태: 규범.** 에이전트란 무엇이며, 실행할 때마다 무엇을 빚지는가.
 
 ---
 
-## 1. Roles
+## 1. 역할
 
-| Role | Who |
+| 역할 | 누구 |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **운영자** | 사람. 우선도를 선언하고, 정지를 풀며, 모든 자격 증명을 쥐고, 되돌릴 수 없는 모든 행위를 확정합니다. |
+| **에이전트** | 정의 파일과, 쓸 수 있는 이름 공간과, 상시 임무를 지닌 범위가 정해진 일꾼 하나. |
+| **선단** | 하나의 프로토콜 루트 아래의 모든 에이전트. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+에이전트를 정하는 것은 파일이지, 돌고 있는 프로세스가 아닙니다. 프로세스는 죽습니다. 정의야말로 그 에이전트를 다른
+기계에서 다시 세울 수 있게 하는 것입니다.
 
 ---
 
-## 3. Scope
+## 2. 모든 에이전트가 실행할 때마다 빚지는 다섯 가지
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **비상 정지를 미리 확인할 것.** 첫 도구 호출 전에, 그리고 모든 쓰기·전송·실행·지출 전에 다시 한 번. `stat`은
+   **이번 실행에서** 하십시오. 기억한 상태를 결코 인용하지 마십시오. 신호가 어긋나면 정지가 이깁니다. 가릴 수 없을
+   때도 정지가 이깁니다.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **살아 있는 요약이 있으면 무엇보다 먼저 읽을 것.** 그리고 그것이 필요로 하는 것 가운데 자신이 가진 것을 말하십시오.
+   *"없습니다"*는 진짜 답변입니다 — 기여를 지어내는 대신 그렇게 말하고 대기하십시오.
+
+3. **산출물을 디스크에 쓸 것.** 방식은 **파일 전체를 한 번에 쓰는 것이며, 결코 덧붙이기의 연속이 아닙니다**
+   ([`03-BUS.md`](03-BUS.md) §7). 대화에서만 보고된 발견은 전달된 것이 아닙니다.
+
+4. 끝내기 전에 **종료 처리를 할 것.** 아래 §4.
+
+5. **모든 주장에 표시를 달 것**([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]`에는 이번 실행에서 실제로 읽은 일차
+   출처가 필요합니다. 불러오지 못한 출처는 실패한 호출이지 증거가 아닙니다.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. 범위
+
+모든 에이전트는 **자기 이름 공간 안에서만** 일합니다. 넓게 읽고 좁게 씁니다.
+
+- **결코 스스로 인력을 늘리지 않습니다.** 새로 찾아낸 일은 게시판의 공고가 됩니다. 새 에이전트가 필요하다면 그것은
+  *초안 정의와 운영자에 대한 요청*이 되지, 결코 돌고 있는 프로세스가 되지 않습니다.
+- **결코 비상 정지를 풀지 않습니다.** 자신이 걸어 둔 것이라도 마찬가지입니다.
+- **결코 다른 에이전트의 이름 공간을 편집하지 않습니다.** 다른 루트의 권위 있는 문맥도 마찬가지입니다. 어긋남을
+  보고합니다.
+- **격리된 에이전트는 운영자가 지목할 때만 지목됩니다.** 어떤 버스에도, 어떤 편성에도, 어떤 공유 표면에도 없습니다.
+  그래도 비상 정지는 읽습니다.
+
+---
+
+## 4. 접속과 종료
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**접속:** 표식을 쓰고, 자기 신원을 전체 전송 로그에 `FLASH`하고, 비상 정지를 미리 확인합니다.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**종료:** 증거 파일을 쓰고, 대장 줄을 덧붙이고, **자기 자신의** 표식을 지우고, 의도적으로 끝냅니다.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+지우는 것은 자기 표식뿐입니다. 남의 표식을 치우는 에이전트는 살아 있는 세션을 끝난 것으로 보고한 셈입니다.
 
-### Why sign-off is a protocol obligation
+### 종료 처리가 프로토콜상의 의무인 이유
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+세션에 매인 파수꾼은 그 세션과 함께 죽습니다. 그리고 **조용한 감시와 죽은 감시는 똑같아 보입니다.** 침묵은 반증할 수
+없습니다. 대책은 구조적인 것들입니다.
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **심박** — 박동의 부재 자체가 증거가 됩니다.
+- **명시적 종료** — 버려진 표식이 잡음이 아니라 탐지 가능한 이상이 되도록.
+- **재시작 시 다시 걸기** — 감시가 살아남았다고 결코 가정하지 말 것.
 
 ---
 
-## 5. Naming
+## 5. 이름 짓기
 
-Every agent carries a working name and a one-line charter:
+모든 에이전트는 작업명과 한 줄짜리 헌장을 지닙니다.
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+속기록에서는 구별되고 발음할 수 있는 이름이 번호를 이깁니다. 두 역할이 겹칠 때는 직함도 이깁니다. 이름 공간에서 두
+이름이 부딪치면 **쓸 때마다 구별하십시오** — 문서마다 처음 언급할 때 둘 다 온전히 적으십시오. 실재하는 두 가지가 한
+글자만 다르다는 것은, 언젠가 들이밀릴 결함입니다.
 
 ---
 
-## 6. The structural failures to design against
+## 6. 설계로 대비해야 할 구조적 실패
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+이것들은 관찰된 것이지 가정이 아닙니다. 하나하나가 돌아가는 선단에서 실제로 일어났습니다.
 
-| Failure | The counter-discipline |
+| 실패 | 맞서는 규율 |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **맞서는 파일들.** 우선도 0 규칙이 다섯 판본; 주 지시가 둘; 사실이 정반대인 지침서가 둘. | 판가름하고 쳐낼 것([`05-CORRECTION.md`](05-CORRECTION.md) §7). 어떤 교리든 쓰기 전에 먼저 찾아보십시오. 새 파일에서 바꿔 말한 규칙은 기여가 아니라 표류입니다. |
+| **죽은 참조.** 존재하지 않는 경로를 가리키는 파일이 수백 개. | 훑기 **전에** 그것을 퍼뜨리는 생성기를 고치십시오. 그러지 않으면 수가 되돌아옵니다. |
+| **원천만 많고 배출구는 거의 없음.** 올라온 파일과 열린 게시판 항목이 수백인데, 맞은편에는 몇 개밖에 읽지 못하는 사람 하나. 무엇도 무엇을 거두어들이지 않고, 모든 층이 쌓이기만 합니다. | **모든 보관에는 배출구를, 보관을 만들 때 정해서 둘 것.** 설계 전체가 쓸모 있게 되는 데 있어 가장 큰 구조적 위험입니다. |
+| **침묵은 반증할 수 없음.** | 심박. §4. |
+| **모든 것이 세션에 매여 있음.** | 재시작 때 감시를 다시 걸 것. 살아남았다고 가정하지 말 것. |
+| **증거 없는 주장.** | 확신 표시. 그리고 증거 경로가 없는 `DONE` 줄은 무효입니다. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. 철학, 한 번만
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **기계는 보고한다. 사람이 결정한다. 되돌릴 수 없는 행위는 언제나 사람의 것이다.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+이 프로토콜의 나머지 전부는 이 한 문장의 구현 세부입니다.

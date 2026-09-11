@@ -1,66 +1,66 @@
-# 05 — CORRECTION
+> **비공식 번역.** 이 문서의 규범 판본은 `main` 브랜치의 영문판입니다. 이 번역은 편의를 위해 제공되며
+> **원어민의 검수를 거치지 않았습니다**. 영문 원문과 어긋날 경우 **영문이 우선합니다**. 프로토콜 식별자
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, 버스 동사, 파일명)는 의도적으로 영문 그대로 두었습니다.
+> 에이전트가 해석하는 리터럴 값이기 때문입니다.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — 정정
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**상태: 규범.** 기록된 사실이 틀린 것으로 드러나면 무슨 일이 일어나는가.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. 문제
 
-Reading a governing file puts you under it. Two things follow:
+> 여섯 파일에서 주장된 사실은 그중 다섯에서 틀려 있다.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+마침 눈앞에 있는 파일을 고치는 것은 정정이 아닙니다. 그것은 진실과 오류가 둘 다 출처를 갖춘 트리를 만들고, 다음 세션은
+먼저 연 쪽을 집어 듭니다. 이것은 문서가 많은 에이전트 선단의 대표적인 실패 양상이며, 조용히 악화됩니다.
+
+**정정은 퍼지거나, 아니면 일어나지 않은 것입니다.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. 읽는 것은 공짜가 아니다 — 의무를 지운다
 
-One command, one turn, no proposal step.
+다스리는 파일을 읽는 것은 자신을 그 아래에 두는 일입니다. 여기서 두 가지가 따라옵니다.
+
+1. 그 안에서 **오래가고, 자명하지 않으며, 트리에서 도출할 수 없는** 것은 모두 세션이 끝나기 전에 자신의 지속 기억으로
+   들어갑니다.
+2. **자신의 문맥이 파일과 어긋나면 파일이 이깁니다.** 우회하지 마십시오. 기록을 정정하십시오.
+
+---
+
+## 3. 즉시 항로 정정 (ICC)
+
+명령 하나, 차례 하나, 제안 단계 없음.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### 순서
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · 훑기.** 정정에서 검색어를 2–5개 뽑습니다 — **옛** 표현, 그 뻔한 변형들, 그리고 관련된 고유명사. 새 표현이
+아닙니다. 무엇이든 읽기 전에 어휘마다 색인을 이용한 훑기를 한 번씩 돌리십시오. 일치하는 곳을 찾겠다고 트리를 파일
+하나하나 걸어 다니지 마십시오 — 색인은 바로 그것을 위해 있습니다.
 
-**2 · Classify every hit.**
+**2 · 일치하는 곳마다 분류하십시오.**
 
-| Hit | Action |
+| 일치 | 조치 |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **옛 사실을 주장함** | 고쳐 쓰십시오. |
+| **지나가듯 언급함**, 어느 쪽이든 참 | 두십시오. 문장을 휘젓지 마십시오. |
+| **새 사실과 간접적으로 어긋남** — 파생된 결론, 표의 한 줄, 옛 값 위에 짜인 예약 작업 | **그것도 고쳐 쓰십시오.** 가장 자주 놓치는 항목입니다. |
+| **범위 밖**(§5) | 결코 편집하지 마십시오. *Left alone* 아래에 적으십시오. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · 한꺼번에 고쳐 쓰십시오.** 각 파일의 기존 어조와 확신 표시 관행에 맞추십시오. 정정된 사실은 제 몫의 표시를
+유지합니다 — **이제 최신이라는 이유로 주장을 `[PROVEN]`으로 올리지 마십시오.** 옛 문장에 날짜가 있었다면 오늘 날짜로
+바꾸십시오.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+한 사실이 세 파일을 넘겨 주장되고 있다면 그것은 **중복이지 이중화가 아닙니다.** 그것을 소유한 파일에서 한 번만 적고,
+나머지는 그곳을 가리키게 하십시오.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · 대장과 기억.** 둘 다입니다. 아니면 그 실행은 끝난 것이 아닙니다. 정정 대장 맨 앞에 항목을 더하십시오.
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +73,69 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+그런 다음 그 사실을 지속 기억에 쓰십시오 — **먼저 그 주제에 대한 기억 항목이 이미 있는지 확인하고, 있으면 그것을
+갱신하십시오.** 방금 명령 하나를 들여 하나로 모은 사실을 두 판본으로 남겨서는 안 됩니다.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · 편집 뒤의 의무.** 편집이 요구한 생성기나 백업을 다시 돌리십시오. 파일이 새로 생기거나 지워졌다면 색인을 다시
+만드십시오.
 
 ---
 
-## 5. What is never rewritten
+## 4. 상시 결정은 공개적으로 뒤집는다
 
-| Never touched | Why |
+정정이 상시 결정을 무효로 만든다면 — "다시 들추지 않음" 한 줄, `[PROVEN]` 항목, 방침 규칙 — **조용히 뒤집지
+마십시오.** 날짜와 사유를 붙여 *뒤집힘*으로 고쳐 써서, 다음 세션이 그것이 잊힌 것이 아니라 취소된 것임을 알게
+하십시오.
+
+흔적 없이 바뀌는 결정은, 애초에 내려진 적 없는 결정과 구별되지 않습니다.
+
+---
+
+## 5. 결코 고쳐 쓰지 않는 것
+
+| 결코 건드리지 않음 | 이유 |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | 역사. 역사는 정정하지 않고, 대체될 뿐입니다. |
+| 생성된 파일 | 원본을 고치고 생성기를 다시 돌리십시오. |
+| 격리된 에이전트의 트리 | 지목되었을 때만 접근합니다. |
+| 다른 루트의 권위 있는 주 문맥 | 어긋남을 보고하십시오. 소유 경계를 넘어 편집하지 마십시오. |
+| 비밀을 담은 모든 것 | 텍스트 훑기의 범위 밖입니다. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**텍스트를 고쳐 쓰는 훑기는 이진 파일을 망가뜨립니다.** 모든 훑기를 허용 목록으로 텍스트 확장자에 한정하고, 제외
+방식은 쓰지 마십시오.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. ICC가 하지 않는 것
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc`는 기록을 정정합니다. **그런 다음 그 정정이 함의하는 일을 하러 가지는 않습니다.** 그것들은 권한이 따로인 별개의
+행위이며, 둘을 섞는 것이야말로 한 줄짜리 정정이 검토 없는 개조로 변하는 길입니다.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. 맞서는 사실은 판가름하고 쳐낸다 — 목록으로 만들지 않는다
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+두 파일이 서로 어긋나는 사실을 주장한다면, **어느 쪽이 옳은지 정하고, 그것을 남기고, 틀린 주장은 같은 회차에
+지우십시오.**
 
-### What still gets escalated instead of settled
+두 경쟁자를 모두 디스크에 남겨 두는 충돌 보고서는 아무것도 해결하지 않은 것입니다. 다음 세션은 여전히 먼저 연 파일을
+집고, 판본이 다섯 개 도는 안전 규칙은 판본이 하나인 것보다 *덜* 미덥습니다. 그 반대가 아닙니다.
 
-Three cases. Surface these; do not decide them:
+**내용으로 판가름하십시오, 결코 타임스탬프로가 아니라.** 이기는 것은 그 사실을 소유한 파일, 측정이 받쳐 주는 판본,
+검토를 견디는 쪽입니다. **가장 새로운 것이 가장 참된 것은 아닙니다** — 여기서의 전형적인 실패는 구십 초 사이에 쓰인 네
+개의 중복 기억 파일이었고, 그중 가장 새로운 것이 거짓 주장을 담고 있었습니다. "가장 새로운 것이 이긴다"는 규칙이었다면
+그 오류를 그대로 물려받았을 것입니다.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**판가름을 기록하십시오.** 어느 사실이 남았고, 무엇을 쳐냈으며, 왜 그랬는지 — 대장에 적어, 쳐냄이 조용하지 않고 읽히게
+하십시오. 흔적 없이 사라진 경쟁자는 애초에 없던 경쟁자와 구별되지 않고, 다음 세션이 그것을 다시 만들어 냅니다.
 
-Everything ordinary gets decided and cleaned up.
+### 그래도 위로 올리는 경우
+
+세 가지입니다. 드러내되, 스스로 판가름하지 마십시오.
+
+- 그 모순이 에이전트가 갖고 있지 않은 정보에 달려 있을 때.
+- 틀리는 것이 **안전하지 않거나 되돌릴 수 없을** 때 — 가로대 0–2에 걸린 모든 것.
+- 지는 쪽 주장이 **에이전트의 소유 경계 밖**에 있을 때 — 다른 루트의 권위 있는 주 문맥. 어긋남을 보고하되, 경계를 넘어
+  편집하지 마십시오.
+
+그 밖의 통상적인 것은 그 자리에서 판가름하고 정리합니다.
