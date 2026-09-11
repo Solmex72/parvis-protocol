@@ -1,118 +1,117 @@
-# 02 — EVIDENCE
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — 証拠
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**ステータス：規範。** 観察がどのようにして記録された事実になるか。
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+このファイルが述べる規律は、ふつう*提案*に対して適用されます——人が判断を下す前に、エージェントが自分の計画の成功
+見込みを述べる、というように。それが*主張*に適用されることはほとんどありません。こうして群は、何を**する**許可が
+欲しいかについては注意深く考え、何を**真である**として書き留めるかについては雑になります。
+
+この二つは同じ行為です。記録に入る主張とは、記録を変えよという提案です。Parvis は両方に一つの規律を課します。
 
 ---
 
-## 1. Every claim carries a tag
+## 1. すべての主張は印を帯びる
 
-| Tag | Means | Admissible where |
+| 印 | 意味 | どこで許されるか |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | **この実行で自分が読んだ**一次資料を引いて検証済み。コマンド、読み取り、測定を名指しすること。 | どこでも。マスターファイルを含む。 |
+| `[CLAIMED]` | ほかの何かによる報告。未検証。 | 作業ファイル。マスターファイルには決して置かない。 |
+| `[ASSUMED]` | 誰も確かめていない作業上の前提。 | 作業ファイルに、明示して。 |
+| `[PROPOSED]` | 見積もり、推奨、計画。 | 提案。記録には決して入れない。 |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**印は主張とともに移動します。** `[PROPOSED]` は、より重要なファイルへ複写されたからといって `[PROVEN]` には
+なりません。格上げに必要なのは新しい測定であって、新しい置き場所ではありません。
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**マスターファイルを変えてよいのは `[PROVEN]` だけです。**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. 出所を示すか、印を付けるか——決して洗浄しないこと
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+数字は出所を述べます。さもなければそれは数字ではなく、小数点を着けた勘です。
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+出所がないなら、**そう述べて、代わりに理路を示してください。** それは役に立つ回答です。出所のない数字を事実として
+差し出すのは役に立ちません。
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**失敗を発見へと洗浄しないこと。** エラーになった検索は失敗した呼び出しであって、空の結果集合ではありません。読み
+込めなかったページは不在の証拠ではありません。起きたことを書いてください。
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. 自己申告は `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+自分の状態、自分の網羅範囲、自分の完了した仕事についてのエージェントの説明は、どれほど確信があろうと `[CLAIMED]`
+です。それを `[PROVEN]` にできるのは外部の記録だけ——ディスク上のファイル、コマンドの終了コード、自分以外の何かが
+書いたログ行です。
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+だからこそ、証拠パスのない `DONE` 行は無効です（[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md) を参照）。
+「やりました」は主張です。ファイルが証拠です。
 
 ---
 
-## 6. Negative findings count
+## 4. 段 0〜2 のものはすべて二度測る
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+一度の確認で安全状態が証明されることは決してありません。優先度 0 の主張の前には、常に二つの独立した測定を。
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**測り直すこと、決して思い出さないこと。** ツリーは並行するセッションのもとで動きます——ターンの初めに読んだパスが、
+終わりには消えていることもあります。状態は*この*実行でディスクから読んでのみ知りうるものです。「異常なし」や「最新」
+を、前のターンや記憶ファイルや要約から持ち越さないこと。
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**数え上げは測定であって、事実ではありません。** 使う場所で数え直すこと。ファイル数、エージェント数、バージョンを
+記憶から挙げないこと。
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. 落ちた呼び出しは発見ではない
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+**通信が失われたとき**——DNS の失敗、接続のリセット、拒絶、応答のないタイムアウト——同じ呼び出しをただちに、繰り返し
+再送してください。届かなかった呼び出しについて「結果なし」と書かないこと。その空白を記憶で埋めないこと。
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**届いた応答は回答であって、再試行の理由ではありません。** 403、404、空の結果集合、明示的な拒絶——これらはデータ
+です。別の答えを得ようと拒絶に再試行を重ねるのは検知の回避であり、誰のアカウント・誰のネットワークで動いていようと
+段 2 で禁じられます。
+
+一行でいえば——*届かなかった呼び出しは再送する。気に入らなかった答えは決して再送しない。*
 
 ---
 
-## 9. The rule these all serve
+## 6. 否定的な発見にも意味がある
 
-> A fact asserted in six files will be wrong in five of them.
+「X を確認、危険ではない」——これが次の三つのセッションに X を再確認させずに済ませます。記録してください。
 
-Evidence discipline is what makes the sixth one findable.
+**学びながら記録すること、最後にまとめてではなく。** 作業記憶にだけ置かれ、やがて失われた発見は、まったく行われ
+なかった仕事と見分けがつきません。
+
+---
+
+## 7. 削除こそ健全性の信号
+
+ある基準に照らしてツリーを検証するとき、報告は三つの類に分かれます——追加、変更、削除。増加と編集は想定される動き
+です。**警報を上げる価値があるのは削除の行です。**
+
+監査していない並行作業の上に基準を引き直さないこと。まず監査、それから刻印。
+
+---
+
+## 8. 監査は役割であって、気分ではない
+
+監査者は、すべてのエージェント、コマンド、指令を**ディスクから**数え上げ、固定された分類に照らして一つずつ確かめ
+ます——欠陥だけでなく、問題のなかった確認も数えます。何一つ問題なしとしなかった実行は、何も監査していません。苦情
+を集めただけです。
+
+**監査者は決して直しません。** 発見は訂正の手続き（[`05-CORRECTION.md`](05-CORRECTION.md)）か、担当のエージェント
+へ回されます。見つけたものを直してしまった監査者は、自分の証拠を壊したのであり、以後「問題のない実行だった」と報告
+することを信用されません。
+
+---
+
+## 9. これらすべてが仕える規則
+
+> 六つのファイルで主張された事実は、そのうち五つで誤っている。
+
+証拠の規律とは、六つ目を見つけられるようにするものです。

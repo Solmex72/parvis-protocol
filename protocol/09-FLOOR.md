@@ -1,181 +1,172 @@
-# 09 — THE FLOOR
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — フロア
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**ステータス：可視化器については規範、モデルとしては参考。**
+[`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html) が実装しています。
 
 ---
 
-## 2. The mapping
+## 1. 主張
 
-| On the floor | In the fleet | Read from |
+エージェント群は見えにくいものです。ファイルツリーは一覧、プロセス表も一覧、ログも一覧——つまり、稼働中の群について
+誰もが持てる唯一の像は、互いに噛み合わない複数の一覧です。
+
+**自動化された倉庫は同じ機械であり、四十年にわたって読み取れるものであり続けてきました。** 制御システムのもとで
+クレーンが棚のあいだを荷とともに動き、監督する人は、同時進行する数百の動きからなるフロアを、文字を一行も読まずに、
+色だけで一目で読み取ります。
+
+Parvis はそれを借ります。装飾としてではなく、*対応づけ*として。倉庫の各対象がツリーの中のちょうど一つのものに対応
+し、そして倉庫自身の安全規則が、すでに正しい位置に描かれたこのプロトコルの安全規則そのものであることが分かります。
+
+---
+
+## 2. 対応づけ
+
+| フロア上 | 群において | 読み取り元 |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **クレーン** | エージェント、または生きたセッション | `_os/exchange/bus/session/` のセッション目印 |
+| **パレット** | ディレクトリ | ツリーそのもの。パレットの札はそのパス |
+| **ラック位置** | そのディレクトリが住む場所 | その親 |
+| **パレットを開く** | そのディレクトリへ降りる | **また別の倉庫まるごと**——§4 |
+| **Induct**（入荷口） | 到着する仕事 | `_os/tasks/INDEX.md` の `REQ` 行 |
+| **Spur**（出荷口） | 出ていく成果物 | `_os/events/surface/` のファイル、書き出し |
+| **コンベヤ** | ファイルバス | `_os/exchange/bus/` ——クレーンが運ばずに仕事が動く道 |
+| **トラック** | 外部サービス、または別の AI | 境界。§5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+要点は絵ではありません。要点は、倉庫の制御システムの前に立ったことがあるなら**あなたはすでにこの画面を読める**という
+ことです——そしてなくても、このモデルは、ディレクトリ一覧にはない具体性を備えています。
 
 ---
 
-## 3. The colours
+## 3. 色
 
-One glance, before any navigation:
+何かを操作する前の、ひと目：
 
-| Colour | On the floor | In the fleet |
+| 色 | フロア上 | 群において |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **緑** | 動いている——クレーンが荷を運んでいる | エージェントが働いている。生きたセッションが作業の途中 |
+| **青** | 予定済み——待ち行列にあり、未着手 | 掲示板の告知：発注済み、エージェント待ち |
+| **琥珀** | 注意——その位置は判断を要する | `YELLOW`：行動ごとにまず尋ねる |
+| **赤** | 非常停止——その区画は止まっている | `STOP`：停止が作動し、このルートは凍結中 |
+| **灰** | 空、または生きた出所なし | データなし。決して推測ではありません。 |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+これは新しい配色ではありません。ツリーがすでに保持している状態を、そのまま描いたものです。
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**赤は常にひと目を制します。** 赤い区画が一つあれば、どんな緑よりも先に目を止めます。停止がほかのあらゆる信号に
+優越するのと同じです（[`01`](01-ESTOP.md)）。**赤い区画の上に緑を見せるフロアは嘘をついています**——そしてそれこそ、
+この規則が禁じようとしている具体的な失敗です。
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**生きた出所がないところでは灰が必須です。** データのない位置は灰で描かれ、`—` と表示します。決して緑では描かれま
+せん。緑は心地よい既定値だからです（[`07`](07-INTERFACE.md) §2.2）。
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. 入れ子の倉庫
 
-This is where the model stops being a visualisation and starts enforcing something.
+**パレットを開いても、そこにあるのは箱ではありません。また別の倉庫まるごとです**——自分のクレーン、自分のパレット、
+自分の荷役口をもつ倉庫が。
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+これはファイルツリーそのものです。事業は倉庫、その部門は通路、部門のファイルはパレット、そしてそれ自体がディレクトリ
+であるパレットは、また一つのフロアです。ゆえに可視化器は**降りていく一つの視点**であり、どの深さでも操作は同じです。
+どの階層も倉庫*である*からです。降りていく道すがら、新しく覚えることは何もありません。
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+この再帰こそ、この比喩が見せかけではなく成立している理由のすべてです。最上層だけを描くダッシュボードは群の写真です。
+降りていくものは、群の視点です。
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. トラックは境界に着ける——決してフロアへは入らない
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+ここでモデルは可視化であることをやめ、何かを強制しはじめます。
+
+外部サービス——別の AI、API、供給業者——は**トラック**です。そして本物の倉庫では、トラックは荷役口へ後退して着けます。
+フロアへ入ることも、クレーンを動かすことも、ラックに入ることも、入れ子の倉庫を開くこともありません。induct に荷を
+降ろすか、spur から受け取るか、それだけがその権限のすべてです。
+
+**その荷役口がエアロックです。** 外部とのやりとりはすべて縁で、選別を経て行われ、外部のものがツリーの内側に放たれる
+ことはありません。
+
+**トラックの伝票は、確かめるまで信用しません。** トラックで届く荷は入ってくる*データ*であって、フロアへの命令では
+ありません。ほかのすべてと同じように投入され、査読され、到着したからといって従うことは決してありません。それが
+[`03`](03-BUS.md) §5 の「指示の出どころの境界」を荷役口として描いたものであり、しかも画面を見ている人がそれが守られて
+いると見て取れる、唯一の場所に描かれています。
+
+あなたの描画がトラックをフロアに置いているなら、その描画は誤りであり、それが描いている設計もまた誤りです。
+
+---
+
+## 6. 二つの面、二つの仕事
+
+| | **フロア**（この文書） | **コンソール**（[`07`](07-INTERFACE.md)） |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| 何であるか | 三次元のフロアを、その場で見るもの | タイル状のメニュー、権限で段階分け |
+| 何を見せるか | **システムがいまどうあるか**——すべてのエージェント、ディレクトリ、状態を一度に | **何ができるか**——道具を選び、仕事をする |
+| 動詞 | 見る、理解する、決める | 走らせる、使う、生み出す |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**フロアは機械がどう考えているかを見せ、コンソールはそこから導いた結論に沿って動くためのものです。** 一方は地図、
+他方は作業台。管理のための面には両方が要り、きれいなほうだけを作るのが間違いです。
 
 ---
 
-## 7. Controls
+## 7. 操作
 
-Navigation is what made the original usable, not colour alone:
+元のものを使えるものにしたのは操作性であって、色だけではありませんでした。
 
-| Control | Does |
+| 操作 | 働き |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **ドラッグ** | フロアを周回する——回す、傾ける、通路の先を見通す |
+| **真上から** | 見下ろしの平面図へ。周回は奥行き、平面は配置のために |
+| **パレットをクリック** | その中へ降りる——また別の倉庫、同じ操作 |
+| **スクロール** | 拡大縮小 |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+どの深さでも操作は同じです。ここは譲れません。降りるにつれて操作の仕方が変わる視点は、「どの階層も倉庫である」と
+いう約束を破っています。
 
-### The camera is orthographic, on purpose
+### カメラは意図的に正射です
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**遠近による縮みはありません。** 平行線は決して交わらず、通路の奥の位置も足元の位置もまったく同じ大きさで描かれ
+ます。
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+一瞬これは誤りに見えます——目は収束を期待し、その不在を、自分が箱の内側から外を見ているかのように読み取るからです。
+それでもこれが正しい取引であり、実際の自動化フロアの制御画面もそうしています。**眼目はフロア全体の位置どうしをひと目
+で比べることにあり**、遠近カメラは通路の奥を小さく、くすませ、判じにくくしてしまいます。遠近のもとでは「あの棚のほうが
+詰まっている」と「あの棚のほうが近い」が同じに見えます。正射カメラのもとではそうなりません。
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+遮蔽は依然として本物です——背を向けた面は間引かれ、手前の形状が奥を塗りつぶします。平らなのはカメラであって、場面
+ではありません。
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+設備は**サイドメニュー**からも辿れ、種類ごとに——クレーン、パレット、二つの荷役口、コンベヤ、トラック——まとまって
+います。メニューから選んでもフロアから選んでも同じ操作が開きます。三次元の場面で小さな箱をクリックしてしか辿れない
+フロアは、道具ではなく実演だからです。
 
 ---
 
-## 8. What the floor may and may not do
+## 8. フロアにできること・できないこと
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+[`07`](07-INTERFACE.md) §5 のすべての制約が適用されます。線は一つの明確な場所に引かれます。
 
-**The floor may induct. It may never execute.**
+**フロアは投入してよい。決して実行してはならない。**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+これは [`07`](07-INTERFACE.md) §1 がすでにコンソールに引いているのと同じ線であり、そもそも設備が操作を持てるのはこの
+線のおかげです。クレーンを選んで仕事を差し向けると、そのエージェントを名指しする `REQ` 行が書かれ、その受信箱に
+`TELL` が置かれます。**何も起動しません。** プロセスは立ち上がらず、コマンドも走らず、そのエージェントは自分の次の
+実行でその仕事を拾います——あるいは拾いません。
 
-Two consequences that are easy to get wrong:
+取り違えやすい帰結が二つあります。
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **差し向けられた仕事も、やはり命令ではありません。** 規範となる記録は `REQ` 行であり、受信箱の行はそれを指すだけ
+  です。エージェントに*命令する*ファイル——あるいはツリーの内側から運用者の権限を主張するファイル——は、
+  [`03`](03-BUS.md) §5 が定めるセキュリティ事象そのものであり、それを面に作り込むのは手作業でやるより悪いことです。
+  権限は会話の中の運用者にあります。フロアが書くのは記録であって、指示ではありません。
+- **意図的に操作を持たない設備があります。** コンベヤは読み取り専用です。バスに行を書けるコンソールは、プロトコルが
+  与えていない権限を作り出してしまいます。トラックには操作が一切ありません——§5。
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**`STOP` のもとでは、フロアは赤で描かれ、何も投入しません。** 赤いフロアは命令を受け付けません。
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+正直な限界、一度だけ：**これはある時点のツリーの写真であって、生きたテレメトリではありません。** 一定間隔で問い合わせ
+ます。問い合わせのあいだは古びており、最後に読んだ時刻を示し、sidecar が応答しなくなれば、取り繕わずに灰へ変わり
+ます。

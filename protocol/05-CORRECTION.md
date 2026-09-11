@@ -1,66 +1,67 @@
-# 05 — CORRECTION
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — 訂正
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**ステータス：規範。** 記録された事実が誤りだと判明したとき、何が起きるか。
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. 問題
 
-Reading a governing file puts you under it. Two things follow:
+> 六つのファイルで主張された事実は、そのうち五つで誤っている。
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+たまたま目の前にあるファイルを直すのは、訂正ではありません。それは、真実と誤りの双方に典拠があるツリーを作り、次の
+セッションは先に開いたほうを採る、という事態を生みます。これは文書の多いエージェント群に特有の失敗の形であり、
+静かに悪化していきます。
+
+**訂正は波及するか、さもなくば起きなかったかのどちらかです。**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. 読むことは無償ではない——義務を生む
 
-One command, one turn, no proposal step.
+統率するファイルを読むことは、自分をその下に置くことです。そこから二つのことが導かれます。
+
+1. その中の、**持続的で、自明でなく、ツリーから導出できない**ものはすべて、セッションが終わる前に自分の永続記憶へ
+   入れること。
+2. **自分の文脈がそのファイルと矛盾するなら、ファイルが勝ちます。** 迂回しないこと。記録を訂正すること。
+
+---
+
+## 3. 即時の針路訂正（ICC）
+
+一つのコマンド、一つのターン、提案の段階なし。
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### 手順
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · 走査。** 訂正から検索語を 2〜5 個導きます——**古い**言い回し、その明白な変種、関わる固有名詞。新しい言い回し
+ではありません。何かを読む前に、語ごとに索引を用いた走査を一度ずつ走らせてください。該当箇所を探すためにツリーを
+一ファイルずつ歩き回らないこと——索引はそのためにあります。
 
-**2 · Classify every hit.**
+**2 · 該当箇所を分類する。**
 
-| Hit | Action |
+| 該当 | 対応 |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **古い事実を主張している** | 書き直す。 |
+| **ついでに触れているだけ**で、どちらでも真 | そのままに。文章をかき回さない。 |
+| **新しい事実と間接的に矛盾する**——派生した結論、表の一行、古い値の上に組まれた定時処理 | **これも書き直す。** ここが最も見落とされます。 |
+| **対象外**（§5） | 決して編集しない。*Left alone* に記す。 |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · 一度にまとめて書き直す。** 各ファイルの既存の語り口と、確信度の印の慣習に合わせてください。訂正された事実は、
+それにふさわしい印を保ちます——**いまが最新だからといって主張を `[PROVEN]` に格上げしないこと。** 古い本文に日付が
+あったなら、今日の日付にしてください。
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+一つの事実が三つを超えるファイルで主張されているなら、それは**冗長ではなく重複**です。それを所有するファイルで一度
+だけ述べ、ほかはそこを指すようにしてください。
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · 台帳と記憶。** 両方です。さもなければその実行は終わっていません。訂正台帳の先頭に項目を加えてください。
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +74,70 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+そのうえで事実を永続記憶へ書いてください——**まずその主題の記憶がすでにないかを確かめ、あればそれを更新すること**。
+いま一つのコマンドを費やして一本化した事実について、版を二つ残すのでは元も子もありません。
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · 編集後の義務。** 編集が要求した生成器やバックアップを再実行してください。ファイルの作成や削除があったなら索引
+を作り直してください。
 
 ---
 
-## 5. What is never rewritten
+## 4. 常設の決定は公然と覆す
 
-| Never touched | Why |
+訂正が常設の決定を無効にするなら——「蒸し返さない」の一行、`[PROVEN]` の項目、方針の規則——**黙ってひっくり返さない
+こと。** 日付と理由を添えて*覆された*ものとして書き直し、次のセッションがそれを忘れられたのではなく取り消されたと
+分かるようにしてください。
+
+跡形もなく変わる決定は、そもそも下されなかった決定と見分けがつきません。
+
+---
+
+## 5. 決して書き換えないもの
+
+| 決して触れない | 理由 |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`、`archive/` | 歴史。歴史は訂正されず、置き換えられます。 |
+| 生成されたファイル | 元を編集し、生成器を再実行してください。 |
+| 隔離されたエージェントのツリー | 名指しされたときにのみ触れられます。 |
+| 別のルートの権威ある主文脈 | 食い違いを報告すること。所有の境界を越えて編集しないこと。 |
+| 秘密を含むもの一切 | テキスト走査の対象外です。 |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**テキストを書き換える走査はバイナリを壊します。** どの走査も許可リストでテキスト拡張子に限定し、除外方式は使わない
+こと。
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. ICC がしないこと
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` は記録を訂正します。**そのあとで、訂正が示唆する作業をしに行くことはありません。** それらは別々の権限をもつ
+別々の行為であり、混同こそが、一行の訂正を未査読の作り直しに変えてしまう道筋です。
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. 競合する事実は決着させて刈り取る——目録にはしない
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+二つのファイルが相反する事実を主張しているなら、**どちらが正しいかを決め、それを残し、誤った主張を同じ手番で取り
+除いてください。**
 
-### What still gets escalated instead of settled
+両方の競合をディスクに残す衝突報告は、何も解決していません。次のセッションは依然として先に開いたファイルを採り、
+版が五つ流通している安全規則は、版が一つのものより*信頼できません*。その逆ではありません。
 
-Three cases. Surface these; do not decide them:
+**中身で決めること、決してタイムスタンプでは決めないこと。** 勝つのは、その事実を所有するファイル、測定に裏打ちされ
+た版、検討に耐える版です。**最も新しいものが最も正しいとは限りません**——ここでの典型的な失敗は、九十秒のあいだに
+書かれた四つの重複記憶ファイルであり、最も新しいものが誤った主張を含んでいました。「最新が勝つ」という規則なら、
+その誤りをそのまま引き継いだはずです。
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**決着を記録すること。** どの事実が残り、何が刈り取られ、なぜそうしたか——台帳に記し、刈り取りが黙って行われるので
+はなく読み取れるようにしてください。跡形もなく消えた競合は、はじめから無かった競合と見分けがつかず、次のセッション
+がそれを作り直します。
 
-Everything ordinary gets decided and cleaned up.
+### それでも判断を仰ぐもの
+
+三つの場合。示すだけにとどめ、自分で決めないこと。
+
+- その矛盾が、エージェントの持たない情報に依存しているとき。
+- 誤ることが**危険または取り返しのつかない**とき——段 0〜2 に関わるもの。
+- 負けるほうの主張が**エージェントの所有の境界の外**にあるとき——別のルートの権威ある主文脈。食い違いを報告し、境界
+  を越えて編集しないこと。
+
+それ以外の通常のものは、その場で決着させ、片づけます。

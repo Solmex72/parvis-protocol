@@ -1,101 +1,100 @@
-# 07 — THE INTERFACE LAYER
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative.** This is the file the project is named for.
+# 07 — インターフェース層
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**ステータス：規範。** このプロジェクトの名前の由来となったファイルです。
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+人が触れるあらゆる面が **Parvis** です。読み取り専用のフロア表示が *Parvis HMI*、群を動かすタイル状のメニューが
+*Parvis Console* です。
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. この HTML を成り立たせている規則
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> ブラウザーのページは**画面とキーボード**であって、ディスクにアクセスできるプログラムではありません。
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+この一点があらゆる層を律します。
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **ページは見せて、受け取ります。** 状態を描画し、入力を受けます。ファイルパスから開いただけでは、それ自体では
+  **ツリーを読むことも、命令を書くこともできません。** ブラウザーのサンドボックスが両方を禁じており、それこそが
+  美点です。
+- **sidecar が橋を架けます。** ループバックだけに——`127.0.0.1` にのみ束ねられ、ほかには何もない——小さなサービスが、
+  ページのためにツリーを読み、ページが送ったものを書く唯一の存在です。ページは状態を `GET` で取り、プロンプトを
+  `POST` で送り、ディスク仕事は sidecar がします。**sidecar がなければ生きた Parvis はなく、あるのはスナップ
+  ショットだけです。**
+- **査読を迂回するものはありません。** Parvis から送られたプロンプトは**投入であって、実行ではありません。**
+  sidecar は作業台帳に `REQ` 行を書き、そこで止まります。エージェントを起こすことも、コマンドを走らせることも、
+  送信することもありません。新しい仕事を確定させるのは、運用者のキー操作のままです。
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+だからこそページは「動く」のです。ページは自分が窓であることに正直で、sidecar は縁で小さな実務をこなし、そして
+**査読は依然として、プロンプトと動いている機械のあいだに立っています。**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. 厳格な要件——すべての Parvis 面
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **自己完結。** HTML 一枚：CSS と JS を埋め込み、外部スクリプトなし、CDN なし。ウェブフォントのみとし、実在する
+   代替フォント指定を伴うこと。ファイルパスからオフラインで描画できなければなりません。
 
-| Requirement | Why |
+2. **色は状態であり、その場で読み、決して装わない。** 緑＝稼働、琥珀＝まず尋ねる、赤＝停止——いずれも STATE ファイル
+   と生きた台帳から導きます。**生きた出所のない値は `—` を表示し、もっともらしい数字を決して出さないこと。** 赤は
+   ほかのどの色にも、そして UI 全体にも優越します。
+
+3. **sidecar はループバック専用で、ページから見える秘密を一切持ちません。** API キーも、資格情報も、価値のある
+   トークンも、ブラウザーには届きません。sidecar はローカルのセッショントークンでページを認証し、特権を要する仕事は
+   自分で行います。**ページは盗む価値のあるものを何一つ持ちません。**
+
+4. **スナップショットはスナップショットとして印を付け、**読み取り時刻を添えます。生きた sidecar と通じているページ
+   だけが、自分を生きていると示してよいのです。古びたページが生きているように見えるのは、ページが無いより悪いこと
+   です。
+
+5. **非常停止はインターフェースに優越します。** `STOP` のもとでは Parvis は何も投入せず、sidecar は終了の一行以外
+   何も書きません。**赤いフロアは命令を受け付けません。**
+
+6. **Parvis の名で、第三者の社名は出さないこと。** どんな実在のシステムから型を学んだにせよ、その型はあなたのもの
+   であり、名前は Parvis です。他人の商号を同梱する面は誤りであり、訂正されます。
+
+---
+
+## 3. sidecar への安全要件
+
+開発機のループバック HTTP サービスは、現実の攻撃面です。以下は任意事項ではありません。
+
+| 要件 | 理由 |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **`127.0.0.1` を明示して束ねること**、`0.0.0.0` は決して使わない | 全インターフェースに束ねることは、群のコンソールを LAN に公開することです。 |
+| **`Host` ヘッダーを `127.0.0.1:<port>` / `localhost:<port>` の許可リストで検証すること** | DNS リバインディングを封じます。訪れたウェブページがループバックのサービスに届くのはこの手口です。 |
+| **自分が発行していない `Origin` を伴う要求を拒むこと** | 同じ種類の攻撃、別の経路です。 |
+| **状態を変えるすべての経路でセッショントークンを要求すること**。ページ読み込み時に発行し、決してログに残さない | ページが「自分はあなたのページだ」と証明します。 |
+| **サービスが読み書きするすべてのパスを許可リストに載せ**、そのうえで解決し直して収まっていることを確認する | パス横断を封じます。シンボリックリンクがあるなら許可リストだけでは足りません。 |
+| **estop が読めないときは安全側で失敗すること**——拒み、`RUN` に戻らない | [`01-ESTOP.md`](01-ESTOP.md) §2 を参照。 |
+| **`eval` なし、シェル呼び出しなし、利用者入力のテンプレート埋め込みなし** | プロンプト欄は投入のための入力欄であって、コマンドラインではありません。 |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+[`reference/sidecar/`](../reference/sidecar/) の参照実装はこれらをすべて実現しており、各項目の箇所に注釈があります。
 
 ---
 
-## 4. What the surfaces are
+## 4. 面は何か
 
-| Surface | What | State |
+| 面 | 内容 | 状況 |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | タブ付きのパネル——状態、文書、台帳、バス、表面、設定 | 提供済み。 |
+| **Parvis Floor** | 倉庫タブ：三次元フロア、周回と掘り下げ、設備の操作 | 提供済み。[`09-FLOOR.md`](09-FLOOR.md) を参照。 |
+| **プロンプト欄** | 投入のための入力欄。コンソールと各フロア設備に | 提供済み。 |
+| **sidecar** | ループバックの橋：ツリーを読み、`REQ` 行を書き、秘密を持たない | 提供済み。 |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**まずパネルを出すこと。** 三次元フロアは誰もが作りたがる部分であり、そして下に台帳がなければ無価値な部分でも
+あります——それはプロトコルの他の部分が生む状態を描くものであり、空のツリーの上では、正しくも何も表示しません。
 
 ---
 
-## 5. Standing
+## 5. 立場
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
-  ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).
+- **ページは読む。sidecar は書く。運用者が確定する。**
+- どの面も、起動・送信・配備・非常停止の解除をしません。
+- いかなる秘密も、決してブラウザーに達しません。
+- 出力はファイルとコンソールへ向かい、チャット欄へは向かいません
+  （[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)）。

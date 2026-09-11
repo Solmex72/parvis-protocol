@@ -1,38 +1,41 @@
-# 04 — THE OUTPUT CONTRACT
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — 出力の契約
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**ステータス：規範。** 仕事が終わったとき、それはどこへ行くか。
 
 ---
 
-## 2. Where output goes
+## 1. 規則
 
-| Kind of output | Lands at |
+**チャットへ報告しないこと。ファイルツリーで作業し、出力をディスクへ書き、指し示すものを一つ提示すること。**
+
+チャット欄に長い返答を書いて締めくくるエージェントは、自分の出力を、群の中のほかの何ものも読めない場所に置いた
+ことになります——ほかのエージェントも、監視も、コンソールも、次のセッションも。ファイルが持続する記録であり、
+チャットは下流の誰も見ない書き起こしです。
+
+---
+
+## 2. 出力の行き先
+
+| 出力の種類 | 落ちる先 |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| 成果物、発見、報告 | 担当のファイル、または `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| 運用者がいま見るべきもの | `_os/events/surface/` 内の短い指示ファイル |
+| 運用者を要する要請 | `_os/exchange/requests/REQ-<slug>.md` |
+| 台帳の行 | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**`surface/` ディレクトリは通知です。ファイルが中身です。** 中身は本来の置き場所へ書き、そのうえで `surface/` に
+一行の指示を置いて、コンソールが運用者にどこへ落ちたかを示せるようにしてください。
 
 ---
 
-## 3. The task index
+## 3. 作業台帳
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+命令ごとに一行。開始**前**に `REQ` 行を追記し、中断された作業でも見えるようにしてください。
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +44,44 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**証拠パスのない `DONE` 行は無効です。** ファイルがないなら、その仕事は運用者に見える場所のどこにも落ちていません。
+自己申告は `[CLAIMED]` であり、それを `[PROVEN]` にするのはファイルです。
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**拒否はここに永続的に残ります。** 群が決着済みの問いを蒸し返さずに済むのはそのおかげです。あとから消さないこと。
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
+**正直な限界：** この台帳は何も観察しません。書き込むエージェントの分だけしか完全ではありません。ある作業が載って
+いないことは、その作業がなかったことの証拠ではなく、誰も記録しなかったことの証拠にすぎません。行は*証拠パスの付いた
+主張*として扱い、決して証拠として扱わないこと。いかなる `DONE` に頼る前にも、その証拠ファイルの実在を確かめて
+ください。
 
 ---
 
-## 4. Completion is the Operator seeing it
+## 4. 完了とは、運用者がそれを見たこと
 
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
-
----
-
-## 5. The counter-rule that outranks routing
-
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+エージェントが宣言することではありません。返答は停止点ではありません——監視はそれをまたいで構えたままで、仕事は
+続き、そののちに意図した終了があります。
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. 経路づけに優越する反対規則
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**非常停止と率直さは、引き続き人へ、ただちに、目立つ形で届きます。**
+
+失敗は成功と同じ目立ち方で示されます。出力をファイルへ回すことが、悪い結果を埋める場所になってはなりません。群の
+良い知らせがチャットに来て、悪い知らせが誰も開かないファイルに来るなら、契約は逆さまになっており、群は経路づけに
+よって嘘をついています。
 
 ---
 
-## 7. No secret reaches the surface
+## 6. 契約そのものの正直な限界
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+チャットの枠組みの中で動くエージェントは、やはりそのチャットにアシスタントのテキストを出します——この契約はその枠組み
+を付け替えられません。契約が縛るのは**エージェントが何を書くと選ぶか**です。中身はファイルへ、チャットのテキストは
+短い指示だけに——*「`<path>` へ書き出し、コンソールへ提示しました」*——決して報告全文ではなく。
+
+---
+
+## 7. いかなる秘密も表面に達しない
+
+`surface/` はコンソールが読み、画面や画面写真、共有ウィンドウに表示されうるものです。データ区画の規則
+（[`06-DATA-ZONES.md`](06-DATA-ZONES.md)）がここでも全面的に効きます。

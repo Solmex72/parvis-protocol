@@ -1,92 +1,95 @@
-# 06 — DATA ZONES
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — データ区画
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**ステータス：規範。** ファイルがどこに住んでよいか。
 
 ---
 
-## 2. The two zones
+## 1. なぜ禁止では効かなかったのか
 
-| Zone | Property | Holds |
+もとの規則は*「秘密は、いつでも、どこにも、置かないこと」*でした——**しかも私的なデータを代わりに置く場所が、どこ
+にもありませんでした。**
+
+行き先のない禁止は守られません。回避され、私的な素材が事故のように同期ツリーへ入り込みます。それは繰り返し起き
+ました。その規則の下にいたエージェント自身によっても。
+
+**この規則は禁止ではなく、経路づけの判断です。**
+
+---
+
+## 2. 二つの区画
+
+| 区画 | 性質 | 収めるもの |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | クラウド保管へ同期します。**すべてのバイトを公開済みとして扱ってください。** | 教義、指令、エージェント定義、設計、事業上の文脈、調査、技術文書 |
+| **PRIVATE** | **あらゆる同期ルートの外**——さらにユーザープロファイルの外。既知フォルダーのリダイレクトでも届かないように | 秘密、実在の人物とその個人情報、私的なプロジェクトや媒体、バックアップに出てきては困るもの一切 |
 
-### The test
+### 判定
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *これが一年後、クラウドのスナップショットに入っていたら問題になるか。*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+なる → PRIVATE。ならない → PUBLIC。本当に迷うなら → **PRIVATE。** 高く分類しすぎる代償は不便です。低く分類しすぎた
+代償は取り消せません。
 
-### Know what actually syncs
+### 実際に何が同期しているかを知る
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+これは思い込みではなく、実機で確かめてください。ふつうの作業機では同期クライアントが同時に複数動いていることがあり、
+利用者のドキュメント・デスクトップ・画像の各フォルダーの下にあるものは機械の外へ出て、版履歴に数週間残ります。
+**手元で削除しても呼び戻せません。**
 
-Two consequences that each cause real failures:
+それぞれが実際の障害を起こす二つの帰結があります。
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **ビルド出力は同期ルートの外へ**振り向けなければなりません。さもないとミラーがビルド途中でそれを壊します。
+2. **鍵は外に置く**——意図的に、既定でそうします。
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. 例外：資格情報はどちらの区画にも属さない
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**現に使われている資格情報——パスワード、API キー、トークン、配信キー——はパスワード管理ソフトに属し、どちらの
+ファイルシステムにも属しません。**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+私的区画が収めるのは*私的なデータ*です。パスワード管理ソフトが収めるのは*資格情報*です。これは言葉遊びではありま
+せん。私的ディレクトリは既定では暗号化されておらず、ファイルはどこまでいってもファイルです。ひとたび複写され、書き
+起こしに引用され、何かに添付された時点で、それは漏れています。
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**私的区画の安全性は狭く述べ、決して誇張しないこと。** 実証されている性質は、たいてい*何もそれをどこへも複写しない*
+という一点だけです。検証済みの全ディスク暗号化やファイル単位の暗号化がないかぎり、それは暗号化されておらず、バック
+アップもされておらず、金庫でもありません。
 
 ---
 
-## 6. Pruning without loss
+## 4. 分類は運用者のものであり、調整できる
 
-Before anything leaves the working tree:
+生きた対応表は一つのファイル——`DATA-CLASSIFICATION.md`——に置いてください。そこで運用者が区画のあいだで分類を動かし、
+各エージェントは推測する代わりにそれを読みます。
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+このプロトコル文書が述べるのは**仕組み**です。あのファイルが述べるのは**方針**です。両者が食い違うときは、方針の
+ファイルが勝ちます。
 
-Never mass-delete under live concurrency.
+---
+
+## 5. エージェントにとっての帰結
+
+- **束ねられるツリーに秘密を置かないこと。** 文脈の束は新しいセッションへ貼り付けるために存在します。何をどこに
+  保持しているかを名指しし、値そのものは決して書かないこと。
+- **いかなる秘密も `surface/` に達しないこと。** そこは画面に表示されます。
+- **いかなる秘密もブラウザーに達しないこと。** [`07-INTERFACE.md`](07-INTERFACE.md) §3 を参照。
+- **削除ではなく参照で伏せること。** `<api key — see password manager entry "acme-prod">` なら、値を明かさずに事実
+  を辿れるままにできます。
+
+---
+
+## 6. 失わずに刈り取る
+
+何かが作業ツリーを離れる前に：
+
+1. **ルートの外**にある封印済みの保管庫へ複写すること——glob では届かない書庫ファイルへ。
+2. パスを `marked-deletion.md` / `marked-archive.md` に並べること。
+3. **実行は運用者の手で**、ツリーを静めた状態で。
+
+並行処理が動いている最中に一括削除しないこと。

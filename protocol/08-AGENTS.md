@@ -1,113 +1,114 @@
-# 08 — AGENTS
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — エージェント
+
+**ステータス：規範。** エージェントとは何か、そして実行のたびに何を負うか。
 
 ---
 
-## 1. Roles
+## 1. 役割
 
-| Role | Who |
+| 役割 | 誰か |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **運用者** | 人間。優先度を宣言し、停止を解除し、すべての資格情報を保持し、すべての不可逆な行為を確定します。 |
+| **エージェント** | 定義ファイルと、書き込んでよい名前空間と、恒常的な任務をもつ、範囲の定まった働き手一つ。 |
+| **群** | 一つのプロトコルルートの下にあるすべてのエージェント。 |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+エージェントを定めるのはファイルであって、動いているプロセスではありません。プロセスは死にます。定義こそが、その
+エージェントを別の機械で組み直せるものにします。
 
 ---
 
-## 3. Scope
+## 2. すべてのエージェントが実行のたびに負う五つのこと
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **非常停止を事前に確認すること。** 最初のツール呼び出しの前に、そして書き込み・送信・実行・支出のたびにもう一度。
+   `stat` は**この実行で**行うこと。記憶した状態を引用しないこと。信号が食い違うなら停止が勝ちます。判断がつかない
+   ときも停止が勝ちます。
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **生きた要点書があれば、何よりも先に読むこと。** そして、それが必要としているもののうち自分が持っているものを
+   述べること。*「何もありません」*は本物の回答です——貢献をひねり出すより、そう述べて待機してください。
+
+3. **成果物をディスクへ書くこと。** 方法は**ファイル全体を一度に書くことであり、追記の連なりでは決してありません**
+   （[`03-BUS.md`](03-BUS.md) §7）。会話の中だけで報告された発見は、届けられていません。
+
+4. 終える前に**終了処理をすること。** 下の §4。
+
+5. **すべての主張に印を付けること**（[`02-EVIDENCE.md`](02-EVIDENCE.md)）。`[PROVEN]` には、この実行で実際に読んだ
+   一次資料が要ります。読み込めなかった資料は失敗した呼び出しであって、証拠ではありません。
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. 範囲
+
+すべてのエージェントは**自分の名前空間の内側だけで**働きます。広く読み、狭く書きます。
+
+- **決して自分で人手を増やしません。** 見つかった新しい仕事は掲示板の告知になります。新しいエージェントが要るなら、
+  それは*草案の定義と運用者への要請*になります——決して動いているプロセスにはなりません。
+- **決して非常停止を解除しません。** 自分が置いたものであっても。
+- **決して別のエージェントの名前空間を編集しません。** 別のルートの権威ある文脈も同様です。食い違いは報告します。
+- **隔離されたエージェントは、運用者が名指ししたときにのみ名指しされます。** どのバスにも、どの編成にも、どの共有面
+  にもいません。それでも非常停止は読みます。
+
+---
+
+## 4. 開始と終了
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**開始：** 目印を書き、自分の身元を同報ログへ `FLASH` し、非常停止を事前確認します。
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**終了：** 証拠ファイルを書き、台帳の行を追記し、**自分の**目印を消し、意図して終わります。
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+消すのは自分の目印だけです。他人の目印を片づけるエージェントは、生きているセッションを終了済みと報告したことに
+なります。
 
-### Why sign-off is a protocol obligation
+### 終了処理がプロトコル上の義務である理由
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+セッションに紐づいた見張りはセッションとともに死にます。そして**静かな監視と死んだ監視は見分けがつきません。**
+沈黙は反証できません。対処は構造的なものになります。
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **心拍**——拍の不在そのものが証拠になります。
+- **明示的な終了**——放置された目印が、雑音ではなく検出可能な異常になるように。
+- **再起動時に張り直す**——監視が生き延びたと決して前提しないこと。
 
 ---
 
-## 5. Naming
+## 5. 名づけ
 
-Every agent carries a working name and a one-line charter:
+すべてのエージェントは、作業名と一行の憲章を帯びます。
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+書き起こしの中では、識別しやすく発音できる名前が番号に勝ちます。二つの役割が重なるときは、役職名にも勝ちます。
+名前空間で二つの名前が衝突したら、**使うたびに区別すること**——各文書の初出で両方を省略せずに書いてください。二つの
+実在するものの違いがたった一文字であるのは、いずれ持ち出される欠陥です。
 
 ---
 
-## 6. The structural failures to design against
+## 6. 設計で備えるべき構造的な失敗
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+これらは観察されたものであり、仮説ではありません。どれも稼働中の群で実際に起きました。
 
-| Failure | The counter-discipline |
+| 失敗 | 対抗する規律 |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **競合するファイル。** 優先度 0 の規則が五版；主指令が二つ；相反する事実を載せた手順書が二冊。 | 決着させて刈り取ること（[`05-CORRECTION.md`](05-CORRECTION.md) §7）。教義を書く前に検索すること。新しいファイルで言い換えられた規則は貢献ではなく漂流です。 |
+| **死んだ参照。** 存在しないパスを挙げるファイルが数百。 | 走査の**前に**、それをまき散らしている生成器を直すこと。さもないと数は元に戻ります。 |
+| **源ばかりで、受け皿がほとんどない。** 提示されたファイルと掲示板の未処理項目が数百、対するのは数件しか読めない人間一人。何一つ何かを引き下げず、どの層も積み上がるだけ。 | **すべての保管には受け皿を、保管を作るときに決めて設けること。** 設計全体が役に立つかどうかにとって、これが最大の構造的リスクです。 |
+| **沈黙は反証できない。** | 心拍。§4。 |
+| **何もかもがセッション任せ。** | 再起動時に監視を張り直すこと。生き延びたと前提しないこと。 |
+| **証拠のない主張。** | 確信度の印。そして証拠パスのない `DONE` 行は無効です。 |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. 理念、一度だけ
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **機械は報告する。人が決める。不可逆な行為は常に人のものである。**
 
-Everything else in this protocol is an implementation detail of that sentence.
+このプロトコルのほかのすべては、この一文の実装上の細部です。

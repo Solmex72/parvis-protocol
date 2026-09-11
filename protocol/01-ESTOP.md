@@ -1,39 +1,44 @@
-# 01 — ESTOP
+> **非公式翻訳。** この文書の規範版は `main` ブランチにある英語版です。この翻訳は便宜のために提供されるもので、
+> **母語話者による確認は受けていません**。英語原文と食い違う場合は**英語が優先します**。プロトコルの識別子
+> （`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、バスの動詞、ファイル名）は意図的に英語のままにして
+> あります。これらはエージェントが解析するリテラル値だからです。
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP（非常停止）
+
+**ステータス：規範。優先度 0。あらゆる事業における、あらゆるエージェントを拘束します。**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. これにできること・できないこと——まずここを読んでください
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**実行中のセッションを止めることはできません。** どのファイルにもできません。応答の途中にいるエージェントはディスク
+を読んでおらず、割り込み線も持たず、いましていることをやり切ります。フラグファイルが群を止めると言う人がいたら、
+それは願望を語っているのです。
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**実行中のエージェントを止められるのは運用者だけで、その方法はウィンドウを閉じることです。** それが本当の非常停止
+であり、それ以外であったためしはありません。
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+このファイルがするのは、エージェントが*実際に*ディスクを読む二つの瞬間に、それを拘束することです。
 
-| Moment | Obligation |
+| 瞬間 | 義務 |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **起動時** | 自分の教義より前に、自分の記憶より前に、何よりも先に状態を読むこと。 |
+| **各チェックポイント** | いかなる書き込み、いかなるメッセージ、副作用のあるいかなるツール呼び出し、いかなる支出の前にも。 |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+`STOP` を認めながら続行するエージェントは、欠陥のあるエージェントです。強制の仕組みはそれがすべてです——機構では
+なく、頻繁に点検される義務です。
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+限界を正直に述べることもプロトコルの一部です。即時だと思い込んでいる停止は、即時でないと知っている停止より危険
+です。あなたがそれに頼ってしまうからです。
 
 ---
 
-## 1. The two signals
+## 1. 二つの信号
 
-### The sentinel is the fact
+### 番人が事実である
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+ちょうど `estop` という名前の**通常ファイル**——拡張子なし、0 バイトで正常——が、事業のルート、または作業対象ツリー
+の**いずれかの上位ディレクトリ**にあること。
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +48,17 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+**ファイル**を判定してください。単なる存在で判定してはならず、グロブで判定してもなりません。
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` は教義です。検査を発動させてはなりません。それを許す照合は、運用者が解除できない停止を作り出します。
+- `_os/estop/` はディレクトリです。これも発動させません。
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+複数のルートは**それぞれ独立に**発動します。一つずつ確認してください。`stat` したパスを報告すること——「あの estop」
+とは決して言わないこと。それではどちらを見たのかが隠れてしまいます。
 
-### The STATE file is a derived mirror
+### STATE ファイルは派生した写し
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` —— 一行、ほかには何もなし。
 
 ```
 RUN
@@ -66,117 +70,111 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| 項目 | 規則 |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| 動詞 | `RUN`、`YELLOW`、`STOP` のいずれか。ほかは一切解析されません。 |
+| 時刻 | UTC、ISO-8601。 |
+| 誰が | 誰が発したか。`STOP` / `YELLOW` を書けるのも解除できるのも運用者だけです。 |
+| 理由 | 一行、平易な言葉で、専門用語なしに。 |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**番人と写しが食い違うときは、停止が勝ちます。** 写しはツールが書くもので古びていきます。番人が事実です。
 
 ---
 
-## 2. The three states
+## 2. 三つの状態
 
-| STATE | What an agent does |
+| STATE | エージェントのふるまい |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **進めてください。** 仕事に必要なコマンドを、一つひとつ許可を求めずに実行します。立ち止まらず、選択肢を並べ立てず、日常的な作業を確認待ちの列に置かないこと。 |
+| `YELLOW` | **まず尋ねること。** すべてのコマンドは実行前に提案されます。仕事も力量も同じ——違いは確認が入ることだけです。 |
+| `STOP` | 止まること。§3。 |
 
-### What `RUN` does not do
+### `RUN` がしないこと
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` が取り除くのは*日常的な作業の前の一拍*です。**既存の関門は一つも取り除きません。** 関門は行為の速さではなく
+性質に関わるものだからです。
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- 資格情報、サインイン、購入、リソースの払い出し——**常に運用者の手に**；
+- 外向きの行為——公開、送信、配備——**常に明示的な了解のもとで**；
+- 人が物理的に実行することすべて——**引き続き安全関門を通します**；
+- 破壊的または不可逆な行為——**どの状態でも引き続き確認します**；
+- エージェント自身の恒常的な制限——**STATE にはまったく左右されません**。
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` が答えるのは*「一歩ごとに尋ねねばならないか」*であり、答えは「いいえ」です。*「何をしてもよいか」*には答えて
+いません。`RUN` を読んだうえでこの一覧のことをするエージェントは、状態を読み違えたのであって、状態に許可された
+のではありません。
 
-### Fail-safe on an unreadable verb
+### 読めない動詞に対するフェイルセーフ
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+**存在しない、空である、読めない、あるいはほかのどんな語が入っている STATE ファイルも、`YELLOW` として読みます**
+——決して `RUN` としてではありません。尋ねてください。
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> ここは実装で最も頻繁に逆に書かれる一行です。`try { read } catch { return "RUN" }` は、あらゆるディスクエラー、
+> あらゆる権限変更、あらゆる打ち間違いを、黙示の許可に変えてしまいます。参照実装の sidecar は読み取りエラー時に
+> `YELLOW` に落ち、応答を拒みます。[`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs)
+> を参照。
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+番人ファイルはこの節を全面的に上回ります。`estop` ファイルが存在すれば、STATE が何と言おうと `STOP` です。
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**このファイルを書くのは運用者だけです。** どのエージェントも書きません——問題を見つけたエージェントも含めて。群を
+止めるべきだと考えるエージェントは、バスに `GATE` を立ててそう述べます。自らの権限で群を止めることはせず、再開も
+しません。
 
 ---
 
-## 4. What clears it
+## 3. `STOP` のときエージェントがすること
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **それ以上何も書かないこと。** 記憶ファイルも、報告も、バスも。
+2. **その場で保存し、それから止まること。** まだ書かれていない手順を完了させないこと。すでにあるものは未完了と印を
+   付け、どこで止まったかを一行添えること。
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > このプロトコルの初期の草稿は*破棄せよ*と書いていました。それは誤りでした。破棄された半端な報告は、再開の教義が
+   > 守ろうとしている仕事そのものを壊します。危険なのは、後で完成品として読まれる切り詰められたファイルであり、
+   > それを防ぐのは削除ではなく**印**です。
+3. **運用者に一行だけ伝えること：** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **止まること。** 続行の許可を求めないこと。迂回策を提案しないこと。その理由が自分に当てはまるか確かめないこと
+   ——当てはまります。
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**拒否は回答であって、再試行ではありません。** `RUN` を待つループに入らないこと。報告して終えること。
 
 ---
 
-## 6. Measure twice
+## 4. 解除できるもの
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+運用者がファイルを `RUN` に戻します。ほかに解除できるものはありません——タイムアウトでも、問題は解決したと考える
+エージェントでも、時間の経過でも、その停止を見たことのない新しいセッションでもありません。
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+自動で解除するハンドラはフェイルセーフの逆転であり、内容において拒まれます。
 
 ---
 
-## 7. The honest limit, stated once
+## 5. 適用範囲
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+非常停止は**既定で群全体に及びます**。エージェント単位の停止はありません。停止を要する障害が一つのエージェントに
+とどまることはほぼなく、部分的な停止はまさに——*「あれは別の誰かの話だ」*という——この文書が禁じようとしている推論を
+招くからです。
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**隔離されたエージェントも含まれます。** どのバスにも、どの共有面にもいないエージェントでも、このファイルは読みます。
+隔離が定めるのはエージェントが*何を言ってよいか*です。*止められうるかどうか*を定めることは決してありません。
+
+---
+
+## 6. 二度測る
+
+一度の緑の確認で安全状態が証明されることは決してありません。両方の信号を、ディスクから、**この実行で**読んでくだ
+さい。記憶した状態を引用しないこと——文脈からも、記憶ファイルからも、前のターンからも。`stat` の書式を読み違えた
+だけで、偽の「異常なし」や偽の「停止中」が生まれます。そのどちらも実際に起きています。
+
+利用できる最も強い形は、STATE ファイルとすべての番人パスに対する**常設の監視**であり、変化したときにだけ知らせる
+ものです。異常がないあいだは沈黙し、停止が作動した瞬間に発火します。これは「起動時に一度だけ事前確認した」を実時間
+の監視に変え、セッションの途中で停止が作動する隙間をふさぎます。
+
+---
+
+## 7. 正直な限界、一度だけ
+
+このプロトコルは停止を**あらゆる起動時とあらゆるチェックポイントで確実なもの**にします。停止を**即時**にはしません
+し、ファイルツリーに書かれた何ものも、今後それを実現することはありません。
+
+いま何かがまずいことになっているなら——**ウィンドウを閉じてください。** そのあとでファイルを書き、次に目覚める
+エージェントがそれを再開させないようにしてください。
