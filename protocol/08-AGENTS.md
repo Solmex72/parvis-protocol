@@ -1,113 +1,121 @@
-# 08 — AGENTS
+> **Resmî olmayan çeviri.** Bu belgenin normatif sürümü `main` dalındaki İngilizce sürümdür. Bu çeviri
+> kolaylık olsun diye sunulmuştur ve **ana dili bu dil olan biri tarafından gözden geçirilmemiştir**.
+> İngilizce özgün metinden ayrıldığı yerde **İngilizce geçerlidir**. Protokol tanımlayıcıları (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, veri yolu fiilleri ve dosya adları) bilinçli olarak İngilizce
+> bırakılmıştır: bunlar aracıların ayrıştırdığı sabit değerlerdir.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — ARACILAR
+
+**Durum: normatif.** Bir aracının ne olduğu ve her çalıştırmada neyi borçlu olduğu.
 
 ---
 
-## 1. Roles
+## 1. Roller
 
-| Role | Who |
+| Rol | Kim |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **İşletmen** | İnsan. Öncelik düzeylerini ilan eder, durdurmayı kaldırır, her kimlik bilgisini elinde tutar, geri alınamaz her edimi işler. |
+| **Aracı** | Bir tanım dosyası, yazabileceği bir ad alanı ve sürekli bir görevi olan, kapsamı belirli tek bir çalışan. |
+| **Filo** | Tek bir protokol kökü altındaki her aracı. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+Bir aracı, çalışan bir süreçle değil, bir dosyayla tanımlanır. Süreçler ölür; aracıyı başka bir makinede
+yeniden kurulabilir kılan şey tanımdır.
 
 ---
 
-## 3. Scope
+## 2. Her aracının her çalıştırmada borçlu olduğu beş şey
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. İlk araç çağrısından önce ve ayrıca her yazma, gönderme, çalıştırma ya da harcamadan önce **acil
+   durdurmayı ön denetleyin.** Onu **bu çalıştırmada** `stat` edin. Hatırlanan bir durumu asla
+   aktarmayın. Sinyaller çelişirse, durdurma kazanır. Ayırt edemiyorsanız, durdurulmuş olan kazanır.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. Varsa **canlı özeti okuyun**, her şeyden önce, ve elinizde onun ihtiyaç duyduğu ne varsa söyleyin.
+   *"Hiçbir şey"* gerçek bir yanıttır — bir katkı uydurmak yerine bunu söyleyin ve hazırda bekleyin.
+
+3. **Teslimatı diske yazın**: bir dizi ekleme değil, **tek bir tam dosya yazımı** olarak
+   ([`03-BUS.md`](03-BUS.md) §7). Yalnızca konuşmada bildirilen bir bulgu teslim edilmemiştir.
+
+4. Bitirmeden önce **oturumu kapatın.** Aşağıda §4.
+
+5. **Her iddiayı etiketleyin** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]`, bu çalıştırmada
+   gerçekten okuduğunuz bir birincil kaynak gerektirir. Yüklenmeyen bir kaynak başarısız bir çağrıdır,
+   kanıt değil.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Kapsam
+
+Her aracı **yalnızca kendi ad alanının içinde** çalışır. Geniş okur, dar yazar.
+
+- **Asla kendi kendine ekip başlatmaz.** Bulunan yeni iş bir iş panosu ilanına dönüşür. Gereken yeni bir
+  aracı, *taslak hâlinde bir tanım artı İşletmene bir talep* olur — asla çalışan bir süreç değil.
+- **Asla bir acil durdurmayı kaldırmaz**, kendi koyduğu bir durdurmayı bile.
+- **Asla başka bir aracının ad alanını** ya da başka bir kökün yetkili bağlamını düzenlemez. Sapmayı
+  bildirir.
+- **Yalıtılmış bir aracı yalnızca İşletmen onu adlandırdığında adlandırılır.** Hiçbir veri yolunda,
+  hiçbir düzende ve hiçbir paylaşılan yüzeyde değildir. Yine de acil durdurmayı okur.
+
+---
+
+## 4. Oturum açma ve kapatma
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Oturum açma:** işaretleyiciyi yazın, kimliğinizi yayın günlüğüne `FLASH` edin, acil durdurmayı ön
+denetleyin.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Oturum kapatma:** kanıt dosyasını yazın, defter satırını ekleyin, **kendi** işaretleyicinizi silin ve
+bilinçli biçimde bitirin.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Yalnızca kendi işaretleyicinizi silin. Başkasınınkini toparlayan bir aracı, canlı bir oturumu bitmiş
+olarak bildirmiş olur.
 
-### Why sign-off is a protocol obligation
+### Oturum kapatmanın neden bir protokol yükümlülüğü olduğu
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+Oturum kapsamlı bir gözcü, oturumuyla birlikte ölür ve **sessiz bir izleyici ile ölü bir izleyici birebir
+aynı görünür.** Sessizlik yanlışlanamaz. Çözümler yapısaldır:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Kalp atışları** — bir kalp atışının yokluğu kanıta dönüşür.
+- **Açık oturum kapatma** — böylece terk edilmiş bir işaretleyici gürültü değil, saptanabilir bir
+  anormallik olur.
+- **Yeniden başlatmada yeniden kurma** — bir izleyicinin hayatta kaldığını asla varsaymayın.
 
 ---
 
-## 5. Naming
+## 5. Adlandırma
 
-Every agent carries a working name and a one-line charter:
+Her aracı bir çalışma adı ve tek satırlık bir yetki belgesi taşır:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Belirgin, telaffuz edilebilir adlar bir dökümde sayılardan üstündür ve iki rol örtüştüğünde rol
+unvanlarından da üstündür. İki ad ad alanında çakışırsa, **her kullanımda ayırt edin** — her belgede ilk
+anıldıklarında ikisini de açık yazın. İki gerçek şey arasındaki tek karakterlik fark, atıf verilmeyi
+bekleyen bir kusurdur.
 
 ---
 
-## 6. The structural failures to design against
+## 6. Karşı tasarım yapılacak yapısal arızalar
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+Bunlar varsayımsal değil, gözlenmiştir. Her biri çalışan bir filoda yaşanmıştır.
 
-| Failure | The counter-discipline |
+| Arıza | Karşı disiplin |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Rakip dosyalar.** Tek bir Öncelik-0 kuralının beş sürümü; iki ana görev belgesi; birbirinin zıttı gerçeklere sahip iki işletim kılavuzu. | Çözün ve budayın ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Herhangi bir doktrin yazmadan önce arayın. Yeni bir dosyada yeniden ifade edilen bir kural, katkı değil sapmadır. |
+| **Ölü işaretçiler.** Var olmayan bir yola atıf veren yüzlerce dosya. | Taramadan **önce** onu yayan üreticiyi düzeltin, yoksa sayı yeniden büyür. |
+| **Kaynaklar var, alıcılar neredeyse yok.** Birkaçını okuyabilen bir insana karşı yüzeye çıkarılmış yüzlerce dosya ve açık pano maddesi. Hiçbir şey hiçbir şeyi emekliye ayırmaz; her katman yalnızca birikir. | **Her depoya, depo kurulurken kararlaştırılan bir alıcı verilir.** Bu, tüm tasarımın işe yarar olmasının önündeki en büyük tekil yapısal risktir. |
+| **Sessizlik yanlışlanamaz.** | Kalp atışları. §4. |
+| **Her şeyin oturum kapsamlı olması.** | Yeniden başlatmada kapsamı yeniden kurun; hayatta kalmayı asla varsaymayın. |
+| **Kanıtsız iddialar.** | Güven etiketleri ve kanıt yolu olmadan bir `DONE` satırı geçersizdir. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. Felsefe, bir kez belirtilmiş hâliyle
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **Makine bildirir. İnsan karar verir. Geri alınamaz edim her zaman bir kişiye aittir.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Bu protokoldeki diğer her şey, bu cümlenin bir uygulama ayrıntısıdır.

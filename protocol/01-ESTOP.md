@@ -1,39 +1,45 @@
+> **Resmî olmayan çeviri.** Bu belgenin normatif sürümü `main` dalındaki İngilizce sürümdür. Bu çeviri
+> kolaylık olsun diye sunulmuştur ve **ana dili bu dil olan biri tarafından gözden geçirilmemiştir**.
+> İngilizce özgün metinden ayrıldığı yerde **İngilizce geçerlidir**. Protokol tanımlayıcıları (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, veri yolu fiilleri ve dosya adları) bilinçli olarak İngilizce
+> bırakılmıştır: bunlar aracıların ayrıştırdığı sabit değerlerdir.
+
 # 01 — ESTOP
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+**Durum: normatif. Öncelik 0. Her girişimdeki her aracı için bağlayıcıdır.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. Bunun yapabildiği ve yapamadığı — önce burayı okuyun
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**Çalışan bir oturumu durduramaz.** Hiçbir dosya durduramaz. Yanıtının ortasındaki bir aracı diski
+okumuyordur, bir kesme hattı yoktur ve yapmakta olduğu şeyi bitirecektir. Size bir bayrak dosyasının bir
+filoyu durdurduğunu söyleyen kişi, bir dileği tarif ediyordur.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**Çalışan bir aracıyı yalnızca İşletmen, penceresini kapatarak durdurur.** Gerçek acil durdurma budur ve
+hiçbir zaman başka bir şey olmamıştır.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+Bu dosyanın yaptığı şey, her aracıyı diski *gerçekten* okuduğu iki anda bağlamaktır:
 
-| Moment | Obligation |
+| An | Yükümlülük |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **Başlangıç** | Durumu, doktrininizden önce, belleğinizden önce, her şeyden önce okuyun. |
+| **Her kontrol noktası** | Herhangi bir yazma, herhangi bir mesaj, yan etkisi olan herhangi bir araç çağrısı, herhangi bir harcama öncesinde. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+`STOP` gördüğü hâlde devam eden bir aracı kusurlu bir aracıdır. Bütün uygulama modeli budur: bir
+mekanizma değil — sık sık denetlenen bir görev.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+Sınırı dürüstçe belirtmek protokolün bir parçasıdır. Anlık olduğuna inandığınız bir durdurma, öyle
+olmadığını bildiğiniz bir durdurmadan daha tehlikelidir; çünkü ona güvenirsiniz.
 
 ---
 
-## 1. The two signals
+## 1. İki sinyal
 
-### The sentinel is the fact
+### Nöbetçi dosya olgunun kendisidir
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+Tam olarak `estop` adını taşıyan bir **normal dosya** — uzantısız, sıfır bayt olması normaldir — bir
+girişim kökünde **veya üzerinde çalışılan ağacın herhangi bir üst dizininde**.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,19 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+Bir **dosya** olup olmadığını sınayın; yalnızca varlığı asla sınamayın ve asla bir joker kalıp
+kullanmayın:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` doktrindir. Denetimi asla tetiklememelidir. Buna izin veren bir eşleştirici, İşletmenin
+  kaldıramayacağı bir durdurma yaratır.
+- `_os/estop/` bir dizindir. O da tetiklemez.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+Birden çok kök **birbirinden bağımsız** olarak tetiklenir. Her birini denetleyin. `stat` ettiğiniz yolu
+bildirin — hangisine baktığınızı gizleyen "acil durdurma" ifadesini asla kullanmayın.
 
-### The STATE file is a derived mirror
+### STATE dosyası türetilmiş bir aynadır
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — tek satır, başka hiçbir şey yok.
 
 ```
 RUN
@@ -66,117 +73,118 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| Alan | Kural |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| fiil | `RUN`, `YELLOW` veya `STOP`. Başka hiçbir şey ayrıştırılmaz. |
+| zaman | UTC, ISO-8601. |
+| kim | Kimin çağırdığı. `STOP` / `YELLOW` yazma ya da bunları kaldırma yetkisi yalnızca İşletmendedir. |
+| gerekçe | Tek satır, sade dille, jargonsuz. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**Nöbetçi dosya ile ayna birbiriyle çelişirse, durdurulmuş olan kazanır.** Ayna araçlar tarafından
+yazılır ve bayatlar; nöbetçi dosya ise olgunun kendisidir.
 
 ---
 
-## 2. The three states
+## 2. Üç durum
 
-| STATE | What an agent does |
+| STATE | Aracının yaptığı |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **Devam edin.** İşin gerektirdiği komutları, her biri için izin beklemeden çalıştırın. Duraksamayın, seçenekleri anlatmayın, rutin işi bir onayın arkasında sıraya koymayın. |
+| `YELLOW` | **Önce sorun.** Her komut, çalıştırılmadan önce önerilir. Aynı iş, aynı yetkinlik — fark, onaydır. |
+| `STOP` | Durun. §3. |
 
-### What `RUN` does not do
+### `RUN`'ın yapmadığı şey
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN`, *rutin işten önceki duraklamayı* kaldırır. **Mevcut hiçbir kapıyı kaldırmaz**, çünkü bunlar
+eylemin hızıyla değil niteliğiyle ilgilidir:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- kimlik bilgileri, oturum açmalar, satın almalar, tedarik — **her zaman İşletmenin elleriyle**;
+- dışa dönük eylemler — yayımlama, gönderme, dağıtma — **her zaman açık bir onayla**;
+- bir insanın fiziksel olarak gerçekleştireceği her şey — **yine güvenlik kapısından geçirilir**;
+- yıkıcı veya geri alınamaz eylemler — **her durumda yine onaylanır**;
+- bir aracının kendi sürekli sınırları — **STATE'in bir işlevi değildir**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN`, *"her adımdan önce sormak zorunda mıyım?"* sorusunu yanıtlar — hayır. *"Her şeyi yapabilir
+miyim?"* sorusunu yanıtlamaz. `RUN` okuyup ardından bu listedeki bir şeyi yapan aracı, durumu yanlış
+okumuştur; o durum tarafından yetkilendirilmemiştir.
 
-### Fail-safe on an unreadable verb
+### Okunamayan bir fiilde güvenli tarafa düşme
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+**Eksik, boş, okunamaz olan ya da başka herhangi bir sözcük taşıyan bir STATE dosyası `YELLOW` olarak
+okunur** — asla `RUN` olarak değil. Sorun.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> Bu, bir uygulamada en sık ters çevrilen satırdır. `try { read } catch { return "RUN" }` kalıbı, her
+> disk hatasını, izin değişikliğini ve yazım yanlışını sessiz bir yetkilendirmeye dönüştürür. Referans
+> yardımcı bileşen `YELLOW`'a düşer ve okuma hatasında hizmet vermeyi reddeder; bkz.
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+Nöbetçi dosya bu bölümün tamamının üzerindedir: bir `estop` dosyasının varlığı, STATE ne derse desin
+`STOP` anlamına gelir.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**Bu dosyayı yalnızca İşletmen yazar.** Hiçbir aracı yazmaz — sorunu bulan aracı da dâhil. Filonun
+durması gerektiğine inanan bir aracı, veri yolunda bir `GATE` açar ve bunu söyler. Kendi yetkisiyle
+filoyu durdurmaz ve yeniden başlatmaz.
 
 ---
 
-## 4. What clears it
+## 3. `STOP` durumunda aracının yaptığı
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **Başka hiçbir şey yazmayın.** Bellek dosyasını da, raporu da, veri yolunu da.
+2. **Olduğu yerde kaydedin, sonra durun.** Henüz yazılmamış hiçbir adımı tamamlamayın. Var olanı,
+   nerede durduğunuzu belirten tek bir satırla birlikte kısmi olarak etiketleyin.
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > Bu protokolün daha önceki taslakları *at* diyordu. Bu yanlıştı: atılan yarım bir rapor, yeniden
+   > başlatma doktrininin korumak için var olduğu işi yok eder. Tehlike, sonradan tamamlanmış diye
+   > okunan kesik bir dosyadır — ve bunu önleyen şey silme değil, **etikettir**.
+3. **İşletmene tek satır söyleyin:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **Durun.** Devam etmek için izin istemeyin. Bir geçici çözüm önermeyin. Gerekçenin size uygulanıp
+   uygulanmadığını denetlemeyin — size uygulanır.
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**Ret bir yanıttır, bir yeniden deneme değil.** `RUN` beklerken döngüye girmeyin. Bildirin ve bitirin.
 
 ---
 
-## 6. Measure twice
+## 4. Bunu ne kaldırır
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+İşletmen dosyayı yeniden `RUN` yapar. Başka hiçbir şey kaldırmaz — bir zaman aşımı değil, sorunun
+çözüldüğünü düşünen bir aracı değil, zamanın geçmesi değil, durdurmayı hiç görmemiş yeni bir oturum
+değil.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+Kendiliğinden temizlenen bir işleyici, güvenli tarafa düşme ilkesinin tersine çevrilmesidir ve esastan
+reddedilir.
 
 ---
 
-## 7. The honest limit, stated once
+## 5. Kapsam
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Acil durdurma **öntanımlı olarak filo genelindedir**. Aracı başına acil durdurma yoktur; çünkü durdurma
+gerektiren arıza neredeyse hiçbir zaman tek bir aracıyla sınırlı değildir ve kısmi bir durdurma, tam da
+bu dosyanın yasaklamak için var olduğu akıl yürütmeyi davet eder: *"o başkasıyla ilgiliydi."*
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**Yalıtılmış aracılar da kapsamdadır.** Hiçbir veri yolunda ve hiçbir paylaşılan yüzeyde bulunmayan bir
+aracı bile bu dosyayı okur. Yalıtım, bir aracının ne *söyleyebileceğini* düzenler. Hiçbir zaman
+*durdurulup* durdurulamayacağını düzenlemez.
+
+---
+
+## 6. İki kez ölçün
+
+Tek bir yeşil onay hiçbir zaman bir güvenlik durumunu belgelemez. Her iki sinyali de diskten, **bu
+çalıştırmada** okuyun. Hatırlanan bir durumu asla aktarmayın — bağlamdan değil, bir bellek dosyasından
+değil, önceki bir turdan değil. Bozuk bir `stat` biçimi, yanlış bir "temiz" ya da yanlış bir
+"durduruldu" üretmeye yeter ve ikisi de uygulamada yaşanmıştır.
+
+Mevcut en güçlü biçim, STATE dosyası ile her nöbetçi dosya yolu üzerinde yalnızca değişimde yayın yapan
+**kalıcı bir izleyicidir**: temizken sessiz, bir durdurma kurulduğu anda tetiklenir. Bu, "başlangıçta bir
+kez ön denetim yaptım" durumunu canlı kapsamaya dönüştürür ve bir durdurmanın oturum ortasında kurulduğu
+boşluğu kapatır.
+
+---
+
+## 7. Dürüst sınır, bir kez belirtilmiş hâliyle
+
+Bu protokol bir durdurmayı **her başlangıçta ve her kontrol noktasında güvenilir** kılar. Bir durdurmayı
+**anlık** kılmaz ve bir dosya ağacına yazılan hiçbir şey bunu asla yapmayacaktır.
+
+Şu anda etkin biçimde ters giden bir şey varsa: **pencereyi kapatın.** Sonra dosyayı yazın ki uyanan bir
+sonraki aracı onu yeniden başlatmasın.

@@ -1,181 +1,184 @@
-# 09 — THE FLOOR
+> **Resmî olmayan çeviri.** Bu belgenin normatif sürümü `main` dalındaki İngilizce sürümdür. Bu çeviri
+> kolaylık olsun diye sunulmuştur ve **ana dili bu dil olan biri tarafından gözden geçirilmemiştir**.
+> İngilizce özgün metinden ayrıldığı yerde **İngilizce geçerlidir**. Protokol tanımlayıcıları (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, veri yolu fiilleri ve dosya adları) bilinçli olarak İngilizce
+> bırakılmıştır: bunlar aracıların ayrıştırdığı sabit değerlerdir.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — ZEMİN
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Durum: görselleştirici için normatif; bir model olarak bilgilendirici.**
+[`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html) tarafından gerçeklenir.
 
 ---
 
-## 2. The mapping
+## 1. İddia
 
-| On the floor | In the fleet | Read from |
+Bir aracı filosunu görmek zordur. Bir dosya ağacı bir listedir, bir süreç tablosu bir listedir ve bir
+günlük bir listedir — dolayısıyla çalışan bir filo hakkında herkesin sahip olduğu tek resim, birbirine
+oturmayan birkaç listedir.
+
+**Otomatikleştirilmiş bir depo aynı makinedir ve kırk yıldır okunabilir durumdadır.** Vinçler bir kontrol
+sistemi altında yükleri raflar arasında taşır ve onu denetleyen kişi, tek bir satır metin okumadan,
+renkten, yüzlerce eşzamanlı hareketin olduğu bir zemini bir bakışta okur.
+
+Parvis bunu ödünç alır. Süs olarak değil — bir *eşleme* olarak; burada her depo nesnesi ağaçtaki tam
+olarak bir şeye karşılık gelir ve deponun kendi güvenlik kurallarının, protokolün güvenlik kuralları
+olarak zaten doğru yere çizilmiş olduğu ortaya çıkar.
+
+---
+
+## 2. Eşleme
+
+| Zeminde | Filoda | Nereden okunur |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Vinç** | bir aracı ya da canlı bir oturum | `_os/exchange/bus/session/` içindeki oturum işaretleyicileri |
+| **Palet** | bir dizin | ağacın kendisi; paletin etiketi onun yoludur |
+| **Raf konumu** | o dizinin bulunduğu yer | üst dizini |
+| **Bir paleti açmak** | dizine inmek | **bambaşka, eksiksiz bir depo** — §4 |
+| **İş açma** (giriş rampası) | gelen iş | `_os/tasks/INDEX.md` içindeki bir `REQ` satırı |
+| **Sevk hattı** (çıkış rampası) | ayrılan bir teslimat | `_os/events/surface/` içindeki bir dosya, bir dışa aktarım |
+| **Konveyör** | dosya veri yolu | `_os/exchange/bus/` — işin bir vinç taşımadan nasıl hareket ettiği |
+| **Kamyon** | bir dış hizmet ya da başka bir yapay zekâ | sınır. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Mesele resim değildir. Mesele şudur: bir depo kontrol sisteminin karşısında hiç durduysanız **bu ekranı
+okumayı zaten biliyorsunuzdur** — durmadıysanız da model, bir dizin listesinin olmadığı bir biçimde
+somuttur.
 
 ---
 
-## 3. The colours
+## 3. Renkler
 
-One glance, before any navigation:
+Herhangi bir gezinmeden önce, tek bakışta:
 
-| Colour | On the floor | In the fleet |
+| Renk | Zeminde | Filoda |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **YEŞİL** | hareket hâlinde — bir vinç yük taşıyor | bir aracı çalışıyor; görev ortasında canlı bir oturum |
+| **MAVİ** | zamanlanmış — sıraya alınmış, henüz başlamamış | bir iş panosu ilanı: emredilmiş, bir aracı bekliyor |
+| **KEHRİBAR** | dikkat — bir konum bir karar gerektiriyor | `YELLOW`: her eylemden önce sor |
+| **KIRMIZI** | acil durduruldu — o bölge durdurulmuş | `STOP`: acil durdurma kurulu ve bu kök dondurulmuş |
+| **GRİ** | boş ya da canlı kaynak yok | veri yok. Asla bir tahmin değil. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Bu yeni bir şema değildir. Ağacın zaten barındırdığı durumun işlenmiş hâlidir.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Kırmızı bakışı her zaman kazanır.** Tek bir kırmızı bölge, gözü herhangi bir yeşilden önce durdurur;
+tıpkı durdurmanın diğer her sinyalin üzerinde olması gibi ([`01`](01-ESTOP.md)). **Kırmızı bir bölgenin
+üzerinde yeşil gösteren bir zemin yalan söylüyordur** — ve bu kuralın yasaklamak için var olduğu belirli
+arıza budur.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**Canlı kaynağın olmadığı yerde gri zorunludur.** Verisi olmayan bir konum gri işlenir ve `—` okunur.
+Asla yeşil işlenmez; çünkü yeşil, hoşa giden öntanımlıdır ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. İç içe depo
 
-This is where the model stops being a visualisation and starts enforcing something.
+**Bir paleti açtığınızda bir kutuya bakmıyorsunuzdur. Bambaşka, eksiksiz bir depoya bakıyorsunuzdur** —
+kendi vinçleri, kendi paletleri, kendi rampalarıyla.
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+Bu, tam olarak dosya ağacıdır. Bir girişim bir depodur; bölümleri koridorlardır; dosyaları paletlerdir;
+ve kendisi bir dizin olan bir palet başka bir zemindir. Dolayısıyla görselleştirici, her derinlikte aynı
+denetimlere sahip, **inen tek bir görünümdür**; çünkü her düzey bir depo *dur*. Aşağı inerken öğrenilecek
+yeni bir şey yoktur.
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+Özyineleme, mecazın bir kaplama olmak yerine tutmasının bütün nedenidir. Yalnızca en üst düzeyi işleyen
+bir gösterge paneli bir filonun resmidir; inen bir gösterge paneli ise onun görünümüdür.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. Kamyonlar sınırda yanaşır — asla zemine çıkmaz
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+Modelin bir görselleştirme olmaktan çıkıp bir şeyi uygulamaya başladığı yer burasıdır.
+
+Bir dış hizmet — başka bir yapay zekâ, bir API, bir sağlayıcı — bir **kamyondur**. Ve gerçek bir depoda
+kamyon bir rampaya geri geri yanaşır. Zemine çıkmaz, bir vinci hareket ettirmez, bir rafa girmez ya da
+iç içe bir depoyu açmaz. Bir giriş rampasına yük bırakır ya da bir sevk hattından yük alır; erişiminin
+tamamı bundan ibarettir.
+
+**O rampa hava kilididir.** Her dış alışveriş kenarda, elenerek gerçekleşir ve dışarıdan hiçbir şey
+ağacın içinde başıboş kalmaz.
+
+**Bir kamyonun evrakı, denetlenene dek güvenilmezdir.** Kamyonla gelen bir yük, zemine verilmiş bir emir
+değil, gelen *veridir*. Her şey gibi iş olarak açılır ve gözden geçirilir; varışında asla itaat edilmez.
+Bu, [`03`](03-BUS.md) §5'teki talimat kaynağı sınırının bir yükleme rampası olarak çizilmiş hâlidir — ve
+ekrana bakan birinin ona uyulduğunu görebileceği tek yerde çizilmiştir.
+
+İşlemeniz zemine bir kamyon koyuyorsa, işleme yanlıştır ve çizdiği mimari de yanlıştır.
+
+---
+
+## 6. İki yüzey, iki iş
+
+| | **Zemin** (bu dosya) | **Konsol** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Nedir | canlı izlenen 3B bir zemin | erişime göre katmanlanmış döşeme bir menü |
+| Ne gösterir | **sistemin nasıl olduğunu** — her aracı, dizin ve durum aynı anda | **ne yapabileceğinizi** — aracı seçin, işi yapın |
+| Fiil | izle, anla, karar ver | çalıştır, kullan, üret |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**Zemin makinenin nasıl düşündüğünü gösterir; konsol ise vardığınız sonuca göre eyleme geçmek içindir.**
+Biri bir harita, diğeri bir tezgâhtır. Bir yönetim yüzeyinin ikisine de ihtiyacı vardır ve hata, yalnızca
+güzel olanı inşa etmektir.
 
 ---
 
-## 7. Controls
+## 7. Denetimler
 
-Navigation is what made the original usable, not colour alone:
+Özgün sistemi kullanılabilir kılan şey yalnızca renk değil, gezinmeydi:
 
-| Control | Does |
+| Denetim | Yaptığı |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Sürükle** | zeminin çevresinde dön — döndür, eğ, bir koridor boyunca bak |
+| **Yukarıdan** | tepeden bir plana geç. Derinlik için yörünge, yerleşim için plan |
+| **Bir palete tıkla** | içine in — başka bir depo, aynı denetimler |
+| **Kaydır** | yakınlaştır |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Her derinlikte aynı denetimler. Pazarlığa kapalı: indikçe etkileşimi değişen bir görünüm, her düzeyin bir
+depo olduğu sözünü çiğnemiştir.
 
-### The camera is orthographic, on purpose
+### Kamera bilinçli olarak ortografiktir
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**Perspektif ayrımı yoktur.** Paralel çizgiler asla birleşmez ve bir koridorun ta öbür ucundaki bir
+konum, ayağınızın dibindekiyle tam olarak aynı boyutta işlenir.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+Bu bir an için yanlış görünür — göz birleşme bekler ve yokluğunu, sanki kutuların içinde durup dışarı
+bakıyormuş gibi okur. Yine de doğru takastır ve gerçek otomatik zeminlerin kontrol ekranlarının
+kullandığı şeydir: **bütün mesele, zemin boyunca konumları bir bakışta karşılaştırmaktır** ve bir
+perspektif kamerası, bir koridorun uzak ucunu yakın ucundan daha küçük, daha sönük ve değerlendirmesi
+daha zor kılar. Perspektif altında "o raf daha dolu" ile "o raf daha yakın" aynı görünür. Ortografik bir
+kamerada görünmezler.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+Örtüşme yine de gerçektir — arkaya dönen yüzeyler ayıklanır ve yakın geometri uzak olanın üzerine boyar.
+Bu düz bir kameradır, düz bir sahne değil.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Ekipmana ayrıca türe göre gruplanmış bir **yan menüden** de ulaşılabilir — vinçler, paletler, iki rampa,
+konveyör, kamyonlar. İster menüden ister zeminden seçin, aynı denetimler açılır; çünkü yalnızca 3B bir
+sahnedeki küçük kutulara tıklayarak gezinebildiğiniz bir zemin, bir araç değil bir tanıtımdır.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Zeminin yapabildikleri ve yapamadıkları
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+[`07`](07-INTERFACE.md) §5'teki her kısıt geçerlidir. Çizgi tek bir belirli yerde çizilir:
 
-**The floor may induct. It may never execute.**
+**Zemin iş açabilir. Asla yürütemez.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+Bu, [`07`](07-INTERFACE.md) §1'in konsol için zaten çizdiği çizgidir ve ekipmanın denetimlere sahip
+olabilmesini sağlayan şeydir. Bir vinci seçip ona iş yöneltmek, o aracıyı adlandıran bir `REQ` satırı
+yazar ve gelen kutusuna bir `TELL` bırakır. **Hiçbir şey başlatmaz.** Hiçbir süreç doğmaz, hiçbir komut
+çalışmaz ve aracı işi kendi bir sonraki çalıştırmasında alır — ya da almaz.
 
-Two consequences that are easy to get wrong:
+Yanlış anlaşılması kolay iki sonuç:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Yöneltilmiş iş yine de bir emir değildir.** `REQ` satırı kanonik kayıttır; gelen kutusu satırı
+  yalnızca ona işaret eder. Bir aracıya *emir veren* — ya da ağacın içinden İşletmenin yetkisini ileri
+  süren — bir dosya, [`03`](03-BUS.md) §5'in tanımladığı güvenlik olayı olurdu ve bunu yüzeye inşa
+  etmek, elle inşa etmekten daha kötü olurdu. Yetki, konuşmadaki İşletmendir. Zemin kaydı yazar,
+  talimatı değil.
+- **Bazı ekipman bilinçli olarak denetim almaz.** Konveyör salt okunurdur: veri yoluna satır yazabilen
+  bir konsol, protokolün ona tanımadığı bir yetkiyi imal ediyor olurdu. Kamyonların ise hiç denetimi
+  yoktur — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**`STOP` altında zemin kırmızı işlenir ve hiçbir iş açmaz.** Kırmızı bir zemin emir almaz.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+Dürüst sınır, bir kez belirtilmiş hâliyle: **bu, ağacın bir andaki resmidir, canlı bir telemetri akışı
+değil.** Yoklama yapar. Yoklamalar arasında bayattır, en son ne zaman okuduğunu gösterir ve yardımcı
+bileşen yanıt vermeyi bıraktığında aksini varsaymak yerine griye döner.

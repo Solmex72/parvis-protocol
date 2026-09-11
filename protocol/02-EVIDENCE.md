@@ -1,118 +1,125 @@
-# 02 — EVIDENCE
+> **Resmî olmayan çeviri.** Bu belgenin normatif sürümü `main` dalındaki İngilizce sürümdür. Bu çeviri
+> kolaylık olsun diye sunulmuştur ve **ana dili bu dil olan biri tarafından gözden geçirilmemiştir**.
+> İngilizce özgün metinden ayrıldığı yerde **İngilizce geçerlidir**. Protokol tanımlayıcıları (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, veri yolu fiilleri ve dosya adları) bilinçli olarak İngilizce
+> bırakılmıştır: bunlar aracıların ayrıştırdığı sabit değerlerdir.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — KANIT
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**Durum: normatif.** Bir gözlemin kayıtlı bir olguya nasıl dönüştüğü.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+Bu dosyanın tarif ettiği disiplin genellikle *önerilere* uygulanır — insan karar vermeden önce aracı,
+planının işe yarama olasılığını belirtir. Bu disiplin *iddialara* neredeyse hiç uygulanmaz. Böylece bir
+filo, izin isteyerek **yapmak** istediği şey üzerine özenle akıl yürütür; **doğru** diye yazdığı şey
+üzerine ise özensizce.
+
+Oysa bunlar aynı edimdir. Kayda giren bir iddia, kaydın değişmesi gerektiğine dair bir öneridir. Parvis
+her ikisine tek bir disiplin uygular.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. Her iddia bir etiket taşır
 
-| Tag | Means | Admissible where |
+| Etiket | Anlamı | Nerede kabul edilir |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | **Bu çalıştırmada okuduğunuz**, atıf verilmiş bir birincil kaynağa karşı doğrulanmış. Komutu, okumayı, ölçümü adlandırın. | Ana dosyalar dâhil her yerde. |
+| `[CLAIMED]` | Başka bir şey tarafından bildirilmiş. Doğrulanmamış. | Çalışma dosyalarında. Ana dosyada asla. |
+| `[ASSUMED]` | Kimsenin denetlemediği bir çalışma varsayımı. | Çalışma dosyalarında, açıkça belirtilerek. |
+| `[PROPOSED]` | Bir kestirim, bir tavsiye, bir plan. | Önerilerde. Kayıtta asla. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**Etiket iddiayla birlikte yolculuk eder.** Bir `[PROPOSED]`, daha önemli bir dosyaya kopyalanmakla
+`[PROVEN]` hâline gelmez. Terfi, yeni bir konum değil, yeni bir ölçüm gerektirir.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**Bir ana dosyayı yalnızca `[PROVEN]` değiştirebilir.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. Atıf verin ya da işaretleyin — asla aklamayın
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+Bir sayı kaynağını belirtir, yoksa o bir sayı değildir; ondalık ayraç takmış bir sezgidir.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+Kaynağa sahip değilseniz, **bunu söyleyin ve onun yerine akıl yürütmenizi verin.** Bu işe yarar bir
+yanıttır. Olgu diye sunulan kaynaksız bir sayı ise değildir.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**Bir başarısızlığı asla bir bulguya dönüştürerek aklamayın.** Hata veren bir arama, başarısız bir
+çağrıdır; boş bir sonuç kümesi değil. Yüklenmeyen bir sayfa, yokluğun kanıtı değildir. Ne olduysa onu
+yazın.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. Kendini betimleme `[CLAIMED]`'dir
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+Bir aracının kendi durumu, kendi kapsamı ya da kendi tamamladığı iş hakkındaki anlatısı — ne kadar emin
+olursa olsun — `[CLAIMED]`'dir. Onu `[PROVEN]` yapan yalnızca dışarıdaki bir kayıttır: diskteki bir
+dosya, bir komutun çıkış kodu, siz olmayan bir şeyin yazdığı bir günlük satırı.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+Kanıt yolu olmayan bir `DONE` satırının geçersiz olmasının nedeni budur (bkz.
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "Yaptım" bir iddiadır. Dosya ise kanıttır.
 
 ---
 
-## 6. Negative findings count
+## 4. Basamak 0–2'deki her şey için iki kez ölçün
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+Tek bir denetim hiçbir zaman bir güvenlik durumunu belgelemez. Her Öncelik-0 iddiasından önce, her
+zaman iki bağımsız ölçüm.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**Yeniden ölçün, asla hatırlamayın.** Bir ağaç eşzamanlı oturumlar altında çalkalanır — bir turun
+başında okunan bir yol, sonunda yok olmuş olabilir. Durum yalnızca *bu* çalıştırmada diskten bilinebilir.
+"Temizlendi" ya da "güncel" bilgisini önceki bir turdan, bir bellek dosyasından veya bir özetten asla
+taşımayın.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**Bir sayım bir ölçümdür, bir olgu değil.** Kullanım anında yeniden sayın. Bir dosya sayısını, bir aracı
+sayısını ya da bir sürümü asla bellekten aktarmayın.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. Düşen bir çağrı bir bulgu değildir
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+**Taşıma kaybında** — DNS hatası, bağlantı sıfırlanması, reddedilme, yanıtsız zaman aşımı — aynı çağrıyı
+hemen ve tekrar tekrar yineleyin. Hiç ulaşmamış bir çağrı için asla "sonuç yok" yazmayın ve boşluğu asla
+bellekten doldurmayın.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**Ulaşmış olan bir yanıt bir cevaptır, bir yeniden deneme değil.** Bir 403, bir 404, boş bir sonuç
+kümesi, açık bir ret — bunlar veridir. Farklı bir cevap almak için bir reddin üzerine yinelemek, tespit
+kaçırmadır ve kimin hesabında veya kimin ağında çalıştığına bakılmaksızın basamak 2'de yasaktır.
+
+Ayrım tek satırda: *hiç ulaşmamış çağrıyı yineleyin; beğenmediğiniz cevabı asla yinelemeyin.*
 
 ---
 
-## 9. The rule these all serve
+## 6. Olumsuz bulgular da sayılır
 
-> A fact asserted in six files will be wrong in five of them.
+"X denetlendi, tehlike değil" ifadesi, sonraki üç oturumun X'i yeniden denetlemesini engelleyen şeydir.
+Kaydedin.
 
-Evidence discipline is what makes the sixth one findable.
+**Öğrendikçe kaydedin, sonunda değil.** Yalnızca çalışma belleğinde tutulup sonra yitirilen bir bulgu,
+hiç yapılmamış işten ayırt edilemez.
+
+---
+
+## 7. Silinmeler bütünlük sinyalidir
+
+Bir ağacı bir taban çizgisine karşı doğrularken raporun üç sınıfı vardır — eklenen, değiştirilen,
+silinen. Büyüme ve düzenlemeler beklenen çalkantıdır. **Alarm verilmeye değer satır silinmedir.**
+
+Denetlenmemiş eşzamanlı işin üzerine yeni taban çizgisi çekmeyin. Önce denetleyin, sonra damgalayın.
+
+---
+
+## 8. Denetim bir roldür, bir ruh hâli değil
+
+Bir denetçi her aracıyı, komutu ve görevi **diskten** sayar ve her birini sabit sınıflara karşı denetler
+— kusurlar kadar temiz denetimleri de sayarak. Hiçbir şeyi aklamayan bir çalıştırma hiçbir şeyi
+denetlememiştir; yalnızca şikâyet toplamıştır.
+
+**Denetçi asla onarmaz.** Bulgular düzeltme sürecine ([`05-CORRECTION.md`](05-CORRECTION.md)) ya da
+sahibi olan aracıya yönlendirilir. Bulduğunu onaran bir denetçi kendi kanıtını yok etmiştir ve artık
+temiz bir çalıştırma bildirmesine güvenilemez.
+
+---
+
+## 9. Bunların tümünün hizmet ettiği kural
+
+> Altı dosyada ileri sürülen bir olgu, bunların beşinde yanlış olacaktır.
+
+Kanıt disiplini, altıncısını bulunabilir kılan şeydir.

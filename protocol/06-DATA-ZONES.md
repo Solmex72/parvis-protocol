@@ -1,92 +1,97 @@
-# 06 — DATA ZONES
+> **Resmî olmayan çeviri.** Bu belgenin normatif sürümü `main` dalındaki İngilizce sürümdür. Bu çeviri
+> kolaylık olsun diye sunulmuştur ve **ana dili bu dil olan biri tarafından gözden geçirilmemiştir**.
+> İngilizce özgün metinden ayrıldığı yerde **İngilizce geçerlidir**. Protokol tanımlayıcıları (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, veri yolu fiilleri ve dosya adları) bilinçli olarak İngilizce
+> bırakılmıştır: bunlar aracıların ayrıştırdığı sabit değerlerdir.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — VERİ BÖLGELERİ
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Durum: normatif.** Bir dosyanın nerede bulunmasına izin verildiği.
 
 ---
 
-## 2. The two zones
+## 1. Yasak neden işe yaramadı
 
-| Zone | Property | Holds |
+Özgün kural *"asla, hiçbir yerde sır olmaz"* idi — ve **özel verinin konulacağı bir yer yoktu.**
+
+Varış yeri olmayan bir yasak uygulanmaz. Etrafından dolaşılır ve özel malzeme kazara eşitlenen ağaca
+iner. Bu defalarca yaşandı; kuralın kendisine tabi olan bir aracı da buna dâhil.
+
+**Kural bir yönlendirme kararıdır, bir yasak değil.**
+
+---
+
+## 2. İki bölge
+
+| Bölge | Özellik | Neyi barındırır |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Bulut depolamayla eşitlenir. **Her baytı yayımlanmış sayın.** | Doktrin, görevler, aracı tanımları, mimari, iş bağlamı, araştırma, teknik belgeler |
+| **PRIVATE** | **Her eşitleme kökünün dışında** — ve kullanıcı profilinin de dışında, böylece bilinen klasör yönlendirmesi de oraya ulaşamaz | Sırlar, gerçek kişiler ve kişisel verileri, özel projeler ve medya, bir yedekte bulunması yanlış olacak her şey |
 
-### The test
+### Sınama
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Bu, bir yıl sonra bir bulut anlık görüntüsünde bulunsaydı sorun olur muydu?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Evet → PRIVATE. Hayır → PUBLIC. Gerçekten emin değilseniz → **PRIVATE.** Fazla sınıflandırmanın bedeli
+zahmettir. Eksik sınıflandırmanın bedeli ise geri alınamaz.
 
-### Know what actually syncs
+### Neyin gerçekten eşitlendiğini bilin
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Bunu varsayımla değil, gerçek makinede denetleyin. Tipik bir iş istasyonunda aynı anda birkaç eşitleme
+istemcisi çalışıyor olabilir ve kullanıcının belgeler, masaüstü ya da resimler klasörleri altındaki her
+şey makineyi terk eder ve haftalarca sürüm geçmişinde tutulur. **Yerelde silmek onu geri çağırmaz.**
 
-Two consequences that each cause real failures:
+Her biri gerçek arızalara yol açan iki sonuç:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **Derleme çıktısı** bir eşitleme kökünün dışına yönlendirilmelidir, yoksa ayna onu derleme sırasında
+   bozar.
+2. **Anahtarlar dışarıda durur**, bilinçli olarak ve öntanımlı biçimde.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. İstisna: kimlik bilgileri hiçbir bölgeye ait değildir
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**Canlı kimlik bilgileri — parolalar, API anahtarları, jetonlar, yayın anahtarları — her iki dosya
+sisteminde değil, bir parola yöneticisinde bulunur.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+Özel bölge *özel veri* barındırır. Bir parola yöneticisi *kimlik bilgileri* barındırır. Bu bir kılı kırk
+yarma değildir: özel bir dizin öntanımlı olarak şifreli değildir ve bir dosya dosyadır. Biri kopyalandığı,
+bir döküme aktarıldığı ya da bir şeye iliştirildiği anda ifşa olmuştur.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Özel bölgenin güvenlik özelliğini dar biçimde belirtin ve asla abartmayın.** Kanıtlanmış tek özelliği
+genellikle *hiçbir şeyin onu bir yere kopyalamamasıdır*. Doğrulanmış tam disk ya da dosya başına
+şifreleme yoksa; o bölge şifreli değildir, yedeklenmemiştir ve bir kasa değildir.
 
 ---
 
-## 6. Pruning without loss
+## 4. Sınıflandırma İşletmenindir ve ayarlanabilir
 
-Before anything leaves the working tree:
+Canlı tabloyu tek bir dosyada tutun — `DATA-CLASSIFICATION.md` — İşletmenin kategorileri bölgeler
+arasında taşıdığı ve her aracının tahmin yürütmek yerine okuduğu yer.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Bu protokol dosyası **mekanizmayı** belirtir. O dosya ise **politikayı** belirtir. İkisi çeliştiğinde
+politika dosyası kazanır.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Aracılar için sonuçlar
+
+- **Paketlenen hiçbir ağaçta sır bulunmaz.** Bir bağlam paketi, yeni bir oturuma yapıştırılmak için
+  vardır. Neyin tutulduğunu ve nerede tutulduğunu adlandırın; değerini asla.
+- **Hiçbir sır `surface/`'a ulaşmaz.** Orası ekranda görüntülenir.
+- **Hiçbir sır bir tarayıcıya ulaşmaz.** Bkz. [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Silerek değil, atıfla gizleyin.** `<api key — see password manager entry "acme-prod">` ifadesi,
+  değeri ifşa etmeden olguyu bulunabilir tutar.
+
+---
+
+## 6. Kayıpsız budama
+
+Çalışma ağacından herhangi bir şey ayrılmadan önce:
+
+1. Onu **köklerin dışındaki** mühürlü bir depoya kopyalayın — joker kalıplarla erişilemeyen bir arşiv
+   dosyasına.
+2. Yolları `marked-deletion.md` / `marked-archive.md` içinde hazırlayın.
+3. **Yürütme İşletmenin elidir**, ağaç durulmuşken.
+
+Canlı eşzamanlılık altında asla toplu silme yapmayın.

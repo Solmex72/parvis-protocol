@@ -1,66 +1,69 @@
-# 05 — CORRECTION
+> **Resmî olmayan çeviri.** Bu belgenin normatif sürümü `main` dalındaki İngilizce sürümdür. Bu çeviri
+> kolaylık olsun diye sunulmuştur ve **ana dili bu dil olan biri tarafından gözden geçirilmemiştir**.
+> İngilizce özgün metinden ayrıldığı yerde **İngilizce geçerlidir**. Protokol tanımlayıcıları (`RUN`,
+> `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, veri yolu fiilleri ve dosya adları) bilinçli olarak İngilizce
+> bırakılmıştır: bunlar aracıların ayrıştırdığı sabit değerlerdir.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — DÜZELTME
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**Durum: normatif.** Kayıtlı bir olgunun yanlış çıkması durumunda ne olacağı.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. Sorun
 
-Reading a governing file puts you under it. Two things follow:
+> Altı dosyada ileri sürülen bir olgu, bunların beşinde yanlış olacaktır.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+O sırada bakmakta olduğunuz dosyayı düzeltmek bir düzeltme değildir. Bu, hem doğrunun hem de hatanın
+atıflara sahip olduğu bir ağaç yaratır ve bir sonraki oturum hangisini önce açarsa onu seçer. Belge
+ağırlıklı bir aracı filosunun tanımlayıcı arıza biçimi budur ve sessizce birikir.
+
+**Bir düzeltme ya yayılır ya da hiç gerçekleşmemiştir.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. Okumak bedelsiz değildir — yükümlülük doğurur
 
-One command, one turn, no proposal step.
+Yönetici bir dosyayı okumak sizi onun altına sokar. Bundan iki şey çıkar:
+
+1. İçindeki **kalıcı, apaçık olmayan ve ağaçtan türetilemeyen** her şey, oturum bitmeden kalıcı
+   belleğinize gider.
+2. **Bağlamınız dosyayla çelişiyorsa, dosya kazanır.** Etrafından dolaşmayın. Kaydı düzeltin.
+
+---
+
+## 3. Anlık Rota Düzeltmesi (ICC)
+
+Tek komut, tek tur, öneri adımı yok.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### Sıra
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · Tarama.** Düzeltmeden 2–5 arama terimi türetin: **eski** ifade, onun bariz türevleri ve işin
+içindeki özel adlar. Yeni ifade değil. Herhangi bir şey okumadan önce terim başına bir dizinli tarama
+çalıştırın. İsabetleri bulmak için ağaçta asla dosya dosya dolaşmayın — dizin bunun içindir.
 
-**2 · Classify every hit.**
+**2 · Her isabeti sınıflandırın.**
 
-| Hit | Action |
+| İsabet | Eylem |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **Eski olguyu ileri sürüyor** | Yeniden yazın. |
+| **Geçerken anıyor**, her iki durumda da doğru | Bırakın. Metni boş yere çalkalamayın. |
+| **Yeni olguyla dolaylı olarak çelişiyor** — akışın aşağısındaki bir sonuç, bir tablo satırı, eski değer üzerine kurulmuş zamanlanmış bir iş | **Onu da yeniden yazın.** En sık atlanan budur. |
+| **Sınır dışı** (§5) | Asla düzenlemeyin. *Dokunulmayanlar* altında not edin. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · Hepsini bir kerede yeniden yazın.** Her dosyanın mevcut üslubuna ve güven etiketi geleneğine uyun.
+Düzeltilmiş bir olgu hak ettiği etiketi korur — **artık güncel diye bir iddiayı `[PROVEN]`'a
+yükseltmeyin.** Eski metin bir tarih taşıyorsa, bugünün tarihini basın.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+Bir olgu üçten fazla dosyada ileri sürülüyorsa, bu **yinelemedir, artıklık değil**: sahibi olan dosyada
+bir kez belirtin ve diğerlerinin oraya işaret etmesini sağlayın.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · Defter ve bellek.** İkisi de olmalı, yoksa çalıştırma bitmemiştir. Düzeltme defterinin başına bir
+kayıt ekleyin:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +76,73 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+Ardından olguyu kalıcı belleğe yazın — **önce konuyla ilgili mevcut bir bellek olup olmadığını
+denetleyip onu güncelleyerek**; az önce bir komut harcayarak birleştirdiğiniz bir olgunun iki sürümünü
+bırakmak yerine.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · Düzenleme sonrası yükümlülükler.** Düzenlemelerin gerektirdiği üretici ya da yedekleme neyse onu
+yeniden çalıştırın. Dosya oluşturulduysa veya silindiyse dizini yeniden kurun.
 
 ---
 
-## 5. What is never rewritten
+## 4. Sürekli bir karar açıkta tersine çevrilir
 
-| Never touched | Why |
+Bir düzeltme sürekli bir kararı geçersiz kılıyorsa — bir "yeniden tartışma" satırını, bir `[PROVEN]`
+maddesini, bir politika kuralını — **sessizce ters çevirmeyin.** Tarihi ve gerekçesiyle birlikte
+*tersine çevrildi* olarak yeniden yazın ki bir sonraki oturum onun unutulmadığını, bozulduğunu bilsin.
+
+İz bırakmadan değişen bir karar, hiç verilmemiş bir karardan ayırt edilemez.
+
+---
+
+## 5. Asla yeniden yazılmayanlar
+
+| Asla dokunulmaz | Neden |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | Tarih. Tarih düzeltilmez; yerine yenisi geçer. |
+| Üretilmiş dosyalar | Kaynağı düzenleyin ve üreticiyi yeniden çalıştırın. |
+| Yalıtılmış bir aracının ağacı | Yalnızca adla erişim. |
+| Başka bir kökün yetkili ana bağlamı | Sapmayı bildirin. Bir sahiplik sınırının ötesine geçerek düzenleme yapmayın. |
+| Sır barındıran her şey | Bir metin taraması için tümüyle kapsam dışı. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**Metni yeniden yazan bir tarama ikili dosyaları mahveder.** Her taramayı, dışlama yoluyla değil, izin
+listesiyle metin uzantılarıyla sınırlayın.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. ICC'nin yapmadığı şey
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` kaydı düzeltir. **Ardından düzeltmenin gerektirdiği işi yapmaya gitmez.** Bunlar ayrı
+yetkilendirmelere sahip ayrı edimlerdir ve ikisini birbirine karıştırmak, tek satırlık bir düzeltmenin
+gözden geçirilmemiş bir yeniden yapılandırmaya dönüşme yoludur.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. Rakip olgular çözülür ve budanır — kataloglanmaz
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+İki dosya birbiriyle çelişen olgular ileri sürdüğünde, **hangisinin doğru olduğuna karar verin, onu
+koruyun ve yanlış olan iddiaları aynı geçişte kaldırın.**
 
-### What still gets escalated instead of settled
+Her iki rakibi de diskte bırakan bir çatışma raporu hiçbir şeyi çözmemiştir. Bir sonraki oturum yine
+hangi dosyayı önce açarsa onu seçer ve dolaşımda beş sürümü olan bir güvenlik kuralı, tek sürümü olandan
+daha *az* güvenilirdir, daha çok değil.
 
-Three cases. Surface these; do not decide them:
+**Esasa göre karar verin, asla zaman damgasına göre değil.** Kazanan, olgunun sahibi olan dosyadır; bir
+ölçümle desteklenen sürümdür; incelemeden sağ çıkandır. **En yeni, en doğru değildir** — buradaki
+örnek arıza, birbirinden doksan saniye arayla yazılmış dört yinelenen bellek dosyasıdır; en yenisi
+yanlış iddiayı ileri sürüyordu, dolayısıyla "en yeni kazanır" kuralı hatayı devralırdı.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**Çözümü kaydedin.** Hangi olgunun kazandığını, neyin budandığını ve nedenini — deftere, ki budama
+sessiz değil okunabilir olsun. İz bırakmadan yok olan bir rakip, hiç var olmamış bir rakiple birebir
+aynı görünür ve bir sonraki oturum onu yeniden yaratır.
 
-Everything ordinary gets decided and cleaned up.
+### Çözülmek yerine yine yukarı taşınanlar
+
+Üç durum. Bunları yüzeye çıkarın; karara bağlamayın:
+
+- Çelişki, aracının sahip olmadığı bir bilgiye dayanıyor.
+- Yanılmak **güvensiz veya geri alınamaz** olurdu — basamak 0–2'deki her şey.
+- Kaybeden iddia **aracının sahiplik sınırının dışında** duruyor — başka bir kökün yetkili ana bağlamı.
+  Sapmayı bildirin; sınırın ötesine geçerek düzenleme yapmayın.
+
+Olağan olan her şey karara bağlanır ve temizlenir.
