@@ -734,16 +734,44 @@
         ctx.globalAlpha = 0.9; ctx.fillText(lab, sc.x, sc.y); ctx.globalAlpha = 1;
       }
     }
+    // Crane names all sat at one height, so several cranes near each other
+    // printed their labels on top of one another and the result was unreadable.
+    // Stagger across three bands, run a leader line down to the mast the label
+    // belongs to, and put a plate behind the text so it survives over a rack.
     for (var m = 0; m < d.cranes.length; m++) {
       var c2 = d.cranes[m];
       var cp2 = WH.cranePos[c2.session || c2.agent];
       if (!cp2) continue;
-      var s2 = project({ x: cp2.x, y: frameTop + 0.95, z: cp2.z }, vp);
-      ctx.fillStyle = stopped ? COL.red
+
+      var col2 = stopped ? COL.red
                     : c2.state === "moving" ? COL.green
                     : c2.state === "gated" ? COL.amber
                     : c2.state === "scheduled" ? COL.blue : COL.grey;
-      ctx.fillText(c2.agent, s2.x, s2.y);
+
+      var band = (m % 3) * 0.52;
+      var s2 = project({ x: cp2.x, y: frameTop + 0.95 + band, z: cp2.z }, vp);
+
+      var lbl = c2.agent;
+      if (lbl.length > 16) lbl = lbl.slice(0, 15) + "…";
+      var w2 = ctx.measureText(lbl).width;
+      var minX = w2 / 2 + 5, maxX = view.w - w2 / 2 - 5;
+      if (s2.x < minX) s2.x = minX;
+      if (s2.x > maxX) s2.x = maxX;
+      if (s2.y < 12) s2.y = 12;
+
+      var top2 = project({ x: cp2.x, y: frameTop + 0.62, z: cp2.z }, vp);
+      ctx.save();
+      ctx.globalAlpha = 0.45; ctx.strokeStyle = col2; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(s2.x, s2.y + 3); ctx.lineTo(top2.x, top2.y); ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = 0.62; ctx.fillStyle = COL.bg || "#0a0f14";
+      ctx.fillRect(s2.x - w2 / 2 - 3, s2.y - 8, w2 + 6, 11);
+      ctx.restore();
+
+      ctx.fillStyle = col2;
+      ctx.fillText(lbl, s2.x, s2.y);
     }
     // aisle numbers at the induct end
     ctx.fillStyle = COL.grey; ctx.globalAlpha = 0.7;
