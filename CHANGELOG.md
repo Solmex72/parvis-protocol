@@ -38,6 +38,11 @@ was decided, what stayed open, and what was removed is in [DECISIONS.md](DECISIO
   and never drives onto the floor — which puts the airlock where it belongs and makes it visible.
   Opening a pallet is entering another whole warehouse, navigated identically, all the way down.
 
+- **10 AIRLOCK** — the dock. The far side is modelled as hostile; everything it returns is
+  wrapped  before anything reads it, quarantined by content hash, and never
+  reaches canonical state without a human. Egress is allowlisted, redacted and provenance-stamped;
+  external callers cannot name paths at all.
+
 ### Added — reference implementation
 
 - `parvis` CLI: `serve`, `init`, `check`, `config`, `estop`, `clear`, `selftest`. Zero
@@ -60,8 +65,31 @@ was decided, what stayed open, and what was removed is in [DECISIONS.md](DECISIO
 - Configuration by file (`parvis.config.json`), environment, and flags, resolved with a stated
   precedence and shown with its source in the settings panel.
 - `parvis check` exits non-zero when not `RUN`, so a hook or a CI job can gate on the stop.
-- CI matrix across Windows, macOS and Linux on Node 18, 20 and 22, plus a hygiene job that fails
-  the build on a leaked path, IP address, or email.
+-  — list, accept, show, promote, verify, redteam. Promotion requires a named
+  human and records a judgement rather than copying anything into canonical state.
+- Hash-chained append-only audit log; a tampered entry is detected and located.
+- **Red-team harness** () replaying a 23-case injection corpus into our own
+  ingress: override attempts, authority spoofs, fake system turns, tool-call syntax, encoded
+  payloads, zero-width steering, and multi-response assembly. 100% detection, zero false positives
+  on benign content, plus structural assertions that the broker contains no eval, no child_process,
+  no network egress, and no path where a payload is interpolated into a template.
+- **Full system stress test** () — deep trees with awkward filenames,
+  malformed estop states, symlink loops, 12k-row ledgers, concurrent appends, racing ingress,
+  hostile requests, oversized bodies, and every write route under STOP. 35 assertions.
+- CI matrix across Windows, macOS and Linux on Node 18, 20 and 22, plus red-team, stress, and a
+  hygiene job that fails the build on a leaked path, IP address, or email.
+
+### Fixed — found by the stress test
+
+- **Silently truncated counts.** The tree walker's depth guard is necessary — a symlink loop would
+  otherwise never return — but a guard that trips makes the count partial, and it was being
+  reported as a total. A tree 20 deep reported 12 of 20 files with no indication. The snapshot now
+  declares , and the console renders the number with a  and says why.
+- **A blue crane on a red floor.** An agent with queued work but no session marker kept reading
+  scheduled under STOP.
+- **Listen backlog saturation.** Under a burst against a large tree, connections were refused at
+  the socket rather than answered. Backlog raised to 1024 and the saturation point is now measured
+  and reported rather than assumed.
 
 ### Fixed — carried over from the origin implementation
 

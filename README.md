@@ -29,7 +29,7 @@ it stop.
 
 Parvis is the set of rules that answers those three questions. It is **doctrine plus a small
 reference implementation** — not a framework, not a runtime, and not something you install.
-There is no dependency to add to your project. You copy nine markdown files into your tree,
+There is no dependency to add to your project. You copy ten markdown files into your tree,
 adapt them, and hold your agents to them.
 
 It was extracted from a working multi-agent system that ran daily for months, and it is
@@ -64,7 +64,7 @@ opinionated in the specific way that only a system that has already failed a few
 
 ---
 
-## The six ideas
+## The seven ideas
 
 **1 · A stop that is honest about what it cannot do.**
 No file halts a running session. An agent mid-response is not reading the disk and will finish
@@ -98,7 +98,14 @@ feature. A loopback sidecar does the small real work at the edge. A prompt submi
 UI is an **induction, not an execution** — it writes a request row and stops. The review still
 stands between a prompt and a moving machine.
 
-**6 · A fleet is a warehouse, and warehouses have been legible for forty years.**
+**6 · The far side is untrusted, and the boundary is a dock.**
+Anything an external model returns is modelled as hostile: it may claim your authority, mimic a
+system turn, or hide an override in a base64 blob. So it crosses one typed channel, is wrapped
+`UNTRUSTED_DATA` before anything reads it, quarantined by content hash, and **never reaches
+canonical state without a human**. There is deliberately no code path where an external response
+becomes a directive. [`10`](protocol/10-AIRLOCK.md), and the red-team corpus that proves it.
+
+**7 · A fleet is a warehouse, and warehouses have been legible for forty years.**
 Agents are **cranes**, directories are **pallets**, work arrives at an **induct** and leaves by a
 **spur**, and an external service is a **truck** — which docks at the boundary and never drives
 onto the floor. That last one is not decoration: it puts the airlock exactly where it belongs and
@@ -109,7 +116,7 @@ the same way, all the way down. [`09`](protocol/09-FLOOR.md).
 
 ## The protocol
 
-Nine files. Read them in order; each is short.
+Ten files. Read them in order; each is short.
 
 | | File | Settles |
 |---|---|---|
@@ -123,6 +130,7 @@ Nine files. Read them in order; each is short.
 | 07 | [**INTERFACE**](protocol/07-INTERFACE.md) | The Parvis surface rules and the sidecar's security requirements. |
 | 08 | [**AGENTS**](protocol/08-AGENTS.md) | What an agent owes every run; the structural failures to design against. |
 | 09 | [**FLOOR**](protocol/09-FLOOR.md) | The warehouse mapping: agents are cranes, directories are pallets, external services are trucks that dock at the boundary. |
+| 10 | [**AIRLOCK**](protocol/10-AIRLOCK.md) | The dock itself. Everything from outside is `UNTRUSTED_DATA`, quarantined by content hash, and promoted only by a human. |
 
 [`DECISIONS.md`](DECISIONS.md) records which contradictions were settled during extraction, which
 version won, and why.
@@ -182,6 +190,9 @@ surface feed, the job board, and settings. One self-contained HTML file, light a
 parvis estop "the bench rig is powered and someone is working on it"
 parvis check     # exits 1 while stopped — gate a hook or a CI job on this
 parvis clear
+
+parvis airlock            # the dock: what has come in from outside, and what it was flagged for
+parvis airlock redteam    # replay the injection corpus against your own ingress
 ```
 
 The sidecar binds loopback only, validates `Host` and `Origin`, mints a per-process session token,
@@ -256,14 +267,17 @@ afternoon of arguing with your own documentation, you can put something back:
 <div align="center">
 
 [![PayPal](https://img.shields.io/badge/PayPal-Donate-00457c?logo=paypal&logoColor=white)](https://www.paypal.com/donate/?business=connorgwoods%40gmail.com&item_name=Parvis+Protocol&currency_code=USD)
-[![Sponsor](https://img.shields.io/badge/GitHub-Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/Solmex72)
 
 </div>
 
-Sponsorship funds the parts nobody volunteers for: the cross-platform testing matrix, the 3D HMI
-that [`07`](protocol/07-INTERFACE.md) §4 currently admits does not exist, and the four open
-questions in [`DECISIONS.md`](DECISIONS.md) getting properly designed rather than left to each
-adopter.
+Sponsorship funds the parts nobody volunteers for: the cross-platform testing matrix that keeps
+the Windows/macOS/Linux claim honest, and the four open questions in
+[`DECISIONS.md`](DECISIONS.md) getting properly designed rather than left to every adopter to
+answer alone.
+
+*GitHub Sponsors is set up but not yet enabled — see
+[`.github/SPONSORS.md`](.github/SPONSORS.md). The badge goes up when the profile actually loads,
+not before.*
 
 **No paywall, ever.** The protocol is CC BY and the code is MIT. Nothing here goes behind a tier,
 and no feature is held back for sponsors. If you cannot donate, use it anyway — telling someone

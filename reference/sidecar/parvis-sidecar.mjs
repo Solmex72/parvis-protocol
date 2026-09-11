@@ -24,6 +24,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as config from "./config.mjs";
+import * as airlock from "../airlock/airlock.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CONSOLE_HTML = path.join(HERE, "console.html");
@@ -176,13 +177,19 @@ export function createServer(cfg) {
   // -------------------------------------------------------------------------
   function snapshot() {
     const g = gate();
-    let files = null, dirs = null;
+    let files = null, dirs = null, truncated = false, unreadable = 0;
     try {
       let f = 0, d = 0;
       (function walk(dir, depth) {
-        if (depth > 12) return;
+        // A depth guard is necessary — a symlink loop would otherwise never
+        // return. But a guard that trips makes the count PARTIAL, and 02 §4
+        // says a count is a measurement: reporting a truncated total as if it
+        // were complete is the quiet inaccuracy this protocol exists to stop.
+        // So the trip is recorded and surfaced, not swallowed.
+        if (depth > 12) { truncated = true; return; }
         let entries;
-        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+        catch { unreadable++; return; }   // permissions, races, vanished dirs
         for (const e of entries) {
           if (e.name === "node_modules" || e.name === ".git") continue;
           if (e.isDirectory()) { d++; walk(path.join(dir, e.name), depth + 1); }
@@ -198,6 +205,10 @@ export function createServer(cfg) {
       sentinel: g.sentinel,
       root: ROOT,
       files, dirs,
+      // partial === the numbers above are a floor, not a total
+      partial: truncated || unreadable > 0,
+      truncated,
+      unreadable,
       readAt: new Date().toISOString(),
       exposed: !config.isLoopback(cfg.host),
       host: cfg.host,
@@ -556,6 +567,14 @@ export function createServer(cfg) {
         return json(res, f);
       }
 
+      // The dock, read-only. 10 §5 — promotion is a human act at a terminal,
+      // never a button on a page, so there is no write route here at all.
+      if (url.pathname === "/airlock" && req.method === "GET") {
+        let held = [], chain = null;
+        try { held = airlock.list(ROOT); chain = airlock.verify(ROOT); } catch { /* no dock yet */ }
+        return json(res, { held, chain, present: held.length > 0 || (chain && chain.entries > 0) });
+      }
+
       if (url.pathname === "/board" && req.method === "GET") {
         let content = null;
         try { content = fs.readFileSync(BOARD_FILE, "utf8").slice(0, 80000); } catch { /* absent */ }
@@ -663,7 +682,12 @@ export async function start(flags = {}) {
   const { server, gate } = createServer(cfg);
 
   return new Promise((resolve) => {
-    server.listen(cfg.port, cfg.host, () => {
+    // Backlog above Node's default 511. A single operator never queues 500
+    // connections, but a slow handler over a large tree holds sockets open
+    // long enough that a burst can overflow the queue and the OS starts
+    // refusing — which looks like the service crashing when it has not.
+    // Measured saturation is in reference/README.md.
+    server.listen({ port: cfg.port, host: cfg.host, backlog: 1024 }, () => {
       const g = gate();
       const shown = config.isLoopback(cfg.host) ? "127.0.0.1" : cfg.host;
       const url = `http://${shown}:${cfg.port}/`;

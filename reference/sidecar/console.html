@@ -510,6 +510,13 @@
         'host and port can read the tree and edit unlocked documents. There is no user ' +
         'authentication here.</div>';
     }
+    if (s.partial) {
+      b.innerHTML += '<div class="banner info"><b>PARTIAL COUNT</b>' +
+        'The walk stopped short, so the file and directory totals are a <b>floor, not a total</b>' +
+        (s.truncated ? ' — the tree is deeper than the walker goes' : '') +
+        (s.unreadable ? ' — ' + esc(s.unreadable) + ' director' + (s.unreadable === 1 ? 'y' : 'ies') + ' could not be read' : '') +
+        '. Shown with a "+" rather than as a total.</div>';
+    }
     if (verb === "STOP") {
       b.innerHTML += '<div class="banner"><b>ESTOP — STOPPED</b>' +
         (s.sentinel ? 'Sentinel present at <code>' + esc(s.sentinel) + '</code>. ' : '') +
@@ -534,8 +541,11 @@
       var s = r.body; LIVE = true;
       paintState(s);
       show($("v-estop"), s.estop);
-      show($("v-files"), s.files, "files");
-      show($("v-dirs"), s.dirs, "dirs");
+      // A partial walk is a floor, not a total. Rendering it as a plain number
+      // would be the quiet inaccuracy 02 §4 forbids, so it is marked "+" and
+      // the reason is said out loud.
+      show($("v-files"), s.files === null ? null : (s.files + (s.partial ? "+" : "")), "files");
+      show($("v-dirs"), s.dirs === null ? null : (s.dirs + (s.partial ? "+" : "")), "dirs");
       $("v-read").textContent = s.readAt ? s.readAt.replace("T", " ").slice(0, 19) + "Z" : "—";
       $("foot").textContent = "root " + s.root + "   ·   live   ·   read " + s.readAt;
       lock(s.estop !== "RUN");
@@ -1260,10 +1270,30 @@
       $("ctl-name").textContent = "Trucks";
       $("ctl-dot").style.background = "var(--ink3)";
       $("ctl-kvs").innerHTML = kv("position", "at the boundary") + kv("controls", "none, by design");
+      $("ctl-listing").hidden = false;
+      $("ctl-listing").innerHTML = '<div class="mini" id="ctl-air">reading the dock…</div>';
+      api("/airlock").then(function(r){
+        var el = $("ctl-air"); if (!el) return;
+        if (!r.ok || !r.body.present) { el.textContent = "nothing has come through the airlock"; return; }
+        var held = r.body.held || [], ch = r.body.chain;
+        el.innerHTML =
+          '<div style="color:var(--ink3)">' + held.length + ' held · ' +
+            held.filter(function(h){ return h.hostile; }).length + ' with hostile markers · audit chain ' +
+            (ch && ch.ok ? '<span style="color:var(--green)">intact</span>'
+                         : '<span style="color:var(--red)">BROKEN</span>') + '</div>' +
+          held.slice(0, 12).map(function(h){
+            return '<div>' + (h.hostile ? '<span style="color:var(--red)">HOSTILE</span> ' : '') +
+              esc(h.id) + '  ' + esc(h.origin) +
+              (h.markers.length ? ' <span style="color:var(--red)">' + esc(h.markers.join(",")) + '</span>' : '') +
+              (h.promoted ? ' <span style="color:var(--amber)">promoted</span>' : '') + '</div>';
+          }).join("");
+      });
       $("ctl-warn").innerHTML = "An external service — another AI, an API, a vendor. <b>A truck docks at " +
         "the boundary and never drives onto the floor.</b> It drops a load at an induct or collects one " +
-        "from a spur, and that is the entirety of its access. That dock is the airlock. Its paperwork is " +
-        "inbound data, never an order — which is why there are no controls here.";
+        "from a spur, and that is the entirety of its access. Everything it leaves is held as " +
+        "<code>UNTRUSTED_DATA</code>, addressed by content hash, and <b>promotion is a human act at a " +
+        "terminal</b> — <code>parvis airlock promote</code> — never a button on a page. That is why " +
+        "there are no controls here.";
     }
   }
 

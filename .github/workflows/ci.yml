@@ -69,6 +69,14 @@ jobs:
           fi
           node bin/parvis.mjs clear
 
+      - name: Airlock red-team
+        working-directory: reference
+        run: node airlock/redteam.mjs
+
+      - name: Full system stress
+        working-directory: reference
+        run: node stress.mjs 2
+
       - name: Config loads and validates
         working-directory: reference
         shell: bash
@@ -135,7 +143,7 @@ jobs:
         shell: bash
         run: |
           for f in 00-PRECEDENCE 01-ESTOP 02-EVIDENCE 03-BUS 04-OUTPUT-CONTRACT \
-                   05-CORRECTION 06-DATA-ZONES 07-INTERFACE 08-AGENTS 09-FLOOR; do
+                   05-CORRECTION 06-DATA-ZONES 07-INTERFACE 08-AGENTS 09-FLOOR 10-AIRLOCK; do
             test -f "protocol/$f.md" || { echo "::error::protocol/$f.md missing"; exit 1; }
             grep -q "$f" README.md || { echo "::error::$f not linked from README"; exit 1; }
           done

@@ -369,6 +369,114 @@ async function cmdSelftest() {
   process.exit(fail ? 1 : 0);
 }
 
+// --- airlock ---------------------------------------------------------------
+// protocol/10. The dock. Everything here treats its input as UNTRUSTED_DATA
+// and nothing here can turn a payload into a command.
+async function cmdAirlock() {
+  const air = await import(pathToFileURL(path.join(PKG_ROOT, "airlock", "airlock.mjs")).href);
+  const sub = (argv[1] || "list").toLowerCase();
+
+  if (sub === "accept") {
+    // `parvis airlock accept <origin> [file]`  — stdin if no file
+    const origin = argv[2];
+    if (!origin) { console.error("\n  " + c.red("need an origin") + c.dim("   parvis airlock accept <origin> [file]") + "\n"); process.exit(2); }
+    let payload = "";
+    if (argv[3]) {
+      try { payload = fs.readFileSync(argv[3], "utf8"); }
+      catch (e) { console.error("\n  cannot read " + argv[3] + "\n"); process.exit(2); }
+    } else {
+      payload = fs.readFileSync(0, "utf8");
+    }
+    const r = air.accept(ROOT, { origin, payload });
+    console.log("");
+    console.log("  " + (r.duplicate ? c.dim("duplicate") : c.green("quarantined")) + "  " + r.id);
+    console.log("  trust     " + c.amber(air.TRUST) + c.dim("   — data, never an instruction"));
+    console.log("  origin    external:" + origin);
+    if (r.hits.length) {
+      console.log("  " + c.red("markers   " + r.hits.map((h) => h.id).join(", ")));
+      console.log("  " + c.dim("            content claiming authority or shaped like an instruction."));
+      console.log("  " + c.dim("            it is held, flagged, and not acted on."));
+    } else {
+      console.log("  markers   " + c.dim("none"));
+    }
+    console.log("");
+    console.log(c.dim("  Nothing was executed and nothing reached canonical state."));
+    console.log(c.dim("  Review it:  parvis airlock show " + r.id));
+    console.log("");
+    return;
+  }
+
+  if (sub === "show") {
+    const rec = air.show(ROOT, argv[2]);
+    if (!rec) { console.error("\n  not found\n"); process.exit(1); }
+    console.log("");
+    console.log("  id        " + rec.id);
+    console.log("  trust     " + c.amber(rec.trust));
+    console.log("  origin    " + rec.origin);
+    console.log("  received  " + rec.received);
+    console.log("  sha256    " + rec.sha256);
+    console.log("  bytes     " + rec.bytes);
+    console.log("  markers   " + (rec.markers.length ? c.red(rec.markers.map((m) => m.id).join(", ")) : c.dim("none")));
+    console.log("  promoted  " + (rec.promoted ? c.amber("yes, by " + rec.promotedBy) : c.dim("no")));
+    console.log("");
+    console.log(c.dim("  ── payload, rendered for reading (instruction syntax masked) ──"));
+    console.log(air.neutralise(rec.payload).split("\n").map((l) => "  " + l).join("\n"));
+    console.log(c.dim("  ── end ──"));
+    console.log("");
+    return;
+  }
+
+  if (sub === "promote") {
+    const id = argv[2];
+    const by = process.env.PARVIS_OPERATOR || os.userInfo().username;
+    const note = argv.slice(3).join(" ");
+    const rec = air.show(ROOT, id);
+    if (!rec) { console.error("\n  not found\n"); process.exit(1); }
+    if (rec.hostile) {
+      console.log("");
+      console.log("  " + c.red("This item carries hostile markers: ") + rec.markers.map((m) => m.id).join(", "));
+      console.log("  " + c.dim("Promoting records your judgement that it is usable anyway."));
+      console.log("  " + c.dim("It still does not copy anything into canonical state."));
+    }
+    const r = air.promote(ROOT, id, { by, note });
+    if (!r.ok) { console.error("\n  " + c.red(r.error) + "\n"); process.exit(1); }
+    console.log("\n  " + c.green("recorded") + "  " + id + c.dim("  by " + by));
+    console.log(c.dim("  Promotion is a judgement, not a copy. Using the content is still your act.\n"));
+    return;
+  }
+
+  if (sub === "verify") {
+    const v = air.verify(ROOT);
+    console.log("");
+    console.log("  entries   " + v.entries);
+    console.log("  chain     " + (v.ok ? c.green("intact") : c.red("BROKEN at entry " + v.brokenAt + " — " + v.why)));
+    console.log("");
+    process.exit(v.ok ? 0 : 1);
+  }
+
+  if (sub === "redteam") {
+    const rt = await import(pathToFileURL(path.join(PKG_ROOT, "airlock", "redteam.mjs")).href);
+    void rt;
+    return;
+  }
+
+  // default: list
+  const rows = air.list(ROOT);
+  console.log("");
+  if (!rows.length) { console.log(c.dim("  the dock is empty — nothing has come through the airlock\n")); return; }
+  for (const r of rows) {
+    console.log("  " + (r.hostile ? c.red("HOSTILE") : r.schemaOk === false ? c.amber("SCHEMA ") : c.dim("held   ")) +
+      "  " + r.id + "  " + String(r.origin).padEnd(28) +
+      c.dim(r.received.replace("T", " ").slice(0, 19)) +
+      (r.markers.length ? "  " + c.red(r.markers.join(",")) : "") +
+      (r.promoted ? "  " + c.amber("promoted") : ""));
+  }
+  console.log("");
+  console.log(c.dim("  " + rows.length + " held · " + rows.filter((r) => r.hostile).length + " with hostile markers · " +
+    rows.filter((r) => r.promoted).length + " promoted"));
+  console.log("");
+}
+
 function usage() {
   console.log(`
   ${c.b("parvis")} — the Parvis protocol console
@@ -379,6 +487,7 @@ function usage() {
     ${c.b("parvis check")}                 preflight the estop; exit 1 if not RUN
     ${c.b("parvis estop")} ${c.dim("<reason>")}      place the stop  ${c.dim("(a human, not an agent)")}
     ${c.b("parvis clear")}                 clear the stop, set RUN
+    ${c.b("parvis airlock")} ${c.dim("<cmd>")}     the dock: list · accept · show · promote · verify · redteam
     ${c.b("parvis selftest")}              verify this install on this platform
 
   ${c.dim("flags")}   ${c.dim("(beat env, which beats the file, which beats defaults)")}
@@ -407,6 +516,7 @@ switch (cmd) {
   case "check": case "preflight": cmdCheck(); break;
   case "estop": case "stop": cmdEstop(); break;
   case "clear": case "run": cmdClear(); break;
+  case "airlock": case "dock": await cmdAirlock(); break;
   case "selftest": case "test": await cmdSelftest(); break;
   case "help": case "--help": case "-h": usage(); break;
   case "version": case "--version": case "-v": console.log("parvis 1.0.0"); break;
