@@ -682,16 +682,54 @@
     return "rgb(" + r + "," + g + "," + b + ")";
   }
 
-  // An axis-aligned box, drawn as three visible faces.
-  function box(out, cxw, czw, w, d, h, color, meta){
-    var x0 = cxw - w/2, x1 = cxw + w/2, z0 = czw - d/2, z1 = czw + d/2;
+  // An axis-aligned box, drawn as three visible faces.  lifts it onto a
+  // rack level — a stored load is not on the ground, it is in a location.
+  function box(out, cxw, czw, w, d, h, color, meta, y0){
+    y0 = y0 || 0;
+    var x0 = cxw - w/2, x1 = cxw + w/2, z0 = czw - d/2, z1 = czw + d/2, y1 = y0 + h;
     var faces = [
-      { pts: [{x:x0,y:h,z:z0},{x:x1,y:h,z:z0},{x:x1,y:h,z:z1},{x:x0,y:h,z:z1}], c: shade(color, 26) },
-      { pts: [{x:x0,y:0,z:z1},{x:x1,y:0,z:z1},{x:x1,y:h,z:z1},{x:x0,y:h,z:z1}], c: shade(color, -16) },
-      { pts: [{x:x1,y:0,z:z0},{x:x1,y:0,z:z1},{x:x1,y:h,z:z1},{x:x1,y:h,z:z0}], c: shade(color, -38) }
+      { pts: [{x:x0,y:y1,z:z0},{x:x1,y:y1,z:z0},{x:x1,y:y1,z:z1},{x:x0,y:y1,z:z1}], c: shade(color, 26) },
+      { pts: [{x:x0,y:y0,z:z1},{x:x1,y:y0,z:z1},{x:x1,y:y1,z:z1},{x:x0,y:y1,z:z1}], c: shade(color, -16) },
+      { pts: [{x:x1,y:y0,z:z0},{x:x1,y:y0,z:z1},{x:x1,y:y1,z:z1},{x:x1,y:y1,z:z0}], c: shade(color, -38) }
     ];
     for (var i = 0; i < faces.length; i++) out.push({ pts: faces[i].pts, c: faces[i].c, meta: meta });
   }
+
+  // --- AS/RS geometry -------------------------------------------------------
+  // A real automated-storage floor is not a grid of boxes. It is parallel
+  // AISLES; each aisle is flanked by two RACK faces; each face is divided into
+  // BAYS along its length and LEVELS up its height. A crane lives IN an aisle,
+  // runs along it, and raises a carriage to the level it is serving.
+  //
+  // Directories are stored into that structure in order, so the same tree
+  // always lays out the same way.
+  var LEVELS = 3, LEVEL_H = 0.58, RACK_W = 0.95, RACK_D = 0.92,
+      AISLE_W = 1.30, BAY_PITCH = 1.06;
+  var AISLE_PITCH = AISLE_W + 2 * RACK_W;
+
+  function plan(n){
+    var perBay = 2 * LEVELS;                              // both faces, all levels
+    var aisles = Math.max(1, Math.min(5, Math.ceil(n / 36)));
+    // A rack with one bay is not a rack. Keep them long — an aisle you can run
+    // a crane down is what makes the floor read as a warehouse rather than a
+    // shelf.
+    var bays = Math.max(3, Math.min(9, Math.ceil(n / (aisles * perBay))));
+    return { aisles: aisles, bays: bays, perBay: perBay };
+  }
+  function slot(i, p){
+    // Stock along the rack first, then the far face, then up a level — the
+    // order a floor actually fills. Filling vertically first would stack
+    // everything in one bay and leave the aisle empty.
+    var perLevel = p.bays * 2;
+    var perAisle = perLevel * LEVELS;
+    var a = Math.floor(i / perAisle), r = i % perAisle;
+    var level = Math.floor(r / perLevel), rr = r % perLevel;
+    return { aisle: a, bay: rr % p.bays, side: Math.floor(rr / p.bays), level: level };
+  }
+  function aisleX(a, p){ return (a - (p.aisles - 1) / 2) * AISLE_PITCH; }
+  function slotX(sl, p){ return aisleX(sl.aisle, p) + (sl.side ? 1 : -1) * (AISLE_W / 2 + RACK_W / 2); }
+  function bayZ(b, p){ return (b - (p.bays - 1) / 2) * BAY_PITCH; }
+  function levelY(l){ return l * LEVEL_H; }
 
   function drawFloor(){
     if (!WH.data) return;
@@ -700,72 +738,116 @@
     var stopped = d.estop === "STOP";
     var COL = {
       green: css("--green"), blue: css("--blue"), amber: css("--amber"),
-      red: css("--red"), grey: css("--ink3"), line: css("--line2"), ink: css("--ink")
+      red: css("--red"), grey: css("--ink3"), ink: css("--ink"), line: css("--line2")
     };
 
     ctx.clearRect(0, 0, view.w, view.h);
 
     var n = d.pallets.length;
-    var cols = Math.max(1, Math.ceil(Math.sqrt(n * 1.6)));
-    var rows = Math.max(1, Math.ceil(n / cols));
-    var span = Math.max(cols, rows) + 3;
-    var vp = { cx: view.w / 2, cy: view.h / 2 + view.h * 0.10, scale: (Math.min(view.w, view.h) / (span * 2.1)) * WH.zoom };
+    var p = plan(Math.max(n, 1));
+    var deckW = p.aisles * AISLE_PITCH + 1.1;
+    var deckD = p.bays * BAY_PITCH + 3.0;
+    var span = Math.max(deckW, deckD) * 0.92;
+    var vp = { cx: view.w / 2, cy: view.h / 2 + view.h * 0.13,
+               scale: (Math.min(view.w, view.h) / span) * 0.86 * WH.zoom };
 
-    var quads = [];
-    var GAP = 1.55;
-    var ox = -((cols - 1) * GAP) / 2, oz = -((rows - 1) * GAP) / 2;
+    var quads = [], lines = [];
 
     // --- deck ---
-    var deckW = cols * GAP + 2.4, deckD = rows * GAP + 2.4;
-    quads.push({
-      pts: [{x:-deckW/2,y:-0.12,z:-deckD/2},{x:deckW/2,y:-0.12,z:-deckD/2},
-            {x:deckW/2,y:-0.12,z:deckD/2},{x:-deckW/2,y:-0.12,z:deckD/2}],
-      c: stopped ? "rgba(207,74,65,.10)" : "rgba(127,140,155,.07)", meta: null
-    });
+    quads.push({ pts: [{x:-deckW/2,y:-0.1,z:-deckD/2},{x:deckW/2,y:-0.1,z:-deckD/2},
+                       {x:deckW/2,y:-0.1,z:deckD/2},{x:-deckW/2,y:-0.1,z:deckD/2}],
+                 c: stopped ? "rgba(207,74,65,.10)" : "rgba(127,140,155,.06)", meta: null });
 
-    // --- pallets ---
+    // --- aisle floors: the lanes a crane actually travels ---
+    var railZ0 = bayZ(0, p) - BAY_PITCH * 0.8, railZ1 = bayZ(p.bays - 1, p) + BAY_PITCH * 0.8;
+    for (var a = 0; a < p.aisles; a++) {
+      var ax = aisleX(a, p);
+      quads.push({ pts: [{x:ax-AISLE_W/2,y:-0.06,z:railZ0},{x:ax+AISLE_W/2,y:-0.06,z:railZ0},
+                         {x:ax+AISLE_W/2,y:-0.06,z:railZ1},{x:ax-AISLE_W/2,y:-0.06,z:railZ1}],
+                   c: stopped ? "rgba(207,74,65,.13)" : "rgba(127,140,155,.13)", meta: null });
+      // the rails themselves
+      lines.push({ a:{x:ax-AISLE_W/2+0.08,y:-0.05,z:railZ0}, b:{x:ax-AISLE_W/2+0.08,y:-0.05,z:railZ1},
+                   c: COL.line, w: 1 });
+      lines.push({ a:{x:ax+AISLE_W/2-0.08,y:-0.05,z:railZ0}, b:{x:ax+AISLE_W/2-0.08,y:-0.05,z:railZ1},
+                   c: COL.line, w: 1 });
+    }
+
+    // --- rack frames: uprights at every bay boundary, on both faces ---
+    var frameTop = LEVELS * LEVEL_H + 0.1;
+    for (var a2 = 0; a2 < p.aisles; a2++) {
+      for (var side = 0; side < 2; side++) {
+        var sx = aisleX(a2, p) + (side ? 1 : -1) * (AISLE_W / 2 + RACK_W / 2);
+        for (var b2 = 0; b2 <= p.bays; b2++) {
+          var z = bayZ(b2, p) - BAY_PITCH / 2;
+          lines.push({ a:{x:sx-RACK_W/2,y:0,z:z}, b:{x:sx-RACK_W/2,y:frameTop,z:z}, c: COL.line, w: 1 });
+          lines.push({ a:{x:sx+RACK_W/2,y:0,z:z}, b:{x:sx+RACK_W/2,y:frameTop,z:z}, c: COL.line, w: 1 });
+        }
+        for (var L = 0; L <= LEVELS; L++) {
+          var y = levelY(L);
+          lines.push({ a:{x:sx,y:y,z:bayZ(0,p)-BAY_PITCH/2}, b:{x:sx,y:y,z:bayZ(p.bays-1,p)+BAY_PITCH/2},
+                       c: COL.line, w: 1 });
+        }
+      }
+    }
+
+    // --- stored loads: one per directory, in its rack location ---
     WH.layout = [];
     for (var i = 0; i < n; i++) {
-      var p = d.pallets[i];
-      var cx = ox + (i % cols) * GAP, cz = oz + Math.floor(i / cols) * GAP;
-      // Height carries how much is inside. Null data stays flat and grey —
-      // a plausible-looking height would be an invented number. (07 §2.2)
-      var load = (p.dirs === null) ? null : (p.dirs + p.files);
-      var h = load === null ? 0.16 : Math.min(1.5, 0.22 + Math.log10(1 + load) * 0.62);
-      var col = stopped ? COL.red : load === null ? COL.grey : p.hot ? COL.green : COL.blue;
-      if (!stopped && load !== null && !p.hot) col = shade(COL.blue, -28);
-      var isHover = WH.hover && WH.hover.kind === "pallet" && WH.hover.name === p.name;
-      box(quads, cx, cz, 1.05, 1.05, h, isHover ? shade(col, 40) : col, { kind: "pallet", name: p.name, rel: p.rel, p: p });
-      WH.layout.push({ name: p.name, x: cx, z: cz, h: h, rel: p.rel, p: p });
+      var pal = d.pallets[i];
+      var sl = slot(i, p);
+      var x = slotX(sl, p), z = bayZ(sl.bay, p), y = levelY(sl.level);
+      var load = (pal.dirs === null) ? null : (pal.dirs + pal.files);
+
+      // How full the location is. "Yellow racks full" is a real state on an
+      // AS/RS screen and it is not the same as busy — so it gets its own
+      // colour rather than being folded into green.
+      var full = load !== null && load >= 30;
+      var col = stopped ? COL.red
+              : load === null ? COL.grey
+              : pal.hot ? COL.green
+              : full ? COL.amber
+              : shade(COL.blue, -22);
+
+      var fill = load === null ? 0.30 : Math.max(0.34, Math.min(1, 0.34 + Math.log10(1 + load) * 0.42));
+      var hgt = LEVEL_H * 0.74 * fill;
+      var hov = WH.hover && WH.hover.kind === "pallet" && WH.hover.name === pal.name;
+      box(quads, x, z, RACK_W * 0.82, RACK_D * 0.8, hgt, hov ? shade(col, 42) : col,
+          { kind: "pallet", name: pal.name, rel: pal.rel, p: pal }, y);
+      WH.layout.push({ name: pal.name, rel: pal.rel, x: x, z: z, y: y, h: hgt, sl: sl, p: pal });
     }
-    if (n === 0) {
-      quads.push({ pts: [{x:-0.5,y:0,z:-0.5},{x:0.5,y:0,z:-0.5},{x:0.5,y:0,z:0.5},{x:-0.5,y:0,z:0.5}],
-                   c: "rgba(127,140,155,.12)", meta: null });
-    }
 
-    // --- docks: induct on one edge, spur on the other (09 §2) ---
-    var edge = deckD / 2 + 0.55;
-    box(quads, -deckW/2 + 0.9, -edge, 1.5, 0.5, 0.26, stopped ? COL.red : COL.blue, { kind: "induct" });
-    box(quads,  deckW/2 - 0.9,  edge, 1.5, 0.5, 0.26, stopped ? COL.red : shade(COL.green, -30), { kind: "spur" });
+    // --- docks at the ends of the aisles, and the conveyor joining them ---
+    var dockZ0 = railZ0 - 0.85, dockZ1 = railZ1 + 0.85;
+    box(quads, aisleX(0, p), dockZ0, AISLE_W * 1.5, 0.52, 0.24,
+        stopped ? COL.red : COL.blue, { kind: "induct" }, 0);
+    box(quads, aisleX(p.aisles - 1, p), dockZ1, AISLE_W * 1.5, 0.52, 0.24,
+        stopped ? COL.red : shade(COL.green, -28), { kind: "spur" }, 0);
+    lines.push({ a:{x:-deckW/2+0.4,y:0.12,z:dockZ0}, b:{x:deckW/2-0.4,y:0.12,z:dockZ0},
+                 c: stopped ? COL.red : shade(COL.blue, -20), w: 2 });
+    lines.push({ a:{x:-deckW/2+0.4,y:0.12,z:dockZ1}, b:{x:deckW/2-0.4,y:0.12,z:dockZ1},
+                 c: stopped ? COL.red : shade(COL.green, -34), w: 2 });
 
-    // --- trucks: outside the deck, never on the floor (09 §5) ---
-    box(quads, -deckW/2 + 0.9, -edge - 1.25, 1.15, 0.75, 0.5, shade(COL.grey, -30), { kind: "truck" });
+    // --- trucks: outside the deck entirely. They never cross the dock line. ---
+    box(quads, aisleX(0, p) - 0.2, dockZ0 - 1.35, 1.25, 0.8, 0.52, shade(COL.grey, -30),
+        { kind: "truck" }, 0);
 
-    // --- cranes ---
+    // --- cranes: in the aisle, travelling along it, carriage at a level ---
     var now = performance.now();
     for (var k = 0; k < d.cranes.length; k++) {
       var cr = d.cranes[k];
-      var target = null;
-      if (cr.at) {
-        for (var q = 0; q < WH.layout.length; q++) if (WH.layout[q].name === cr.at) { target = WH.layout[q]; break; }
-      }
-      // No attribution -> park at the induct dock, grey. Never invented.
-      var tx = target ? target.x : -deckW/2 + 0.9;
-      var tz = target ? target.z - 0.95 : -edge;
+      var tgt = null;
+      if (cr.at) for (var q = 0; q < WH.layout.length; q++) if (WH.layout[q].name === cr.at) { tgt = WH.layout[q]; break; }
 
-      var pos = WH.cranePos[cr.session || cr.agent] || { x: tx, z: tz };
-      pos.x += (tx - pos.x) * 0.07;          // eased travel = "realtime" motion
+      // A crane is bound to one aisle. With no attribution it holds at the
+      // induct end of aisle 0 — parked, grey, never placed somewhere invented.
+      var aIdx = tgt ? tgt.sl.aisle : 0;
+      var tz = tgt ? tgt.z : dockZ0 + 0.5;
+      var tLevel = tgt ? levelY(tgt.sl.level) : 0;
+
+      var pos = WH.cranePos[cr.session || cr.agent] || { x: aisleX(aIdx, p), z: tz, y: tLevel };
+      pos.x += (aisleX(aIdx, p) - pos.x) * 0.10;
       pos.z += (tz - pos.z) * 0.07;
+      pos.y += (tLevel - pos.y) * 0.09;
       WH.cranePos[cr.session || cr.agent] = pos;
 
       var ccol = stopped ? COL.red
@@ -773,69 +855,98 @@
                : cr.state === "gated" ? COL.amber
                : cr.state === "scheduled" ? COL.blue
                : COL.grey;
+      var hovC = WH.hover && WH.hover.kind === "crane" && WH.hover.name === cr.agent;
+      var cc = hovC ? shade(ccol, 45) : ccol;
 
-      // A moving crane bobs; an idle one does not. Motion means motion.
-      var bob = (cr.state === "moving" && !stopped) ? Math.sin((now - WH.t0) / 320 + k) * 0.06 : 0;
-      var mast = 1.85 + bob;
-      var hov = WH.hover && WH.hover.kind === "crane" && WH.hover.name === cr.agent;
-      box(quads, pos.x, pos.z, 0.2, 0.2, mast, hov ? shade(ccol, 45) : ccol, { kind: "crane", name: cr.agent, cr: cr });
-      box(quads, pos.x, pos.z, 0.74, 0.32, 0.13, shade(ccol, -20), { kind: "crane", name: cr.agent, cr: cr });
-      if (cr.state === "moving" && !stopped && target) {
-        box(quads, pos.x, pos.z, 0.42, 0.42, 0.3, shade(COL.amber, -6), { kind: "crane", name: cr.agent, cr: cr });
+      // mast, from the rail to above the top level
+      box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, { kind: "crane", name: cr.agent, cr: cr }, 0);
+      // base bogie on the rail
+      box(quads, pos.x, pos.z, AISLE_W * 0.82, 0.36, 0.12, shade(cc, -22), { kind: "crane", name: cr.agent, cr: cr }, 0);
+      // carriage at the serving level
+      box(quads, pos.x, pos.z, AISLE_W * 0.6, 0.30, 0.22, shade(cc, 12), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.06);
+      // a carried load, only while actually moving to a location
+      if (cr.state === "moving" && !stopped && tgt) {
+        box(quads, pos.x, pos.z, 0.36, 0.36, 0.24, shade(COL.amber, -4), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.30);
+      }
+
+      // The path: green while moving, blue while scheduled. On a real floor
+      // this is the line that tells you where a crane is going before it
+      // gets there.
+      if (tgt && !stopped && (cr.state === "moving" || cr.state === "scheduled")) {
+        lines.push({ a:{x:pos.x,y:pos.y+0.14,z:pos.z}, b:{x:tgt.x,y:tgt.y+0.1,z:tgt.z},
+                     c: cr.state === "moving" ? COL.green : COL.blue,
+                     w: cr.state === "moving" ? 2 : 1.4,
+                     dash: cr.state === "scheduled" });
       }
     }
 
     // --- project, depth sort, paint ---
     var tris = [];
     for (var f = 0; f < quads.length; f++) {
-      var q2 = quads[f], sp = [], dsum = 0;
-      for (var v = 0; v < q2.pts.length; v++) { var s = project(q2.pts[v], vp); sp.push(s); dsum += s.d; }
-      tris.push({ sp: sp, c: q2.c, d: dsum / q2.pts.length, meta: q2.meta });
+      var qd = quads[f], sp = [], dsum = 0;
+      for (var v = 0; v < qd.pts.length; v++) { var s = project(qd.pts[v], vp); sp.push(s); dsum += s.d; }
+      tris.push({ sp: sp, c: qd.c, d: dsum / qd.pts.length, meta: qd.meta });
     }
-    tris.sort(function(a, b){ return b.d - a.d; });
-
+    tris.sort(function(x, y){ return y.d - x.d; });
     for (var t = 0; t < tris.length; t++) {
       var tr = tris[t];
       ctx.beginPath();
       ctx.moveTo(tr.sp[0].x, tr.sp[0].y);
       for (var j = 1; j < tr.sp.length; j++) ctx.lineTo(tr.sp[j].x, tr.sp[j].y);
       ctx.closePath();
-      ctx.fillStyle = tr.c;
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,.22)";
-      ctx.lineWidth = 0.6;
-      ctx.stroke();
+      ctx.fillStyle = tr.c; ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,.24)"; ctx.lineWidth = 0.6; ctx.stroke();
     }
     WH.tris = tris;
 
-    // --- labels ---
-    ctx.font = "600 10px " + css("--mono").split(",")[0] + ",monospace";
-    ctx.textAlign = "center";
-    ctx.fillStyle = COL.ink;
-    for (var L = 0; L < WH.layout.length; L++) {
-      var it = WH.layout[L];
-      var sc = project({ x: it.x, y: it.h + 0.26, z: it.z }, vp);
-      var label = it.name.length > 13 ? it.name.slice(0, 12) + "…" : it.name;
-      ctx.globalAlpha = 0.92;
-      ctx.fillText(label, sc.x, sc.y);
-      ctx.globalAlpha = 1;
-    }
-    for (var m = 0; m < d.cranes.length; m++) {
-      var cc = d.cranes[m];
-      var cp2 = WH.cranePos[cc.session || cc.agent];
-      if (!cp2) continue;
-      var s2 = project({ x: cp2.x, y: 2.18, z: cp2.z }, vp);
-      ctx.fillStyle = stopped ? COL.red
-                    : cc.state === "moving" ? COL.green
-                    : cc.state === "gated" ? COL.amber
-                    : cc.state === "scheduled" ? COL.blue : COL.grey;
-      ctx.fillText(cc.agent, s2.x, s2.y);
+    // frames and paths over the solids
+    ctx.lineCap = "round";
+    for (var li = 0; li < lines.length; li++) {
+      var ln = lines[li];
+      var A = project(ln.a, vp), B = project(ln.b, vp);
+      ctx.save();
+      ctx.globalAlpha = ln.w > 1 ? 0.95 : 0.42;
+      if (ln.dash) ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = ln.c; ctx.lineWidth = ln.w || 1;
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+      ctx.restore();
     }
 
+    // --- labels ---
+    ctx.font = "600 9.5px " + css("--mono").split(",")[0] + ",monospace";
+    ctx.textAlign = "center";
+    if (WH.layout.length <= 26) {
+      ctx.fillStyle = COL.ink;
+      for (var L2 = 0; L2 < WH.layout.length; L2++) {
+        var it = WH.layout[L2];
+        var sc = project({ x: it.x, y: it.y + it.h + 0.17, z: it.z }, vp);
+        var lab = it.name.length > 12 ? it.name.slice(0, 11) + "…" : it.name;
+        ctx.globalAlpha = 0.9; ctx.fillText(lab, sc.x, sc.y); ctx.globalAlpha = 1;
+      }
+    }
+    for (var m = 0; m < d.cranes.length; m++) {
+      var c2 = d.cranes[m];
+      var cp2 = WH.cranePos[c2.session || c2.agent];
+      if (!cp2) continue;
+      var s2 = project({ x: cp2.x, y: frameTop + 0.95, z: cp2.z }, vp);
+      ctx.fillStyle = stopped ? COL.red
+                    : c2.state === "moving" ? COL.green
+                    : c2.state === "gated" ? COL.amber
+                    : c2.state === "scheduled" ? COL.blue : COL.grey;
+      ctx.fillText(c2.agent, s2.x, s2.y);
+    }
+    // aisle numbers at the induct end
+    ctx.fillStyle = COL.grey; ctx.globalAlpha = 0.7;
+    for (var an = 0; an < p.aisles; an++) {
+      var sa = project({ x: aisleX(an, p), y: 0, z: railZ0 - 0.3 }, vp);
+      ctx.fillText("A" + (an + 1), sa.x, sa.y);
+    }
+    ctx.globalAlpha = 1;
+
     $("wh-hud").textContent =
-      (d.path ? "/" + d.path : "/") + "   ·   " + d.pallets.length + " pallets · " +
-      d.cranes.length + " cranes   ·   read " + d.readAt.slice(11, 19) + "Z" +
-      (stopped ? "   ·   E-STOPPED" : "");
+      (d.path ? "/" + d.path : "/") + "   ·   " + p.aisles + " aisles · " + p.bays + " bays · " +
+      LEVELS + " levels   ·   " + n + " stored · " + d.cranes.length + " cranes" +
+      "   ·   read " + d.readAt.slice(11, 19) + "Z" + (stopped ? "   ·   E-STOPPED" : "");
 
     $("wh-wrap").classList.toggle("stopped", stopped);
   }
