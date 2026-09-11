@@ -434,7 +434,9 @@
     var cy=Math.cos(WH.yaw), sy=Math.sin(WH.yaw);
     var x=pt.x*cy - pt.z*sy, z=pt.x*sy + pt.z*cy;
     var cp=Math.cos(WH.pitch), sp=Math.sin(WH.pitch);
-    return { x:v.cx + x*v.scale, y:v.cy + (pt.y*cp - z*sp)*v.scale, d: pt.y*sp + z*cp };
+    // Canvas Y grows DOWNWARD, so world height must be negated or the floor
+    // renders upside down — racks hanging below the deck.
+    return { x:v.cx + x*v.scale, y:v.cy + (z*sp - pt.y*cp)*v.scale, d: pt.y*sp + z*cp };
   }
   function shade(hex, amt){
     var c = String(hex).trim().replace("#","");

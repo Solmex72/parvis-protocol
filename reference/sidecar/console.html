@@ -986,8 +986,21 @@
 
       // No attributed work -> it belongs in the parking lot, in its own bay.
       var bay = tgt ? null : parkBay(cr.session || cr.agent);
-      var tx = tgt ? aisleX(aIdx, p) : bay.x;
-      var tz = tgt ? tgt.z : bay.z;
+      var tx, tz;
+      if (tgt) {
+        tx = aisleX(aIdx, p); tz = tgt.z;
+      } else if (!stopped && cr.state === "scheduled") {
+        // A scheduled crane has open REQ rows and no attributed location: it is
+        // queued for dispatch, so it shuttles between its bay and the induct
+        // dock where work arrives. The travel is not decoration — it encodes
+        // "this agent has queued work it has not started". An idle crane, which
+        // has none, stays in its bay.
+        var duty = (Math.sin(now / 4200 + (cid.length * 1.3)) * 0.5 + 0.5);
+        tx = bay.x + (aisleX(0, p) - bay.x) * duty;
+        tz = bay.z + (dockZ0 + 0.5 - bay.z) * duty;
+      } else {
+        tx = bay.x; tz = bay.z;
+      }
       var tLevel = tgt ? levelY(tgt.sl.level) : 0;
 
       var cid = cr.session || cr.agent;
@@ -1010,11 +1023,17 @@
       pos.y += (tLevel - pos.y) * 0.09;
       WH.cranePos[cid] = pos;
 
-      // Idle presence: a slow breath, not travel. A parked crane must never
-      // read as a moving one (09 §3), so this is deliberately tiny and only
-      // touches the carriage.
-      var breath = (!stopped && cr.state === "idle")
-        ? Math.sin((now / 1400) + (cid.length * 0.7)) * 0.035 : 0;
+      // Idle presence. A parked crane must not read as a travelling one (09 §3),
+      // so the carriage rides slowly up and down its own mast rather than moving
+      // along the floor — unmistakably "powered, holding station", not "in
+      // transit". The previous amplitude was 0.035 world units, roughly one
+      // pixel, which is the same as no animation at all.
+      var phase = (now / 2600) + (cid.length * 0.9);
+      var breath = (!stopped && cr.state === "idle") ? (Math.sin(phase) * 0.5 + 0.5) * 0.9 : 0;
+
+      // Beacon: every crane carries a status light that pulses while it is
+      // signed on. Presence is a fact worth showing even when nothing moves.
+      var beat = 0.55 + 0.45 * Math.sin(now / 520 + cid.length);
 
       var ccol = stopped ? COL.red
                : cr.state === "moving" ? COL.green
@@ -1030,6 +1049,13 @@
       box(quads, pos.x, pos.z, AISLE_W * 0.82, 0.36, 0.12, shade(cc, -22), { kind: "crane", name: cr.agent, cr: cr }, drop);
       // carriage at the serving level
       box(quads, pos.x, pos.z, AISLE_W * 0.6, 0.30, 0.22, shade(cc, 12), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.06 + drop + breath);
+      // Status beacon at the mast head.
+      if (!stopped) {
+        box(quads, pos.x, pos.z, 0.13 + beat * 0.10, 0.13 + beat * 0.10, 0.10 + beat * 0.08,
+            shade(cc, Math.round(beat * 60)), { kind: "crane", name: cr.agent, cr: cr },
+            frameTop + 0.55 + drop);
+      }
+
       // Landing ring while it drops in — the touchdown marker on the rail.
       if (spawning) {
         var rr = 0.30 + (1 - sp) * 1.5;
