@@ -383,7 +383,7 @@ async function cmdAirlock() {
     let payload = "";
     if (argv[3]) {
       try { payload = fs.readFileSync(argv[3], "utf8"); }
-      catch (e) { console.error("\n  cannot read " + argv[3] + "\n"); process.exit(2); }
+      catch { console.error("\n  cannot read " + argv[3] + "\n"); process.exit(2); }
     } else {
       payload = fs.readFileSync(0, "utf8");
     }

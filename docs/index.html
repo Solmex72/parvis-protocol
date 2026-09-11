@@ -295,12 +295,12 @@
   var $ = function(id){ return document.getElementById(id); };
   function esc(t){ var d=document.createElement("span"); d.textContent = (t==null?"":String(t)); return d.innerHTML; }
 
-  try { var sv = localStorage.getItem("parvis-theme"); if (sv) document.documentElement.setAttribute("data-theme", sv); } catch(e){}
+  try { var sv = localStorage.getItem("parvis-theme"); if (sv) document.documentElement.setAttribute("data-theme", sv); } catch {}
   $("theme").addEventListener("click", function(){
     var cur = document.documentElement.getAttribute("data-theme");
     var next = cur === "light" ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", next);
-    try { localStorage.setItem("parvis-theme", next); } catch(e){}
+    try { localStorage.setItem("parvis-theme", next); } catch {}
   });
 
   // =======================================================================
@@ -438,13 +438,27 @@
     // renders upside down — racks hanging below the deck.
     return { x:v.cx + x*v.scale, y:v.cy + (z*sp - pt.y*cp)*v.scale, d: pt.y*sp + z*cp };
   }
-  function shade(hex, amt){
-    var c = String(hex).trim().replace("#","");
-    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
-    if (!/^[0-9a-f]{6}$/i.test(c)) return hex;
-    var n = parseInt(c,16);
-    var r=Math.max(0,Math.min(255,(n>>16)+amt)), g=Math.max(0,Math.min(255,((n>>8)&255)+amt)), b=Math.max(0,Math.min(255,(n&255)+amt));
-    return "rgb("+r+","+g+","+b+")";
+  function shade(color, amt){
+    // Accepts #rgb, #rrggbb OR the rgb(r,g,b) this function itself returns.
+    //
+    // THIS IS LOAD-BEARING. box() shades every face of a solid, so any colour
+    // that has already been through shade() gets shaded a second time. Before
+    // this, parseInt("rgb(100,160,213)", 16) returned NaN and the box rendered
+    // black — which is why every directory drawn with a shaded colour was a
+    // silhouette while raw-hex ones (amber, the cranes) came out fine.
+    var r, g, b, c = String(color).trim();
+    var m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (m) {
+      r = +m[1]; g = +m[2]; b = +m[3];
+    } else {
+      c = c.replace("#", "");
+      if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+      if (!/^[0-9a-f]{6}$/i.test(c)) return color;   // unknown format: pass through, never NaN
+      var n = parseInt(c, 16);
+      r = (n >> 16) & 255; g = (n >> 8) & 255; b = n & 255;
+    }
+    var cl = function(v){ return Math.max(0, Math.min(255, Math.round(v + amt))); };
+    return "rgb(" + cl(r) + "," + cl(g) + "," + cl(b) + ")";
   }
   // A solid box: all six faces, wound counter-clockwise as seen from OUTSIDE.
   //
@@ -571,13 +585,13 @@
       for (var side = 0; side < 2; side++) {
         var sx = aisleX(a2, p) + (side ? 1 : -1) * (AISLE_W / 2 + RACK_W / 2);
         for (var b2 = 0; b2 <= p.bays; b2++) {
-          var z = bayZ(b2, p) - BAY_PITCH / 2;
-          lines.push({ a:{x:sx-RACK_W/2,y:0,z:z}, b:{x:sx-RACK_W/2,y:frameTop,z:z}, c: COL.line, w: 1 });
-          lines.push({ a:{x:sx+RACK_W/2,y:0,z:z}, b:{x:sx+RACK_W/2,y:frameTop,z:z}, c: COL.line, w: 1 });
+          var fz = bayZ(b2, p) - BAY_PITCH / 2;
+          lines.push({ a:{x:sx-RACK_W/2,y:0,z:fz}, b:{x:sx-RACK_W/2,y:frameTop,z:fz}, c: COL.line, w: 1 });
+          lines.push({ a:{x:sx+RACK_W/2,y:0,z:fz}, b:{x:sx+RACK_W/2,y:frameTop,z:fz}, c: COL.line, w: 1 });
         }
         for (var L = 0; L <= LEVELS; L++) {
-          var y = levelY(L);
-          lines.push({ a:{x:sx,y:y,z:bayZ(0,p)-BAY_PITCH/2}, b:{x:sx,y:y,z:bayZ(p.bays-1,p)+BAY_PITCH/2},
+          var fy = levelY(L);
+          lines.push({ a:{x:sx,y:fy,z:bayZ(0,p)-BAY_PITCH/2}, b:{x:sx,y:fy,z:bayZ(p.bays-1,p)+BAY_PITCH/2},
                        c: COL.line, w: 1 });
         }
       }
@@ -625,7 +639,6 @@
         { kind: "truck" }, 0);
 
     // --- cranes: in the aisle, travelling along it, carriage at a level ---
-    var now = performance.now();
     for (var k = 0; k < d.cranes.length; k++) {
       var cr = d.cranes[k];
       var tgt = null;
