@@ -132,7 +132,7 @@ rather than deletion. [`12`](protocol/12-CREDENTIALS.md).
 
 ## The protocol
 
-Twelve files. Read them in order; each is short.
+Thirteen files. Read them in order; each is short.
 
 | | File | Settles |
 |---|---|---|
