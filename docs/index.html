@@ -738,6 +738,7 @@
     // printed their labels on top of one another and the result was unreadable.
     // Stagger across three bands, run a leader line down to the mast the label
     // belongs to, and put a plate behind the text so it survives over a rack.
+    var placed = [];
     for (var m = 0; m < d.cranes.length; m++) {
       var c2 = d.cranes[m];
       var cp2 = WH.cranePos[c2.session || c2.agent];
@@ -748,8 +749,7 @@
                     : c2.state === "gated" ? COL.amber
                     : c2.state === "scheduled" ? COL.blue : COL.grey;
 
-      var band = (m % 3) * 0.52;
-      var s2 = project({ x: cp2.x, y: frameTop + 0.95 + band, z: cp2.z }, vp);
+      var s2 = project({ x: cp2.x, y: frameTop + 0.95, z: cp2.z }, vp);
 
       var lbl = c2.agent;
       if (lbl.length > 16) lbl = lbl.slice(0, 15) + "…";
@@ -759,6 +759,19 @@
       if (s2.x > maxX) s2.x = maxX;
       if (s2.y < 12) s2.y = 12;
 
+
+      // Fixed bands are not enough: cranes parked at the same spot project to
+      // the same point, so labels still overprinted. Push each label down until
+      // it clears every label already placed — exact for any number of cranes.
+      for (var gi = 0; gi < 40; gi++) {
+        var clash = false;
+        for (var u = 0; u < placed.length; u++) {
+          if (Math.abs(placed[u].y - s2.y) < 11 && Math.abs(placed[u].x - s2.x) < (placed[u].w + w2) / 2 + 4) { clash = true; break; }
+        }
+        if (!clash) break;
+        s2.y += 12;
+      }
+      placed.push({ x: s2.x, y: s2.y, w: w2 });
       var top2 = project({ x: cp2.x, y: frameTop + 0.62, z: cp2.z }, vp);
       ctx.save();
       ctx.globalAlpha = 0.45; ctx.strokeStyle = col2; ctx.lineWidth = 1;
