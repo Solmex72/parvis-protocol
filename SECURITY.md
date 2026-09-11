@@ -2,8 +2,13 @@
 
 ## Reporting a vulnerability
 
-Use **GitHub's private vulnerability reporting** on this repository:
+**Preferred:** GitHub's private vulnerability reporting on this repository —
 [Security → Report a vulnerability](https://github.com/Solmex72/parvis-protocol/security/advisories/new).
+It keeps the report private, threads the discussion, and issues a CVE if one is warranted.
+
+**Alternative:** [connor@woodswiring.com](mailto:connor@woodswiring.com). Plain email is
+unencrypted, so if the details are sensitive, open the private advisory instead and we can move
+there.
 
 Please do not open a public issue for anything exploitable. Expect a first response within a
 week; this is maintained by one person.

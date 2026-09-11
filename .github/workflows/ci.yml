@@ -102,10 +102,13 @@ jobs:
              | grep -vE '(127\.0\.0\.1|0\.0\.0\.0|255\.255\.255\.255|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.)' ; then
             echo "::error::a real-looking IP address is present"; fail=1
           fi
-          # Email addresses.
+          # Email addresses. Two are published deliberately — the maintainer's
+          # contact and the donation account — and are allowlisted by exact
+          # match. Anything else is a leak: a contributor's address, or a third
+          # party's, which is the case that actually matters.
           if grep -rIn --exclude-dir=.git -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' . \
-             | grep -vE '(example\.com|noreply@)' ; then
-            echo "::error::an email address is present"; fail=1
+             | grep -vE '(example\.com|noreply@|connor@woodswiring\.com|connorgwoods@gmail\.com)' ; then
+            echo "::error::an unexpected email address is present"; fail=1
           fi
           exit $fail
 

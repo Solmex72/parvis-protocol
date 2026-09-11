@@ -233,9 +233,8 @@ afternoon of arguing with your own documentation, you can put something back:
 
 <div align="center">
 
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457c?logo=paypal&logoColor=white)](https://www.paypal.com/donate/?business=connorgwoods%40gmail.com&item_name=Parvis+Protocol&currency_code=USD)
 [![Sponsor](https://img.shields.io/badge/GitHub-Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/Solmex72)
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20a%20coffee-ff5e5b?logo=kofi&logoColor=white)](https://ko-fi.com/solmex72)
-[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457c?logo=paypal&logoColor=white)](https://paypal.me/solmex72)
 
 </div>
 
@@ -247,6 +246,19 @@ adopter.
 **No paywall, ever.** The protocol is CC BY and the code is MIT. Nothing here goes behind a tier,
 and no feature is held back for sponsors. If you cannot donate, use it anyway — telling someone
 it exists helps as much.
+
+## Credits
+
+**Connor Woods** — author and maintainer.
+Contact: [connor@woodswiring.com](mailto:connor@woodswiring.com) ·
+GitHub: [@Solmex72](https://github.com/Solmex72)
+
+Extracted from a private multi-agent system with [Claude Code](https://claude.com/claude-code),
+which also fixed four defects on the way out — the inverted estop fail-safe most consequentially.
+That process is documented rather than hidden: [`DECISIONS.md`](DECISIONS.md) names every rival
+fact that was settled, the four that were not, and everything removed.
+
+For security reports use [private disclosure](SECURITY.md), not the address above.
 
 ## License
 
