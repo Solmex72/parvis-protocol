@@ -48,7 +48,10 @@
     --amber:#96661a; --green:#1f7146; --red:#b03027; --blue:#2d5f8a; --violet:#5e51a0;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
+  html,body{min-height:100%}  /* not height:100% — a sticky element needs a
+     containing block that can grow PAST the viewport. Pinning body to exactly
+     100% makes content overflow it instead, and Firefox then refuses to stick
+     anything at all. Chrome is more forgiving, which is how this shipped. */
   body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);
        display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 
