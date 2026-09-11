@@ -1,101 +1,95 @@
-# 07 — THE INTERFACE LAYER
+> **非官方翻譯。** 本文件的規範版本為 `main` 分支上的英文版。此翻譯僅供參考，且**未經母語人士審閱**。
+> 若與英文原文有出入，**以英文為準**。協定識別符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 匯流排動詞與檔案名稱）刻意保留英文：這些是代理程式解析的字面值。
 
-**Status: normative.** This is the file the project is named for.
+# 07 — 介面層
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**狀態：規範性。** 這就是本專案命名所源自的檔案。
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+人類接觸到的每一個介面都是 **Parvis**。唯讀的廠區檢視是 *Parvis HMI*；你用來駕馭艦隊的方塊選單是
+*Parvis Console*。
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. 讓這份 HTML 成立的規則
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> 瀏覽器頁面是一個**顯示器與一組鍵盤**，不是一個有磁碟存取權的程式。
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+這一個事實就統轄了整層：
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **頁面負責顯示與蒐集。** 它呈現狀態並接收輸入。從檔案路徑開啟時，單憑它自己，**讀不到樹狀結構，也寫不
+  出任何指令。** 瀏覽器沙箱兩者都禁止，而這是一項特性。
+- **sidecar 負責橋接。** 一個小型的回送服務——只綁定 `127.0.0.1`，別無其他——是唯一替頁面讀取樹狀結構、
+  並寫下頁面所提交內容的東西。頁面向它 `GET` 狀態；頁面向它 `POST` 一則提示；磁碟的工作由 sidecar 完成。
+  **沒有 sidecar 就沒有即時的 Parvis——只有一份快照。**
+- **沒有任何東西繞過審查。** 從 Parvis 送出的提示是一次**收料，不是一次執行**。sidecar 在任務索引寫下一
+  列 `REQ`，然後停止。它從不衍生代理程式、從不執行指令、從不發送。開始新工作始終是 Operator 的按鍵。
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+這就是頁面「能運作」的原因：頁面誠實面對自己只是一扇窗，sidecar 在邊界上做那一點真正的工作，而**審查依然
+橫在提示與運轉中的機器之間。**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. 硬性要求——每一個 Parvis 介面
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **自給自足。** 單一 HTML 檔案：內嵌 CSS 與 JS，沒有外部指令碼，沒有 CDN。只用網頁字型，並附上真正的
+   備援字型堆疊。它必須能從檔案路徑離線呈現。
 
-| Requirement | Why |
+2. **顏色就是狀態，即時讀取，絕不偽造。** 綠 = 執行中，琥珀 = 先詢問，紅 = 已停止——由 STATE 檔案與即時
+   帳冊推導而來。**沒有即時來源的值顯示 `—`，絕不顯示一個看似合理的數字。** 紅色凌駕其他所有顏色與整個
+   使用者介面。
+
+3. **sidecar 僅限回送，且不持有任何頁面看得到的機密。** 沒有 API 金鑰、沒有憑證、沒有任何有價值的權杖會
+   抵達瀏覽器。sidecar 以本機工作階段權杖驗證頁面，並自行執行特權工作。**頁面從不持有任何值得被偷的東
+   西。**
+
+4. **快照要標示為快照，** 並附上其讀取時間。只有與即時 sidecar 通訊的頁面才可自稱為即時。看起來即時的過
+   期頁面，比沒有頁面更糟。
+
+5. **緊急停止凌駕介面。** 在 `STOP` 之下，Parvis 不收任何料，sidecar 除了登出那一行之外什麼都不寫。**紅色
+   的廠區不接受任何指令。**
+
+6. **Parvis 品牌，不出現第三方公司名稱。** 無論這套模式是從哪些真實系統學來的，模式是你的，它叫 Parvis。
+   帶著別人商標出貨的介面是錯的，而且會被修正。
+
+---
+
+## 3. sidecar 的安全要求
+
+開發者工作站上的回送 HTTP 服務是一個真實的攻擊面。這些並非選配。
+
+| 要求 | 原因 |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **明確綁定 `127.0.0.1`**，絕不綁 `0.0.0.0` | 綁定所有介面等於把你的艦隊主控台發佈到區域網路上。 |
+| 對照 `127.0.0.1:<port>` / `localhost:<port>` 的允許清單**驗證 `Host` 標頭** | 挫敗 DNS 重新綁定，那正是你造訪的網頁搆到回送服務的手法。 |
+| **拒絕帶有並非你所簽發之 `Origin` 的請求** | 同一類攻擊，不同途徑。 |
+| 對每一條會變更狀態的路由**要求工作階段權杖**，於頁面載入時簽發，且絕不寫入日誌 | 頁面藉此證明它是你的頁面。 |
+| **把服務會讀取或寫入的每一條路徑列入允許清單**，然後重新解析並確認仍在範圍內 | 挫敗路徑穿越。若存在符號連結，光有允許清單並不足夠。 |
+| **在緊急停止無法讀取時故障安全**——拒絕，不要預設為 `RUN` | 見 [`01-ESTOP.md`](01-ESTOP.md) §2。 |
+| **不用 `eval`、不外呼 shell、不把使用者輸入做樣板插值** | 提示列是一個收料輸入，不是一條命令列。 |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+[`reference/sidecar/`](../reference/sidecar/) 中的參考實作全部落實了這些項目，並在每一項所在之處加上註解。
 
 ---
 
-## 4. What the surfaces are
+## 4. 介面有哪些
 
-| Surface | What | State |
+| 介面 | 內容 | 狀態 |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | 分頁面板——狀態、文件、帳冊、匯流排、surface、設定 | 已出貨。 |
+| **Parvis Floor** | 倉儲分頁：3D 廠區、環繞與下鑽、設備控制 | 已出貨。見 [`09-FLOOR.md`](09-FLOOR.md)。 |
+| **提示列** | 收料輸入，位於主控台與每一件廠區設備上 | 已出貨。 |
+| **sidecar** | 回送橋接：讀取樹狀結構、寫入 `REQ` 列、不持有機密 | 已出貨。 |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**先出貨面板。** 3D 廠區是人人都想做的部分，也是底下沒有帳冊就毫無價值的部分——它呈現的是協定其餘部分所
+產生的狀態，而在空的樹狀結構上，它正確地什麼都不顯示。
 
 ---
 
-## 5. Standing
+## 5. 常設條款
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
-  ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).
+- **頁面讀取。sidecar 寫入。Operator 定案。**
+- 沒有任何介面會衍生代理程式、發送、部署或解除緊急停止。
+- 沒有機密會抵達瀏覽器，永遠不會。
+- 輸出去到檔案與主控台，不是聊天視窗
+  （[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)）。

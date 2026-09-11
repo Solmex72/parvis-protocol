@@ -1,92 +1,88 @@
-# 06 — DATA ZONES
+> **非官方翻譯。** 本文件的規範版本為 `main` 分支上的英文版。此翻譯僅供參考，且**未經母語人士審閱**。
+> 若與英文原文有出入，**以英文為準**。協定識別符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 匯流排動詞與檔案名稱）刻意保留英文：這些是代理程式解析的字面值。
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — 資料區
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**狀態：規範性。** 檔案被允許存放在哪裡。
 
 ---
 
-## 2. The two zones
+## 1. 為何禁令行不通
 
-| Zone | Property | Holds |
+原本的規則是*「絕不、在任何地方、放任何機密」*——而且**根本沒有別的地方可以放私密資料。**
+
+沒有目的地的禁令不會被遵守。它會被繞過，而私密材料會意外落進同步的樹狀結構裡。這件事反覆發生過，包括由
+一個本身就受該規則約束的代理程式所造成。
+
+**這條規則是一項路由決定，不是一項禁令。**
+
+---
+
+## 2. 兩個區域
+
+| 區域 | 性質 | 存放什麼 |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | 會同步到雲端儲存。**把每一個位元組都當成已發佈。** | 準則、指令書、代理程式定義、架構、業務脈絡、研究、技術文件 |
+| **PRIVATE** | **位於每個同步根目錄之外**——並且在使用者設定檔之外，讓已知資料夾重新導向也搆不到 | 機密、真實人物及其個資、私人專案與媒體、任何出現在備份中就不對勁的東西 |
 
-### The test
+### 判準
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *如果這個東西一年後出現在某個雲端快照裡，會不會是個問題？*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+會 → PRIVATE。不會 → PUBLIC。真的不確定時 → **PRIVATE。** 過度分類的代價是不方便。分類不足的代價無法
+挽回。
 
-### Know what actually syncs
+### 要知道實際上什麼會被同步
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+要在真實機器上查，不要靠假設。在典型的工作站上，可能同時有好幾個同步用戶端在執行，而使用者的文件、桌面
+或圖片資料夾底下的任何東西都會離開這台機器，並在版本歷史中保留數週。**在本機刪除它並不能把它召回。**
 
-Two consequences that each cause real failures:
+由此得出兩個各自造成真實失效的後果：
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
+1. **建置輸出必須重新導向**到同步根目錄之外，否則鏡像會在建置途中把它弄壞。
+2. **金鑰放在外面**，刻意如此，且為預設。
 
 ---
 
-## 3. The carve-out: credentials are neither zone
+## 3. 例外：憑證不屬於任一區域
 
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
+**有效憑證——密碼、API 金鑰、權杖、串流金鑰——屬於密碼管理器，不屬於任何一個檔案系統。**
 
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
+私密區存放的是*私密資料*。密碼管理器存放的是*憑證*。這不是吹毛求疵：私密目錄預設並未加密，而檔案終究是
+檔案。其中任何一個一旦被複製、被引用進逐字稿，或被附加到任何東西上，它就已經外洩了。
 
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+**要狹義地陳述私密區的安全性質，絕不誇大它。** 它唯一經過證明的性質，通常只是*沒有東西會把它複製到別
+處*。在沒有經過查證的全碟或逐檔加密之下，它並未加密、沒有備份，也不是保險箱。
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 4. 分類屬於 Operator，而且可調整
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+把即時的表格放在單一檔案裡——`DATA-CLASSIFICATION.md`——Operator 在那裡把類別在區域之間搬動，而每個代理
+程式去讀它，而不是靠猜。
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
-
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+這份協定檔案陳述的是**機制**。那份檔案陳述的是**政策**。兩者不一致時，以政策檔案為準。
 
 ---
 
-## 6. Pruning without loss
+## 5. 對代理程式的後果
 
-Before anything leaves the working tree:
+- **任何會被打包的樹狀結構裡都不放機密。** 上下文包的存在就是為了被貼進新的工作階段。指出持有什麼、放在
+  哪裡；絕不指出其值。
+- **沒有機密會抵達 `surface/`。** 那裡會顯示在螢幕上。
+- **沒有機密會抵達瀏覽器。** 見 [`07-INTERFACE.md`](07-INTERFACE.md) §3。
+- **用參照遮蔽，而不是用刪除。** `<api key — see password manager entry "acme-prod">` 讓事實仍可被找到，
+  同時不揭露其值。
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+---
 
-Never mass-delete under live concurrency.
+## 6. 無損修剪
+
+在任何東西離開工作樹之前：
+
+1. 把它複製到**根目錄之外**一個封存的儲存處——一個封存檔，不可被萬用字元搆到。
+2. 把路徑列進 `marked-deletion.md` / `marked-archive.md`。
+3. **執行是 Operator 之手**，且樹狀結構須先靜止。
+
+絕不在即時並行下大量刪除。

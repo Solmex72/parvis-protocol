@@ -1,38 +1,40 @@
-# 04 — THE OUTPUT CONTRACT
+> **非官方翻譯。** 本文件的規範版本為 `main` 分支上的英文版。此翻譯僅供參考，且**未經母語人士審閱**。
+> 若與英文原文有出入，**以英文為準**。協定識別符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 匯流排動詞與檔案名稱）刻意保留英文：這些是代理程式解析的字面值。
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — 輸出契約
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**狀態：規範性。** 工作完成後該往哪裡去。
 
 ---
 
-## 2. Where output goes
+## 1. 規則
 
-| Kind of output | Lands at |
+**不要向聊天視窗回報。在檔案樹中工作，把輸出寫到磁碟，然後浮出一個指標。**
+
+以在聊天視窗裡寫下長篇回答來收尾的代理程式，等於把自己的輸出放在艦隊裡其他任何東西都讀不到的地方——沒有
+別的代理程式、沒有監視器、沒有主控台、沒有下一個工作階段讀得到。持久的紀錄是檔案；聊天是一份下游沒人看
+見的逐字稿。
+
+---
+
+## 2. 輸出去哪裡
+
+| 輸出的種類 | 落在何處 |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| 工作成果、發現事項、一份報告 | 擁有它的檔案，或 `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Operator 現在就該看到的任何東西 | `_os/events/surface/` 中一個簡短的指標檔案 |
+| 需要 Operator 的請求 | `_os/exchange/requests/REQ-<slug>.md` |
+| 帳冊列 | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**surface 目錄是通知。檔案才是實質內容。** 把實質內容寫進它該去的地方，然後在 `surface/` 放一行指標，讓
+主控台向 Operator 顯示它落在哪裡。
 
 ---
 
-## 3. The task index
+## 3. 任務索引
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+每道指令一列。在開始**之前**先附加一列 `REQ`，這樣被中斷的任務仍然看得見。
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +43,42 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**沒有證據路徑的 `DONE` 列是無效的。** 如果沒有檔案，這份工作就沒有落在 Operator 看得到的任何地方。自我
+回報是 `[CLAIMED]`；讓它成為 `[PROVEN]` 的是檔案。
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**拒絕永久留在這裡。** 艦隊正是靠這個停止反覆爭論已定案的問題。日後不要刪除它。
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
+**誠實的限制：** 這份索引什麼都沒有觀察。它的完整程度，恰好等於那些寫入它的代理程式。索引中沒有某項任務
+並不能證明那項任務從未發生——只能證明沒有人記錄它。永遠把一列當成*附有證據路徑的一項主張*，絕不當成證明。
+在依賴任何 `DONE` 之前，先確認證據檔案確實存在。
 
 ---
 
-## 4. Completion is the Operator seeing it
+## 4. 完成是 Operator 看見它
 
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
-
----
-
-## 5. The counter-rule that outranks routing
-
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+而不是代理程式宣告它。回覆不是一個停止點：監視器會跨過它繼續佈署，工作繼續進行，之後才有一次刻意的收尾
+確認。
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. 凌駕於路由之上的反向規則
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**緊急停止與坦率，仍然要立即且顯著地送到人類面前。**
+
+失敗被浮出的顯著程度，要與成功相同。把輸出導向檔案，絕不能變成埋葬壞結果的地方。如果艦隊的好消息出現在
+聊天裡，壞消息卻出現在沒人打開的檔案裡，那麼契約已經被反轉，艦隊現在正透過路由說謊。
 
 ---
 
-## 7. No secret reaches the surface
+## 6. 契約自身的誠實限制
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+在聊天外殼中執行的代理程式，仍然會在那個聊天裡輸出助理文字——本契約無法改變外殼的行為。它所約束的是
+**代理程式選擇寫什麼**：實質內容寫進檔案，聊天文字只留一行簡短指標——*「已寫入 `<path>`，已浮出到主控
+台」*——絕不是完整報告。
+
+---
+
+## 7. 沒有任何機密會抵達 surface
+
+`surface/` 由主控台讀取，並可能顯示在螢幕上、螢幕截圖中，或分享的視窗上。資料區規則
+（[`06-DATA-ZONES.md`](06-DATA-ZONES.md)）在此完全適用。

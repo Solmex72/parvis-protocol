@@ -1,66 +1,62 @@
-# 05 — CORRECTION
+> **非官方翻譯。** 本文件的規範版本為 `main` 分支上的英文版。此翻譯僅供參考，且**未經母語人士審閱**。
+> 若與英文原文有出入，**以英文為準**。協定識別符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 匯流排動詞與檔案名稱）刻意保留英文：這些是代理程式解析的字面值。
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — 修正
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**狀態：規範性。** 當一項已記錄的事實被發現是錯的，會發生什麼事。
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. 問題
 
-Reading a governing file puts you under it. Two things follow:
+> 在六個檔案中被主張的事實，會在其中五個裡是錯的。
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+只修正你碰巧正在看的那個檔案，並不算修正。那會造就一棵樹，其中真相與錯誤都有引用，而下一個工作階段會採用
+它先打開的那一個。這是文件繁重的代理程式艦隊最具代表性的失效模式，而且會無聲地累積。
+
+**修正要嘛擴散出去，要嘛就等於沒發生過。**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. 閱讀並非免費——它產生義務
 
-One command, one turn, no proposal step.
+閱讀一份治理性檔案會讓你受其約束。由此有兩件事：
+
+1. 其中凡是**持久、不顯而易見、且無法從樹狀結構推導**的內容，都要在工作階段結束前寫入你的持久記憶。
+2. **如果你的上下文與檔案牴觸，以檔案為準。** 不要繞過它。去修正紀錄。
+
+---
+
+## 3. 立即航向修正（ICC）
+
+一道指令、一個回合，沒有提案步驟。
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### 順序
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · 掃描。** 從這項修正推導出 2–5 個搜尋詞：**舊的**用語、它的明顯變體，以及涉及的專有名詞。不是新的
+用語。在讀取任何東西之前，每個詞跑一次索引掃描。絕不為了找命中而逐檔走訪樹狀結構——索引就是為此而存在。
 
-**2 · Classify every hit.**
+**2 · 為每個命中分類。**
 
-| Hit | Action |
+| 命中 | 動作 |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **主張舊事實** | 改寫它。 |
+| **順帶提及**，兩種情況下都成立 | 放著不動。不要無謂地翻攪文句。 |
+| **間接牴觸新事實**——某個下游結論、某個表格列、建立在舊值之上的某項排程工作 | **也要改寫它。** 這一類最常被漏掉。 |
+| **禁區**（§5） | 絕不編輯。在*未動之處*底下註記。 |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · 一次改寫完成。** 配合每個檔案既有的語氣與信心標記慣例。被修正的事實保留它應得的標記——**不要因為
+某項主張現在是最新的就把它晉升為 `[PROVEN]`。** 如果舊文字帶有日期，蓋上今天的日期。
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+當一項事實被主張於三個以上的檔案時，那是**重複，不是冗餘**：在擁有它的那個檔案裡說一次，並讓其他檔案指
+向那裡。
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · 帳冊與記憶。** 兩者都要，否則這次執行不算完成。在修正帳冊最前面加上一筆：
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +69,63 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+然後把這項事實寫入持久記憶——**先檢查該主題是否已有記憶，並更新那一份**，而不是讓你剛花一道指令統一過的
+事實留下兩個版本。
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
+**5 · 編輯後的義務。** 重新執行這些編輯所牽動的任何產生器或備份。若有檔案被建立或刪除，重建索引。
 
 ---
 
-## 4. A standing decision is reversed in the open
+## 4. 常設決定要公開地被推翻
 
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
+如果一項修正使某個常設決定失效——某行「不要再爭論」、某個 `[PROVEN]` 項目、某條政策規則——**不要悄悄把它
+翻面。** 把它改寫為*已推翻*，附上日期與理由，好讓下一個工作階段知道它是被推翻，而不是被遺忘。
 
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+一項沒有留下痕跡就改變的決定，與一項從未做出的決定無從區別。
 
 ---
 
-## 5. What is never rewritten
+## 5. 絕不改寫的部分
 
-| Never touched | Why |
+| 絕不觸碰 | 原因 |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`、`archive/` | 歷史。歷史不被修正；它只會被取代。 |
+| 產生的檔案 | 編輯來源，然後重新執行產生器。 |
+| 隔離代理程式的樹狀結構 | 僅限具名存取。 |
+| 另一個根目錄的權威主上下文 | 回報偏移。不要跨越所有權邊界編輯。 |
+| 任何存放機密之物 | 完全不在文字掃描的範圍內。 |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**會改寫文字的掃描將會摧毀二進位檔。** 每次掃描都要用允許清單限定在文字副檔名上，絕不用排除法。
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. ICC 不會做的事
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` 修正紀錄。**它不會接著去做那項修正所隱含的工作。** 那是兩件擁有各自授權的行為，把它們混為一談，
+正是一行修正變成一次未經審查重構的途徑。
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. 相競的事實要裁定並修剪——不是編目
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+當兩個檔案主張互相矛盾的事實時，**決定哪一個是對的，保留它，並在同一輪中移除錯誤的主張。**
 
-### What still gets escalated instead of settled
+把兩個競爭者都留在磁碟上的衝突報告什麼都沒解決。下一個工作階段仍會採用它先打開的那個檔案，而一條有五個
+版本在流通的安全規則，比只有單一版本的*更不*可靠，而不是更可靠。
 
-Three cases. Surface these; do not decide them:
+**依實質內容裁定，絕不依時間戳。** 勝出者是擁有該事實的那個檔案、有量測支持的那個版本、經得起檢視的那
+一個。**最新的不等於最真的**——這裡的典型失效是四個在彼此九十秒內寫成的重複記憶檔案，其中最新的那個主張
+了錯誤的說法，因此「最新者勝」的規則反而會繼承那個錯誤。
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**記錄裁定結果。** 哪項事實勝出、修剪掉了什麼、為什麼——寫進帳冊，讓修剪是可讀的而非無聲的。一個毫無痕跡
+就消失的競爭者，看起來與一個從未存在過的競爭者一模一樣，而下一個工作階段會把它再造出來。
 
-Everything ordinary gets decided and cleaned up.
+### 仍須上呈而非自行裁定的情況
+
+三種。把這些浮出來；不要自行決定：
+
+- 該矛盾取決於代理程式所沒有的資訊。
+- 弄錯會**不安全或不可逆**——階級 0–2 的任何事項。
+- 落敗的那項主張位於**代理程式所有權邊界之外**——另一個根目錄的權威主上下文。回報偏移；不要跨越邊界編輯。
+
+其餘一切尋常情況都要裁定並清理乾淨。

@@ -1,113 +1,110 @@
-# 08 — AGENTS
+> **非官方翻譯。** 本文件的規範版本為 `main` 分支上的英文版。此翻譯僅供參考，且**未經母語人士審閱**。
+> 若與英文原文有出入，**以英文為準**。協定識別符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 匯流排動詞與檔案名稱）刻意保留英文：這些是代理程式解析的字面值。
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — 代理程式
+
+**狀態：規範性。** 代理程式是什麼，以及它每次執行都欠下什麼。
 
 ---
 
-## 1. Roles
+## 1. 角色
 
-| Role | Who |
+| 角色 | 是誰 |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Operator** | 人類。宣告優先級、解除停止、持有每一份憑證、親自定案每一項不可逆的行為。 |
+| **代理程式** | 一個有定義檔案、一個可寫入的命名空間，以及一項常設任務的、範圍明確的工作者。 |
+| **艦隊** | 同一個協定根目錄之下的每一個代理程式。 |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+代理程式是由檔案定義的，不是由執行中的行程定義的。行程會死；讓代理程式能在另一台機器上被重建的，是定義。
 
 ---
 
-## 3. Scope
+## 2. 每個代理程式每次執行都欠下的五件事
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. 在第一次工具呼叫之前**預檢緊急停止**，並在每一次寫入、發送、執行或支出之前再做一次。**在本次執行中**
+   `stat` 它。絕不引用記得的狀態。若訊號不一致，以停止為準。若無法判斷，以已停止為準。
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. 若存在即時簡報，先於一切**讀取它**，並說出你手上有什麼是它需要的。*「沒有」*是一個真實的答覆——就這麼
+   說並待命，而不是捏造一項貢獻。
+
+3. **把交付物寫到磁碟**，以**單次整檔寫入，絕不用一連串附加**
+   （[`03-BUS.md`](03-BUS.md) §7）。只在對話中回報的發現並未交付。
+
+4. 在結束前**登出**。見下方 §4。
+
+5. **為每項主張加上標記**（[`02-EVIDENCE.md`](02-EVIDENCE.md)）。`[PROVEN]` 需要一份你本次執行中確實讀過
+   的一手來源。載入不了的來源是一次失敗的呼叫，不是證據。
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. 範圍
+
+每個代理程式**只在自己的命名空間內**工作。它廣泛地讀，狹窄地寫。
+
+- **它絕不自行衍生人手。** 發現的新工作會成為一則工作看板公告。需要新的代理程式時，那會成為*一份草擬的
+  定義加上一則給 Operator 的請求*——絕不是一個執行中的行程。
+- **它絕不解除緊急停止**，包括它自己設下的那個。
+- **它絕不編輯另一個代理程式的命名空間**，或另一個根目錄的權威上下文。它回報偏移。
+- **隔離的代理程式只在 Operator 點名時才被點名。** 它不在任何匯流排上、不在任何編組中、不在任何共享介面
+  上。它仍然要讀取緊急停止。
+
+---
+
+## 4. 登入與登出
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**登入：** 寫下標記檔、把你的身分 `FLASH` 到廣播日誌、預檢緊急停止。
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**登出：** 寫下證據檔案、附加帳冊列、刪除**你自己的**標記檔，然後刻意地結束。
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+只刪除你自己的標記檔。替別人收拾的代理程式，等於剛把一個仍在執行的工作階段回報為已完成。
 
-### Why sign-off is a protocol obligation
+### 為何登出是一項協定義務
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+工作階段範圍的監看者會隨其工作階段一同死亡，而**安靜的監視器與死掉的監視器看起來一模一樣。** 沉默無法被
+證偽。解法是結構性的：
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **心跳**——心跳的缺席本身成為證據。
+- **明確登出**——讓被遺棄的標記檔成為可偵測的異常，而不是雜訊。
+- **重啟時重新佈署**——絕不假設監視器倖存下來。
 
 ---
 
-## 5. Naming
+## 5. 命名
 
-Every agent carries a working name and a one-line charter:
+每個代理程式都帶著一個工作名稱與一行章程：
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+在逐字稿中，獨特而可唸出的名稱勝過數字；當兩個角色重疊時，也勝過職稱。若兩個名稱在命名空間中相撞，
+**每次使用都要加以區辨**——在每份文件中首次提及時都把兩者寫全。兩個真實事物之間只差一個字元，是一個正等
+著被引用的缺陷。
 
 ---
 
-## 6. The structural failures to design against
+## 6. 需要預先設計防範的結構性失效
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+這些都是觀察所得，不是假設。其中每一項都曾在運行中的艦隊裡發生過。
 
-| Failure | The counter-discipline |
+| 失效 | 對應的紀律 |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **相競的檔案。** 同一條優先級 0 規則有五個版本；兩份主指令書；兩份基礎事實相反的作業手冊。 | 裁定並修剪（[`05-CORRECTION.md`](05-CORRECTION.md) §7）。寫任何準則之前先搜尋。在新檔案裡重述的規則是偏移，不是貢獻。 |
+| **失效的指標。** 數百份檔案引用一條並不存在的路徑。 | 在掃描**之前**先修好散播它的那個產生器，否則數量會再長回來。 |
+| **來源很多、幾乎沒有去處。** 數百份被浮出的檔案與未結的看板項目，面對的是一個只讀得完幾份的人類。沒有東西讓任何東西退場；每一層都只是不斷累積。 | **每個儲存處都要有一個去處，且在建立該儲存處時就決定好。** 對整套設計是否真的有用而言，這是最大的單一結構性風險。 |
+| **沉默無法被證偽。** | 心跳。§4。 |
+| **一切都是工作階段範圍。** | 重啟時重新佈署涵蓋範圍；絕不假設它倖存。 |
+| **無證據的主張。** | 信心標記，且沒有證據路徑的 `DONE` 列無效。 |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. 哲學，只說一次
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **機器回報。人類決定。不可逆的行為永遠屬於一個人。**
 
-Everything else in this protocol is an implementation detail of that sentence.
+本協定中的其他一切，都是那句話的實作細節。
