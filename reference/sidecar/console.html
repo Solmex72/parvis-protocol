@@ -1109,6 +1109,39 @@
       }
     }
 
+    // --- THE OPERATOR CRANE -------------------------------------------------
+    // The prompt bar is a crane too, and it is RED because it is the one piece
+    // of equipment on this floor that is a person. Every other crane is an
+    // agent that picked its own work up; this one only moves when a human
+    // types. It stands at the induct dock because that is where human
+    // instruction enters the floor — 07 §1, a prompt is an induction.
+    //
+    // Red is not an alarm here. It is the same convention as the estop: red is
+    // reserved for the things only a human controls.
+    (function(){
+      var opx = aisleX(0, p) - AISLE_W * 0.9;
+      var opz = dockZ0 - 0.35;
+      var pulse = 0.55 + 0.45 * Math.sin(now / 700);
+      var typing = ($("pbar-in") && $("pbar-in").value.trim()) ||
+                   ($("ctl-p") && !$("wh-ctl").hidden && $("ctl-p").value.trim());
+      var ocol = COL.red;
+      var meta = { kind: "operator" };
+      // mast
+      box(quads, opx, opz, 0.19, 0.19, frameTop + 0.70, ocol, meta, 0);
+      // base
+      box(quads, opx, opz, AISLE_W * 0.78, 0.40, 0.14, shade(ocol, -24), meta, 0);
+      // carriage — rides up while a prompt is being written, parks when empty
+      var oy = typing ? (0.5 + pulse * 1.4) : 0.22;
+      box(quads, opx, opz, AISLE_W * 0.58, 0.34, 0.24, shade(ocol, 14), meta, oy);
+      // beacon
+      box(quads, opx, opz, 0.14 + pulse * 0.11, 0.14 + pulse * 0.11, 0.11 + pulse * 0.09,
+          shade(ocol, Math.round(pulse * 70)), meta, frameTop + 0.70);
+      // the line from the operator to the induct dock: where human input lands
+      lines.push({ a:{x:opx,y:0.13,z:opz}, b:{x:aisleX(0,p),y:0.13,z:dockZ0},
+                   c: ocol, w: 2, arrow: true, flow: !!typing });
+      WH.operatorAt = { x: opx, z: opz };
+    })();
+
     // --- project, depth sort, paint ---
     var tris = [];
     for (var f = 0; f < quads.length; f++) {
@@ -1177,39 +1210,6 @@
         ctx.globalAlpha = 0.9; ctx.fillText(lab, sc.x, sc.y); ctx.globalAlpha = 1;
       }
     }
-    // --- THE OPERATOR CRANE -------------------------------------------------
-    // The prompt bar is a crane too, and it is RED because it is the one piece
-    // of equipment on this floor that is a person. Every other crane is an
-    // agent that picked its own work up; this one only moves when a human
-    // types. It stands at the induct dock because that is where human
-    // instruction enters the floor — 07 §1, a prompt is an induction.
-    //
-    // Red is not an alarm here. It is the same convention as the estop: red is
-    // reserved for the things only a human controls.
-    (function(){
-      var opx = aisleX(0, p) - AISLE_W * 0.9;
-      var opz = dockZ0 - 0.35;
-      var pulse = 0.55 + 0.45 * Math.sin(now / 700);
-      var typing = ($("pbar-in") && $("pbar-in").value.trim()) ||
-                   ($("ctl-p") && !$("wh-ctl").hidden && $("ctl-p").value.trim());
-      var ocol = COL.red;
-      var meta = { kind: "operator" };
-      // mast
-      box(quads, opx, opz, 0.19, 0.19, frameTop + 0.70, ocol, meta, 0);
-      // base
-      box(quads, opx, opz, AISLE_W * 0.78, 0.40, 0.14, shade(ocol, -24), meta, 0);
-      // carriage — rides up while a prompt is being written, parks when empty
-      var oy = typing ? (0.5 + pulse * 1.4) : 0.22;
-      box(quads, opx, opz, AISLE_W * 0.58, 0.34, 0.24, shade(ocol, 14), meta, oy);
-      // beacon
-      box(quads, opx, opz, 0.14 + pulse * 0.11, 0.14 + pulse * 0.11, 0.11 + pulse * 0.09,
-          shade(ocol, Math.round(pulse * 70)), meta, frameTop + 0.70);
-      // the line from the operator to the induct dock: where human input lands
-      lines.push({ a:{x:opx,y:0.13,z:opz}, b:{x:aisleX(0,p),y:0.13,z:dockZ0},
-                   c: ocol, w: 2, arrow: true, flow: !!typing });
-      WH.operatorAt = { x: opx, z: opz };
-    })();
-
     // 08 §5 — where two agents share a name, disambiguate at every use. Four
     // cranes called BRIDGE are four different sessions, and a floor that draws
     // them all as "BRIDGE" is unreadable exactly when it matters.
