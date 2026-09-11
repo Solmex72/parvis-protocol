@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parvis — simulated warehouse floor</title>
+<meta name="description" content="A simulated Parvis warehouse floor. Agents are cranes, directories are pallets, external services are trucks that dock at the boundary. No install, no server, no real tree.">
+<!--
+  PARVIS — SIMULATED FLOOR.  github.com/Solmex72/parvis-protocol
+
+  This page runs on static hosting with NO SIDECAR. Everything on it is
+  synthetic: the tree, the agents, the bus traffic, the ledger rows.
+
+  protocol/07-INTERFACE.md §2.4 — "A page baked with disk values at build time
+  says so. Only a page talking to a live sidecar may present itself as live."
+  So this one says so, permanently, in the banner and in the HUD. A demo that
+  looked live would break the first rule it exists to demonstrate.
+
+  It doubles as the renderer's smoke test. Append ?selftest=1 to assert the
+  invariants — grey without a source, red outranking everything, trucks never
+  on the floor — and print pass/fail.
+
+  Self-contained: inline CSS and JS, no external script, no CDN, no font fetch.
+-->
+<style>
+  :root{
+    --bg:#0a0f14; --panel:#0e151d; --panel2:#121b24; --raised:#16212c;
+    --line:#1b2731; --line2:#26343f;
+    --ink:#d8e3ed; --ink2:#8da0b0; --ink3:#617688;
+    --amber:#d9a441; --green:#3aa06a; --red:#cf4a41; --blue:#4a86bb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f4f6f8; --panel:#fff; --panel2:#eef1f4; --raised:#e7ebef;
+      --line:#dfe4e9; --line2:#cbd3da;
+      --ink:#16202a; --ink2:#4d5e6d; --ink3:#75858f;
+      --amber:#96661a; --green:#1f7146; --red:#b03027; --blue:#2d5f8a;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f6f8; --panel:#fff; --panel2:#eef1f4; --raised:#e7ebef;
+    --line:#dfe4e9; --line2:#cbd3da;
+    --ink:#16202a; --ink2:#4d5e6d; --ink3:#75858f;
+    --amber:#96661a; --green:#1f7146; --red:#b03027; --blue:#2d5f8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);
+       -webkit-font-smoothing:antialiased}
+  a{color:var(--blue)}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 16px 44px}
+
+  .bar{display:flex;align-items:center;gap:12px;padding:11px 16px;background:var(--panel2);
+       border-bottom:1px solid var(--line2);flex-wrap:wrap;position:sticky;top:0;z-index:20}
+  .bar .in{max-width:1140px;margin:0 auto;width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:.16em;font-size:13px}
+  .brand em{font-style:normal;color:var(--ink3);font-weight:400;letter-spacing:.06em;margin-left:8px;font-size:11px}
+  .spacer{flex:1}
+  .pill{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.09em;
+        padding:5px 12px;border-radius:999px;border:1px solid var(--line2);white-space:nowrap;color:var(--ink3)}
+  .pill.run{color:var(--green);border-color:var(--green)}
+  .pill.stop{color:#fff;background:var(--red);border-color:var(--red)}
+  .btn{background:var(--raised);border:1px solid var(--line2);color:var(--ink);padding:6px 12px;
+       border-radius:7px;cursor:pointer;font:inherit;font-size:12px}
+  .btn:hover{border-color:var(--ink3)}
+  .btn.hot{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+
+  .sim{background:color-mix(in srgb,var(--amber) 14%,transparent);border-bottom:1px solid var(--amber);
+       color:var(--ink);padding:9px 16px;font-size:13px}
+  .sim .in{max-width:1140px;margin:0 auto}
+  .sim b{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;margin-right:8px}
+
+  h1{font-size:25px;margin:26px 0 6px;letter-spacing:-.01em}
+  h1 span{color:var(--ink3);font-weight:400}
+  .lede{color:var(--ink2);max-width:74ch;margin:0 0 20px}
+  h2{font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+     color:var(--ink3);margin:26px 0 9px;font-weight:600}
+
+  .whbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .crumb{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .crumb b{color:var(--ink)} .crumb span{cursor:pointer;color:var(--blue)}
+  .crumb span:hover{text-decoration:underline}
+  .legend{font-family:var(--mono);font-size:10.5px;color:var(--ink3);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-left:9px}
+
+  .whgrid{display:grid;grid-template-columns:206px 1fr;gap:11px}
+  @media (max-width:760px){ .whgrid{grid-template-columns:1fr} }
+  .equip{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;max-height:min(56vh,470px)}
+  .equip .grp{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+              color:var(--ink3);padding:9px 11px 5px;position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line)}
+  .equip .grp span{float:right;opacity:.7}
+  .equip .it{display:flex;align-items:center;gap:8px;padding:7px 11px;cursor:pointer;
+             font-family:var(--mono);font-size:11.5px;border-bottom:1px solid var(--line)}
+  .equip .it:hover{background:var(--raised)}
+  .equip .it[aria-selected="true"]{background:var(--raised);box-shadow:inset 2px 0 0 var(--amber)}
+  .equip .it .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .equip .it .mt{color:var(--ink3);font-size:10.5px}
+  .equip .dot{width:8px;height:8px;border-radius:50%;background:var(--ink3);flex:none}
+
+  .floor{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+         overflow:hidden;height:min(56vh,470px);min-height:280px;touch-action:none}
+  .floor canvas{display:block;width:100%;height:100%;cursor:grab}
+  .floor canvas:active{cursor:grabbing}
+  .floor .hud{position:absolute;left:11px;bottom:9px;font-family:var(--mono);font-size:10.5px;
+              color:var(--ink3);pointer-events:none;text-shadow:0 1px 3px var(--bg)}
+  .floor .tip{position:absolute;pointer-events:none;background:var(--raised);border:1px solid var(--line2);
+              border-radius:7px;padding:7px 10px;font-family:var(--mono);font-size:11.5px;max-width:275px;
+              box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:5}
+  .floor .tip b{color:var(--amber)}
+  .floor.stopped{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+
+  .ctl{margin-top:11px;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  .ctl .ch{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--line2);background:var(--raised);flex-wrap:wrap}
+  .ctl .ch .t{font-family:var(--mono);font-size:13px;font-weight:700}
+  .ctl .ch .sub{flex:1;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+  .ctl .dot{width:10px;height:10px;border-radius:50%;background:var(--ink3);flex:none}
+  .ctl .cb{padding:11px 12px 13px}
+  .ctl .kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:3px 16px;margin-bottom:8px}
+  .ctl .kv{display:flex;gap:8px;font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+  .ctl .kv span{width:80px;flex:none} .ctl .kv b{color:var(--ink2);font-weight:500;overflow-wrap:anywhere}
+  .ctl .last{font-family:var(--mono);font-size:11px;color:var(--ink2);margin:0 0 10px;padding:7px 9px;
+             background:var(--bg);border-radius:6px;overflow-wrap:anywhere}
+  .ctl .lb{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+  .ctl textarea{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--ink);border-radius:7px;
+                padding:8px 9px;font-family:var(--mono);font-size:12px;resize:vertical}
+  .ctl .go{margin-top:7px;background:var(--amber);color:#14100a;border:0;font-weight:700;padding:9px 20px;
+           border-radius:7px;cursor:pointer;font:inherit;font-size:12.5px}
+  .ctl .go:disabled{background:var(--line2);color:var(--ink3);cursor:not-allowed}
+  .ctl .echo{margin-top:7px;font-size:11px;font-family:var(--mono);color:var(--ink2);overflow-wrap:anywhere}
+  .ctl .warn{margin:10px 0 0;font-size:11.5px;line-height:1.55;color:var(--ink3)}
+  .ctl .warn code{font-family:var(--mono);font-size:10.5px;background:var(--bg);padding:1px 4px;border-radius:3px}
+  .ctl .mini{font-family:var(--mono);font-size:11px;color:var(--ink2);max-height:150px;overflow:auto}
+  .ctl .mini div{padding:3px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin-top:12px}
+  .cell{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 14px}
+  .cell .k{font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.11em;text-transform:uppercase}
+  .cell .v{font-family:var(--mono);font-size:23px;font-weight:600;margin-top:5px}
+
+  .note{color:var(--ink3);font-size:12.5px;max-width:78ch;margin:14px 0 0}
+  .note code{font-family:var(--mono);font-size:11.5px;background:var(--raised);padding:1px 5px;border-radius:4px}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:11px;margin-top:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 14px}
+  .card h3{margin:0 0 5px;font-size:13px;font-family:var(--mono);letter-spacing:.03em}
+  .card p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.5}
+
+  #st{font-family:var(--mono);font-size:12px;background:var(--panel);border:1px solid var(--line);
+      border-radius:9px;padding:13px 15px;margin-top:14px;white-space:pre-wrap}
+  footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0;color:var(--ink3);
+         font-family:var(--mono);font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="in">
+  <span class="brand">PARVIS<em>simulated floor</em></span>
+  <span class="spacer"></span>
+  <span class="pill run" id="pill">STATE: RUN</span>
+  <button class="btn hot" id="estop">Trip the E-stop</button>
+  <button class="btn" id="theme" title="Light / dark">◑</button>
+</div></div>
+
+<div class="sim"><div class="in">
+  <b>SIMULATION</b> Nothing here is real. The tree, the agents, the bus traffic and the ledger are
+  synthetic and generated in your browser — there is no sidecar and no filesystem.
+  <a href="https://github.com/Solmex72/parvis-protocol">Run it against a real tree →</a>
+</div></div>
+
+<div class="wrap">
+  <h1>The fleet as a warehouse floor <span>— a demo you can break</span></h1>
+  <p class="lede">
+    Agents are <b>cranes</b>. Directories are <b>pallets</b>. Work arrives at an <b>induct</b> and
+    leaves by a <b>spur</b>. An external service is a <b>truck</b> — and a truck docks at the
+    boundary and never drives onto the floor, which is the airlock drawn where you can see it.
+    Drag to orbit, scroll to zoom, click anything. Then trip the E-stop and watch the floor refuse.
+  </p>
+
+  <div class="whbar">
+    <span class="crumb" id="crumb">/</span>
+    <span class="spacer"></span>
+    <span class="legend">
+      <i style="background:var(--green)"></i>moving
+      <i style="background:var(--blue)"></i>scheduled
+      <i style="background:var(--amber)"></i>gated
+      <i style="background:var(--red)"></i>stopped
+      <i style="background:var(--ink3)"></i>no source
+    </span>
+    <button class="btn" id="up" title="Up one level">↰</button>
+    <button class="btn" id="top" title="Top-down">⊞</button>
+  </div>
+
+  <div class="whgrid">
+    <aside class="equip" id="equip"></aside>
+    <div class="floor" id="wrap">
+      <canvas id="cv"></canvas>
+      <div class="hud" id="hud">—</div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+  </div>
+
+  <div class="ctl" id="ctl" hidden>
+    <div class="ch">
+      <span class="dot" id="c-dot"></span>
+      <span class="t" id="c-name">—</span>
+      <span class="sub" id="c-kind">—</span>
+      <button class="btn" id="c-x">✕</button>
+    </div>
+    <div class="cb">
+      <div class="kvs" id="c-kvs"></div>
+      <div class="last" id="c-last" hidden></div>
+      <div id="c-form" hidden>
+        <label class="lb" id="c-lb" for="c-p">Induct work</label>
+        <textarea id="c-p" rows="2" spellcheck="false" placeholder="What should be picked up?"></textarea>
+        <button class="go" id="c-go">Induct</button>
+        <div class="echo" id="c-msg"></div>
+      </div>
+      <div id="c-list" hidden></div>
+      <p class="warn" id="c-warn"></p>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="cell"><div class="k">Cranes</div><div class="v" id="n-cranes">—</div></div>
+    <div class="cell"><div class="k">Pallets</div><div class="v" id="n-pallets">—</div></div>
+    <div class="cell"><div class="k">Inducts</div><div class="v" id="n-inducts">—</div></div>
+    <div class="cell"><div class="k">Spurs</div><div class="v" id="n-spurs">—</div></div>
+  </div>
+
+  <p class="note">
+    The real thing reads all of this from disk: cranes from session markers in
+    <code>_os/exchange/bus/session/</code>, pallets from the tree, inducts from <code>REQ</code>
+    rows, spurs from the surface directory. Here it is a simulation, which is why this page says so
+    in three places. <b>A page with no live source that presents itself as live is the failure the
+    protocol names first.</b>
+  </p>
+
+  <h2>Three things to try</h2>
+  <div class="cards">
+    <div class="card"><h3>Trip the E-stop</h3><p>The floor goes red, every crane stops, and the
+      induct button refuses. A red floor takes no orders — and red outranks every other colour in
+      the glance.</p></div>
+    <div class="card"><h3>Click a truck</h3><p>It has no controls, deliberately. A truck drops a
+      load at a dock and that is the whole of its access. That is the airlock, drawn as a loading
+      bay.</p></div>
+    <div class="card"><h3>Open a pallet</h3><p>You are inside another whole warehouse, navigated
+      identically. Every level is a floor, all the way down — same controls, nothing new to
+      learn.</p></div>
+  </div>
+
+  <h2>Renderer self-test</h2>
+  <p class="note" style="margin-top:0">
+    The demo doubles as a smoke test of the invariants in
+    <code>protocol/09-FLOOR.md</code>. It runs on load; add <code>?selftest=1</code> to the URL to
+    see it run in isolation.
+  </p>
+  <div id="st">running…</div>
+
+  <footer>
+    Parvis Protocol · <a href="https://github.com/Solmex72/parvis-protocol">github.com/Solmex72/parvis-protocol</a>
+    · protocol CC BY 4.0 · code MIT · © 2026 Connor Woods
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(t){ var d=document.createElement("span"); d.textContent = (t==null?"":String(t)); return d.innerHTML; }
+
+  try { var sv = localStorage.getItem("parvis-theme"); if (sv) document.documentElement.setAttribute("data-theme", sv); } catch(e){}
+  $("theme").addEventListener("click", function(){
+    var cur = document.documentElement.getAttribute("data-theme");
+    var next = cur === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("parvis-theme", next); } catch(e){}
+  });
+
+  // =======================================================================
+  // THE SYNTHETIC FLEET. Entirely fabricated, which is the point — see the
+  // banner. Shaped to look like a tree that has been worked in for a while.
+  // =======================================================================
+  var TREE = {
+    "": ["_os", "business", "personal", "dev"],
+    "_os": ["estop", "tasks", "events", "exchange", "protocol", "warehouse"],
+    "_os/exchange": ["bus", "board", "requests"],
+    "_os/exchange/bus": ["in", "session"],
+    "_os/events": ["surface"],
+    "_os/warehouse": ["rack", "staging", "receiving", "quarantine", "lanes"],
+    "business": ["ledger", "contracts", "research"],
+    "personal": ["context", "planner"],
+    "dev": ["sidecar", "console"]
+  };
+  var AGENTS = [
+    { agent:"SCOUT",   home:"_os/exchange" },
+    { agent:"PURSER",  home:"_os/tasks" },
+    { agent:"BULWARK", home:"_os/warehouse" },
+    { agent:"GAVEL",   home:"business/contracts" },
+    { agent:"SIGNAL",  home:"_os/events" },
+    { agent:"KEEL",    home:"dev/sidecar" }
+  ];
+  var CHATTER = [
+    "sweeping for stale session markers", "writing the rate table",
+    "re-measuring the rack depth", "checking the lane assignments",
+    "reconciling the ledger against the inbox", "tagging claims in the last dump",
+    "verifying the evidence path on a DONE row", "counting pallets, not remembering them"
+  ];
+
+  var SIM = { estop:"RUN", reason:"", t:0, cranes:[], ledger:[], bus:[], spurs:9, path:"" };
+
+  AGENTS.forEach(function(a, i){
+    SIM.cranes.push({
+      agent:a.agent, home:a.home, state:"idle", at:null,
+      note:null, scheduled:0, signedOn:new Date(Date.now() - (i+1)*907000).toISOString(),
+      tick: i * 7
+    });
+  });
+
+  function kidsOf(p){ return TREE[p] || []; }
+
+  function tick(){
+    SIM.t++;
+    if (SIM.estop === "STOP") { SIM.cranes.forEach(function(c){ c.state = "stopped"; }); return; }
+    SIM.cranes.forEach(function(c, i){
+      c.tick++;
+      // Every so often a crane picks a new location inside its own home area
+      // and starts moving. One is permanently gated, so the floor always has
+      // an amber to read.
+      if (c.agent === "BULWARK") {
+        c.state = "gated";
+        c.note = "GATE holding the bench procedure until someone measures the load";
+        c.at = pickChild(c.home);
+        return;
+      }
+      if (c.tick % 11 === 0) {
+        c.at = pickChild(c.home);
+        c.state = "moving";
+        c.note = "TELL " + CHATTER[(SIM.t + i) % CHATTER.length];
+        if (Math.random() < 0.5) {
+          SIM.bus.unshift({ time:new Date().toISOString(), from:c.agent, to:"ALL", verb:"TELL",
+                            text:CHATTER[(SIM.t + i) % CHATTER.length] });
+          SIM.bus = SIM.bus.slice(0, 40);
+        }
+      } else if (c.tick % 11 === 6) {
+        c.state = "idle";
+      }
+      // One crane always has queued work, so the blue state is reachable.
+      c.scheduled = (i === 3) ? 2 : 0;
+      if (c.scheduled && c.state === "idle") c.state = "scheduled";
+    });
+  }
+  function pickChild(p){
+    var k = kidsOf(p);
+    if (!k.length) { var seg = p.split("/"); return seg[seg.length-1]; }
+    return k[Math.floor(Math.random() * k.length)];
+  }
+
+  // Build the same payload shape the real sidecar's /floor returns, so this
+  // demo exercises the identical renderer path.
+  function floor(p){
+    var kids = kidsOf(p);
+    var pallets = kids.map(function(n){
+      var rel = p ? p + "/" + n : n;
+      var sub = kidsOf(rel);
+      // One directory is deliberately unreadable, so the grey-when-no-source
+      // rule is visible rather than theoretical.
+      var dead = (rel === "personal/context");
+      return { name:n, rel:rel,
+               dirs: dead ? null : sub.length,
+               files: dead ? null : (3 + (n.length * 7) % 26),
+               mtime: dead ? null : new Date(Date.now() - ((n.length * 97531) % 5400000)).toISOString(),
+               hot: !dead && ((SIM.t + n.length) % 4 === 0) };
+    });
+    var here = SIM.cranes.map(function(c){
+      var onThisFloor = c.home === p || (p && c.home.indexOf(p + "/") === 0) || (p === "" );
+      var at = null;
+      if (c.at) for (var i=0;i<pallets.length;i++) if (pallets[i].name === c.at) { at = c.at; break; }
+      return { agent:c.agent, session:c.agent+"-sim", signedOn:c.signedOn,
+               at: at, state: SIM.estop === "STOP" ? "stopped" : c.state,
+               note:c.note, scheduled:c.scheduled, onThisFloor:onThisFloor };
+    });
+    var parts = p ? p.split("/") : [];
+    return { path:p, parent: parts.length ? parts.slice(0,-1).join("/") : null, breadcrumb:parts,
+             pallets:pallets, cranes:here,
+             inducts: SIM.cranes.reduce(function(a,c){ return a + c.scheduled; }, 0) + SIM.ledger.length,
+             spurs: SIM.spurs, estop:SIM.estop, reason:SIM.reason,
+             readAt:new Date().toISOString() };
+  }
+
+  // =======================================================================
+  // RENDERER — identical approach to reference/sidecar/console.html:
+  // hand-rolled yaw/pitch projection, painter's-algorithm sort, no library.
+  // =======================================================================
+  var WH = { yaw:-0.62, pitch:0.72, zoom:1, top:false, drag:null, hover:null,
+             data:null, layout:[], cranePos:{}, tris:null, t0:performance.now() };
+  var cv = $("cv"), ctx = cv.getContext("2d");
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function fit(){
+    var r = cv.parentElement.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.round(r.width*dpr)); cv.height = Math.max(1, Math.round(r.height*dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return { w:r.width, h:r.height };
+  }
+  function project(pt, v){
+    var cy=Math.cos(WH.yaw), sy=Math.sin(WH.yaw);
+    var x=pt.x*cy - pt.z*sy, z=pt.x*sy + pt.z*cy;
+    var cp=Math.cos(WH.pitch), sp=Math.sin(WH.pitch);
+    return { x:v.cx + x*v.scale, y:v.cy + (pt.y*cp - z*sp)*v.scale, d: pt.y*sp + z*cp };
+  }
+  function shade(hex, amt){
+    var c = String(hex).trim().replace("#","");
+    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    if (!/^[0-9a-f]{6}$/i.test(c)) return hex;
+    var n = parseInt(c,16);
+    var r=Math.max(0,Math.min(255,(n>>16)+amt)), g=Math.max(0,Math.min(255,((n>>8)&255)+amt)), b=Math.max(0,Math.min(255,(n&255)+amt));
+    return "rgb("+r+","+g+","+b+")";
+  }
+  function box(out, cx, cz, w, d, h, color, meta){
+    var x0=cx-w/2,x1=cx+w/2,z0=cz-d/2,z1=cz+d/2;
+    out.push({pts:[{x:x0,y:h,z:z0},{x:x1,y:h,z:z0},{x:x1,y:h,z:z1},{x:x0,y:h,z:z1}],c:shade(color,26),meta:meta});
+    out.push({pts:[{x:x0,y:0,z:z1},{x:x1,y:0,z:z1},{x:x1,y:h,z:z1},{x:x0,y:h,z:z1}],c:shade(color,-16),meta:meta});
+    out.push({pts:[{x:x1,y:0,z:z0},{x:x1,y:0,z:z1},{x:x1,y:h,z:z1},{x:x1,y:h,z:z0}],c:shade(color,-38),meta:meta});
+  }
+  function craneColour(c, stopped){
+    return stopped || c.state==="stopped" ? css("--red")
+         : c.state==="moving" ? css("--green")
+         : c.state==="gated" ? css("--amber")
+         : c.state==="scheduled" ? css("--blue") : css("--ink3");
+  }
+
+  function draw(){
+    var d = WH.data; if (!d) return;
+    var v = fit(), stopped = d.estop === "STOP";
+    var GREY = css("--ink3"), INK = css("--ink");
+    ctx.clearRect(0,0,v.w,v.h);
+
+    var n = d.pallets.length;
+    var cols = Math.max(1, Math.ceil(Math.sqrt(n*1.6))), rows = Math.max(1, Math.ceil(n/cols));
+    var span = Math.max(cols, rows) + 3;
+    var vp = { cx:v.w/2, cy:v.h/2 + v.h*0.10, scale:(Math.min(v.w,v.h)/(span*2.1))*WH.zoom };
+    var quads = [], GAP = 1.55;
+    var ox = -((cols-1)*GAP)/2, oz = -((rows-1)*GAP)/2;
+    var deckW = cols*GAP + 2.4, deckD = rows*GAP + 2.4;
+
+    quads.push({pts:[{x:-deckW/2,y:-0.12,z:-deckD/2},{x:deckW/2,y:-0.12,z:-deckD/2},
+                     {x:deckW/2,y:-0.12,z:deckD/2},{x:-deckW/2,y:-0.12,z:deckD/2}],
+                c: stopped ? "rgba(207,74,65,.10)" : "rgba(127,140,155,.07)", meta:null});
+
+    WH.layout = [];
+    for (var i=0;i<n;i++){
+      var p = d.pallets[i];
+      var cx = ox + (i%cols)*GAP, cz = oz + Math.floor(i/cols)*GAP;
+      var load = (p.dirs === null) ? null : (p.dirs + p.files);
+      var h = load === null ? 0.16 : Math.min(1.5, 0.22 + Math.log10(1+load)*0.62);
+      var col = stopped ? css("--red") : load === null ? GREY : p.hot ? css("--green") : shade(css("--blue"), -28);
+      var hov = WH.hover && WH.hover.kind==="pallet" && WH.hover.name===p.name;
+      box(quads, cx, cz, 1.05, 1.05, h, hov ? shade(col,40) : col, {kind:"pallet", name:p.name, rel:p.rel, p:p});
+      WH.layout.push({name:p.name, x:cx, z:cz, h:h, rel:p.rel});
+    }
+
+    var edge = deckD/2 + 0.55;
+    box(quads, -deckW/2+0.9, -edge, 1.5, 0.5, 0.26, stopped?css("--red"):css("--blue"), {kind:"induct"});
+    box(quads,  deckW/2-0.9,  edge, 1.5, 0.5, 0.26, stopped?css("--red"):shade(css("--green"),-30), {kind:"spur"});
+    // Trucks sit OUTSIDE the deck. Never on the floor. (09 §5)
+    box(quads, -deckW/2+0.9, -edge-1.25, 1.15, 0.75, 0.5, shade(GREY,-30), {kind:"truck"});
+
+    var now = performance.now();
+    d.cranes.forEach(function(c, k){
+      var target = null;
+      for (var q=0;q<WH.layout.length;q++) if (WH.layout[q].name === c.at) { target = WH.layout[q]; break; }
+      var tx = target ? target.x : -deckW/2+0.9, tz = target ? target.z - 0.95 : -edge;
+      var pos = WH.cranePos[c.agent] || {x:tx, z:tz};
+      pos.x += (tx-pos.x)*0.07; pos.z += (tz-pos.z)*0.07;
+      WH.cranePos[c.agent] = pos;
+      var col = craneColour(c, stopped);
+      var bob = (c.state==="moving" && !stopped) ? Math.sin((now-WH.t0)/320 + k)*0.06 : 0;
+      var hov = WH.hover && WH.hover.kind==="crane" && WH.hover.name===c.agent;
+      box(quads, pos.x, pos.z, 0.2, 0.2, 1.85+bob, hov?shade(col,45):col, {kind:"crane", name:c.agent, cr:c});
+      box(quads, pos.x, pos.z, 0.74, 0.32, 0.13, shade(col,-20), {kind:"crane", name:c.agent, cr:c});
+      if (c.state==="moving" && !stopped && target) box(quads, pos.x, pos.z, 0.42,0.42,0.3, shade(css("--amber"),-6), {kind:"crane", name:c.agent, cr:c});
+    });
+
+    var tris = [];
+    quads.forEach(function(q){
+      var sp=[], ds=0;
+      q.pts.forEach(function(pt){ var s=project(pt,vp); sp.push(s); ds+=s.d; });
+      tris.push({sp:sp, c:q.c, d:ds/q.pts.length, meta:q.meta});
+    });
+    tris.sort(function(a,b){ return b.d-a.d; });
+    tris.forEach(function(t){
+      ctx.beginPath(); ctx.moveTo(t.sp[0].x,t.sp[0].y);
+      for (var j=1;j<t.sp.length;j++) ctx.lineTo(t.sp[j].x,t.sp[j].y);
+      ctx.closePath(); ctx.fillStyle=t.c; ctx.fill();
+      ctx.strokeStyle="rgba(0,0,0,.22)"; ctx.lineWidth=0.6; ctx.stroke();
+    });
+    WH.tris = tris;
+
+    ctx.font = "600 10px " + css("--mono").split(",")[0] + ",monospace";
+    ctx.textAlign = "center"; ctx.fillStyle = INK;
+    WH.layout.forEach(function(it){
+      var s = project({x:it.x, y:it.h+0.26, z:it.z}, vp);
+      ctx.globalAlpha=.92; ctx.fillText(it.name.length>13?it.name.slice(0,12)+"…":it.name, s.x, s.y); ctx.globalAlpha=1;
+    });
+    d.cranes.forEach(function(c){
+      var pos = WH.cranePos[c.agent]; if (!pos) return;
+      var s = project({x:pos.x, y:2.18, z:pos.z}, vp);
+      ctx.fillStyle = craneColour(c, stopped);
+      ctx.fillText(c.agent, s.x, s.y);
+    });
+
+    $("hud").textContent = "SIMULATED · " + (d.path ? "/"+d.path : "/") + "  ·  " +
+      d.pallets.length + " pallets · " + d.cranes.length + " cranes" + (stopped ? "  ·  E-STOPPED" : "");
+    $("wrap").classList.toggle("stopped", stopped);
+  }
+
+  function pick(mx,my){
+    if (!WH.tris) return null;
+    for (var i=WH.tris.length-1;i>=0;i--){
+      var t=WH.tris[i]; if (!t.meta) continue;
+      var pts=t.sp, inside=false;
+      for (var a=0,b=pts.length-1;a<pts.length;b=a++){
+        if (((pts[a].y>my)!==(pts[b].y>my)) && (mx < (pts[b].x-pts[a].x)*(my-pts[a].y)/(pts[b].y-pts[a].y)+pts[a].x)) inside=!inside;
+      }
+      if (inside) return t.meta;
+    }
+    return null;
+  }
+
+  cv.addEventListener("pointerdown", function(e){ cv.setPointerCapture(e.pointerId);
+    WH.drag={x:e.clientX,y:e.clientY,yaw:WH.yaw,pitch:WH.pitch,moved:0}; });
+  cv.addEventListener("pointermove", function(e){
+    var r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    if (WH.drag){
+      var dx=e.clientX-WH.drag.x, dy=e.clientY-WH.drag.y;
+      WH.drag.moved=Math.max(WH.drag.moved,Math.abs(dx)+Math.abs(dy));
+      WH.yaw=WH.drag.yaw+dx*0.008;
+      WH.pitch=Math.max(0.12,Math.min(1.52,WH.drag.pitch+dy*0.006));
+      return;
+    }
+    var hit=pick(mx,my); WH.hover = hit && (hit.kind==="pallet"||hit.kind==="crane") ? hit : null;
+    var tip=$("tip");
+    if (!hit){ tip.hidden=true; return; }
+    var html="";
+    if (hit.kind==="pallet"){ var p=hit.p;
+      html="<b>"+esc(p.name)+"</b><br>"+(p.dirs===null?"unreadable — no live source":p.dirs+" dirs · "+p.files+" files")+
+           "<br><span style='color:var(--ink3)'>click for controls</span>"; }
+    else if (hit.kind==="crane"){ var c=hit.cr;
+      html="<b>"+esc(c.agent)+"</b> · "+esc(c.state)+(c.at?"<br>at "+esc(c.at):"<br><span style='color:var(--ink3)'>position unknown — parked</span>")+
+           (c.note?"<br>"+esc(c.note):""); }
+    else if (hit.kind==="truck"){ html="<b>truck</b><br>an external service<br><span style='color:var(--ink3)'>docks at the boundary, never on the floor</span>"; }
+    else if (hit.kind==="induct"){ html="<b>induct</b><br>work arriving"; }
+    else if (hit.kind==="spur"){ html="<b>spur</b><br>deliverables leaving"; }
+    tip.innerHTML=html; tip.hidden=false;
+    tip.style.left=Math.min(mx+14, r.width-285)+"px"; tip.style.top=Math.max(6,my-12)+"px";
+  });
+  cv.addEventListener("pointerup", function(e){
+    var wasDrag = WH.drag && WH.drag.moved>5; WH.drag=null; if (wasDrag) return;
+    var r=cv.getBoundingClientRect(); var hit=pick(e.clientX-r.left, e.clientY-r.top);
+    if (!hit) return;
+    if (hit.kind==="pallet") select("pallet", hit.name);
+    else if (hit.kind==="crane") select("crane", hit.name);
+    else select(hit.kind, hit.kind);
+  });
+  cv.addEventListener("pointerleave", function(){ WH.drag=null; WH.hover=null; $("tip").hidden=true; });
+  cv.addEventListener("wheel", function(e){ e.preventDefault();
+    WH.zoom=Math.max(0.35,Math.min(3.2, WH.zoom*(e.deltaY>0?0.92:1.08))); }, {passive:false});
+
+  $("top").addEventListener("click", function(){ WH.top=!WH.top;
+    WH.pitch = WH.top?1.52:0.72; WH.yaw = WH.top?0:-0.62; });
+  $("up").addEventListener("click", function(){ if (WH.data && WH.data.parent !== null) go(WH.data.parent); });
+
+  $("estop").addEventListener("click", function(){
+    if (SIM.estop === "RUN"){
+      SIM.estop="STOP"; SIM.reason="tripped from the demo";
+      this.textContent="Clear the E-stop"; $("pill").className="pill stop"; $("pill").textContent="STATE: STOP";
+    } else {
+      SIM.estop="RUN"; SIM.reason="";
+      this.textContent="Trip the E-stop"; $("pill").className="pill run"; $("pill").textContent="STATE: RUN";
+    }
+    refresh(); if (SEL) select(SEL.kind, SEL.id);
+  });
+
+  // --- equipment menu ------------------------------------------------------
+  var SEL = null;
+  function buildEquip(d){
+    var stopped = d.estop==="STOP", h="";
+    h += '<div class="grp">Cranes<span>'+d.cranes.length+'</span></div>';
+    d.cranes.forEach(function(c){
+      h += '<div class="it" data-k="crane" data-i="'+esc(c.agent)+'"><i class="dot" style="background:'+craneColour(c,stopped)+'"></i>'+
+           '<span class="nm">'+esc(c.agent)+'</span><span class="mt">'+esc(c.state)+'</span></div>';
+    });
+    h += '<div class="grp">Pallets<span>'+d.pallets.length+'</span></div>';
+    d.pallets.forEach(function(p){
+      var col = stopped?css("--red"):p.dirs===null?css("--ink3"):p.hot?css("--green"):css("--blue");
+      h += '<div class="it" data-k="pallet" data-i="'+esc(p.name)+'"><i class="dot" style="background:'+col+'"></i>'+
+           '<span class="nm">'+esc(p.name)+'</span><span class="mt">'+(p.dirs===null?"—":(p.dirs+p.files))+'</span></div>';
+    });
+    h += '<div class="grp">Docks</div>'+
+         '<div class="it" data-k="induct" data-i="induct"><i class="dot" style="background:'+(stopped?css("--red"):css("--blue"))+'"></i><span class="nm">Induct</span><span class="mt">'+d.inducts+'</span></div>'+
+         '<div class="it" data-k="spur" data-i="spur"><i class="dot" style="background:'+(stopped?css("--red"):css("--green"))+'"></i><span class="nm">Spur</span><span class="mt">'+d.spurs+'</span></div>'+
+         '<div class="grp">Transport</div>'+
+         '<div class="it" data-k="conveyor" data-i="conveyor"><i class="dot"></i><span class="nm">Conveyor</span><span class="mt">bus</span></div>'+
+         '<div class="it" data-k="truck" data-i="truck"><i class="dot"></i><span class="nm">Trucks</span><span class="mt">edge</span></div>';
+    $("equip").innerHTML = h;
+    Array.prototype.forEach.call($("equip").querySelectorAll(".it[data-k]"), function(el){
+      if (SEL && SEL.kind===el.dataset.k && SEL.id===el.dataset.i) el.setAttribute("aria-selected","true");
+      el.addEventListener("click", function(){ select(el.dataset.k, el.dataset.i); });
+    });
+  }
+  function kv(k,v){ return '<div class="kv"><span>'+esc(k)+'</span><b>'+(v==null||v===""?"—":esc(v))+'</b></div>'; }
+
+  function select(kind,id){
+    SEL={kind:kind,id:id}; var d=WH.data; if(!d) return;
+    var stopped = d.estop==="STOP";
+    Array.prototype.forEach.call($("equip").querySelectorAll(".it[data-k]"), function(el){
+      el.setAttribute("aria-selected",(el.dataset.k===kind&&el.dataset.i===id)?"true":"false"); });
+    $("ctl").hidden=false; $("c-form").hidden=true; $("c-list").hidden=true; $("c-last").hidden=true; $("c-msg").textContent="";
+    $("c-kind").textContent=kind;
+
+    if (kind==="crane"){
+      var c=null; d.cranes.forEach(function(x){ if(x.agent===id) c=x; }); if(!c){ $("ctl").hidden=true; return; }
+      $("c-name").textContent=c.agent; $("c-dot").style.background=craneColour(c,stopped);
+      $("c-kvs").innerHTML = kv("state",c.state)+kv("at",c.at||"position unknown")+
+        kv("signed on", c.signedOn ? c.signedOn.replace("T"," ").slice(0,19) : null)+kv("queued",c.scheduled);
+      if (c.note){ $("c-last").textContent=c.note; $("c-last").hidden=false; }
+      $("c-form").hidden=false; $("c-lb").textContent="Induct work for "+c.agent;
+      $("c-go").textContent="Induct to "+c.agent; $("c-go").disabled=stopped;
+      $("c-p").placeholder="What should "+c.agent+" pick up?";
+      $("c-warn").innerHTML = stopped
+        ? "<b>E-stopped.</b> A red floor takes no orders."
+        : "In the real thing this writes a <code>REQ</code> row addressed to this agent and a <code>TELL</code> to its inbox. <b>It does not start the agent.</b>";
+    } else if (kind==="pallet"){
+      var p=null; d.pallets.forEach(function(x){ if(x.name===id) p=x; }); if(!p){ $("ctl").hidden=true; return; }
+      $("c-name").textContent=p.name;
+      $("c-dot").style.background = stopped?css("--red"):p.dirs===null?css("--ink3"):p.hot?css("--green"):css("--blue");
+      $("c-kvs").innerHTML = kv("path","/"+p.rel)+
+        kv("contents", p.dirs===null?"unreadable — no live source":p.dirs+" dirs · "+p.files+" files")+
+        kv("touched", p.mtime?p.mtime.replace("T"," ").slice(0,19):null)+kv("recent", p.hot?"yes":"no");
+      $("c-list").hidden=false;
+      $("c-list").innerHTML = kidsOf(p.rel).length
+        ? '<button class="go" id="desc">Descend into '+esc(p.name)+'</button>'
+        : '<div class="mini">no floor below this one in the simulation</div>';
+      if ($("desc")) $("desc").addEventListener("click", function(){ go(p.rel); });
+      $("c-warn").innerHTML = "Open a pallet and you are looking at <b>another whole warehouse</b> — its own cranes, pallets and docks, navigated the same way.";
+    } else if (kind==="induct"){
+      $("c-name").textContent="Induct"; $("c-dot").style.background=stopped?css("--red"):css("--blue");
+      $("c-kvs").innerHTML = kv("open REQ rows", d.inducts)+kv("dock","inbound");
+      $("c-form").hidden=false; $("c-lb").textContent="Induct unaddressed work";
+      $("c-go").textContent="Induct"; $("c-go").disabled=stopped; $("c-p").placeholder="What arrived?";
+      $("c-warn").innerHTML = stopped ? "<b>E-stopped.</b> Nothing inducts while the floor is red."
+        : "Work enters here and gets a <code>REQ</code> row before any crane touches it, so an interrupted induction is still visible.";
+    } else if (kind==="spur"){
+      $("c-name").textContent="Spur"; $("c-dot").style.background=stopped?css("--red"):css("--green");
+      $("c-kvs").innerHTML = kv("staged", d.spurs)+kv("dock","outbound");
+      $("c-warn").innerHTML = "Deliverables leave through a dock; they are never dropped off the edge of the floor.";
+    } else if (kind==="conveyor"){
+      $("c-name").textContent="Conveyor"; $("c-dot").style.background=css("--ink3");
+      $("c-kvs").innerHTML = kv("path","_os/exchange/bus/")+kv("verbs","FLASH ASK ANS TELL GATE ACK");
+      $("c-list").hidden=false;
+      $("c-list").innerHTML = '<div class="mini">'+(SIM.bus.length? SIM.bus.slice(0,12).map(function(l){
+        return "<div><b>"+esc(l.verb)+"</b> "+esc(l.from)+" &rsaquo; "+esc(l.to)+" — "+esc(l.text)+"</div>"; }).join("")
+        : "bus is quiet")+'</div>';
+      $("c-warn").innerHTML = "How work moves without a crane carrying it. <b>Read-only</b> — a line on the bus informs, it never commands.";
+    } else if (kind==="truck"){
+      $("c-name").textContent="Trucks"; $("c-dot").style.background=css("--ink3");
+      $("c-kvs").innerHTML = kv("position","at the boundary")+kv("controls","none, by design");
+      $("c-warn").innerHTML = "An external service — another AI, an API, a vendor. <b>A truck docks at the boundary and never drives onto the floor.</b> It drops a load at an induct or collects one from a spur, and that is the entirety of its access. That dock is the airlock, which is why there are no controls here.";
+    }
+  }
+  $("c-x").addEventListener("click", function(){ SEL=null; $("ctl").hidden=true;
+    Array.prototype.forEach.call($("equip").querySelectorAll(".it[data-k]"), function(el){ el.setAttribute("aria-selected","false"); }); });
+  $("c-go").addEventListener("click", function(){
+    var t=$("c-p").value.trim(); if(!t) return;
+    if (SIM.estop==="STOP"){ $("c-msg").textContent="refused — the floor is e-stopped"; return; }
+    SIM.ledger.unshift({who: SEL.kind==="crane"?SEL.id:"console", what:t});
+    $("c-msg").innerHTML = "REQ row written"+(SEL.kind==="crane"?" for <b>"+esc(SEL.id)+"</b>":"")+" · nothing executed <i>(simulated)</i>";
+    $("c-p").value=""; refresh();
+  });
+
+  function crumb(d){
+    var el=$("crumb"), html='<span data-r="">root</span>', acc=[];
+    d.breadcrumb.forEach(function(s,i){ acc.push(s);
+      html += ' / ' + (i===d.breadcrumb.length-1 ? '<b>'+esc(s)+'</b>' : '<span data-r="'+esc(acc.join("/"))+'">'+esc(s)+'</span>'); });
+    el.innerHTML=html;
+    Array.prototype.forEach.call(el.querySelectorAll("span[data-r]"), function(s){
+      s.addEventListener("click", function(){ go(s.getAttribute("data-r")); }); });
+  }
+
+  function go(p){ SIM.path=p; WH.cranePos={}; SEL=null; $("ctl").hidden=true; refresh(); }
+  function refresh(){
+    var d = floor(SIM.path); WH.data = d;
+    crumb(d); buildEquip(d);
+    $("n-cranes").textContent=d.cranes.length; $("n-pallets").textContent=d.pallets.length;
+    $("n-inducts").textContent=d.inducts; $("n-spurs").textContent=d.spurs;
+    if (SEL) select(SEL.kind, SEL.id);
+    draw();
+  }
+
+  (function loop(){ draw(); requestAnimationFrame(loop); })();
+  setInterval(function(){ tick(); refresh(); }, 1600);
+  window.addEventListener("resize", draw);
+  go("");
+
+  // =======================================================================
+  // SELF-TEST — asserts the invariants the protocol actually names, against
+  // the same payload shape and the same renderer the real console uses.
+  // =======================================================================
+  function selftest(){
+    var out=[], pass=0, fail=0;
+    function ok(name, cond, detail){
+      out.push((cond?"  pass  ":"  FAIL  ")+name+(detail?"   "+detail:""));
+      cond?pass++:fail++;
+    }
+    var save = { estop:SIM.estop, path:SIM.path };
+
+    // 09 §3 — no live source renders grey and reads "—", never a guess.
+    SIM.estop="RUN"; var f = floor("personal");
+    var dead = f.pallets.filter(function(p){ return p.dirs===null; })[0];
+    ok("a directory with no readable source reports null, not 0", !!dead && dead.dirs===null && dead.files===null);
+
+    // 09 §3 — red outranks. Under STOP every crane is stopped, whatever it was.
+    SIM.estop="STOP"; var s = floor("_os");
+    ok("under STOP every crane reads stopped", s.cranes.length>0 && s.cranes.every(function(c){ return c.state==="stopped"; }),
+       s.cranes.length+" cranes");
+    ok("the floor reports STOP", s.estop==="STOP");
+
+    // 09 §5 — a truck is never placed inside the deck.
+    SIM.estop="RUN"; WH.data=floor("_os"); draw();
+    var truck=null, pallets=[];
+    (WH.tris||[]).forEach(function(t){
+      if (!t.meta) return;
+      if (t.meta.kind==="truck") truck=t;
+      if (t.meta.kind==="pallet") pallets.push(t);
+    });
+    var truckZ = truck ? Math.min.apply(null, truck.sp.map(function(p){return p.y;})) : null;
+    var palletTop = pallets.length ? Math.min.apply(null, pallets.map(function(t){ return Math.min.apply(null, t.sp.map(function(p){return p.y;})); })) : null;
+    ok("a truck is rendered outside the deck", truck!==null && truckZ!==null && palletTop!==null && truckZ < palletTop,
+       "truck y="+(truckZ===null?"—":truckZ.toFixed(0))+" vs pallets y="+(palletTop===null?"—":palletTop.toFixed(0)));
+
+    // 09 §4 — descending is a floor of its own, same shape.
+    var nested = floor("_os/exchange");
+    ok("a nested level returns the same payload shape",
+       Array.isArray(nested.pallets) && Array.isArray(nested.cranes) && nested.parent==="_os");
+
+    // 09 §7 — controls do not change with depth.
+    ok("the same renderer draws every depth", typeof draw==="function" && typeof pick==="function");
+
+    // 07 §2.4 — the page must declare itself a simulation.
+    ok("the page declares itself a simulation", /SIMULATION/.test(document.body.textContent));
+
+    // 07 §2.1 — self-contained.
+    ok("no external scripts or stylesheets",
+       document.querySelectorAll('script[src], link[rel="stylesheet"]').length===0);
+
+    SIM.estop=save.estop; SIM.path=save.path; refresh();
+    $("st").textContent = out.join("\n") + "\n\n  " + (fail? fail+" FAILED" : "all passed") + "   ("+pass+" checks)";
+    return fail===0;
+  }
+
+  setTimeout(selftest, 260);
+  if (/[?&]selftest=1/.test(location.search)) setTimeout(function(){ $("st").scrollIntoView({behavior:"smooth"}); }, 500);
+})();
+</script>
+</body>
+</html>

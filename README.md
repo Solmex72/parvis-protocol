@@ -11,6 +11,11 @@
 [![Protocol](https://img.shields.io/badge/protocol-v1.0-8a6d3b.svg)](protocol/)
 [![Status](https://img.shields.io/badge/status-extracted%20from%20production-2d7d46.svg)](DECISIONS.md)
 
+### [→ Open the simulated warehouse floor](https://solmex72.github.io/parvis-protocol/)
+
+*No install, no server, nothing real.* Agents as cranes, directories as pallets, orbiting in your
+browser. Trip the E-stop and watch the floor refuse to take orders.
+
 </div>
 
 ---

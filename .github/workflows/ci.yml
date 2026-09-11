@@ -112,6 +112,25 @@ jobs:
           fi
           exit $fail
 
+      # The Pages demo has no sidecar, so 07 §2.4 obliges it to say so. It is
+      # also served from static hosting, so a single external reference would
+      # break it for anyone behind a restrictive network.
+      - name: Demo is self-contained and declares itself a simulation
+        shell: bash
+        run: |
+          f=docs/index.html
+          test -f "$f" || { echo "::error::$f missing"; exit 1; }
+          grep -q 'SIMULATION' "$f" || { echo "::error::the demo does not declare itself a simulation (07 §2.4)"; exit 1; }
+          if grep -qE '<script[^>]+src=|<link[^>]+rel="stylesheet"' "$f"; then
+            echo "::error::the demo loads an external script or stylesheet (07 §2.1)"; exit 1
+          fi
+          node -e "
+            const h=require('fs').readFileSync('docs/index.html','utf8');
+            const m=h.match(/<script>([\s\S]*?)<\/script>/);
+            if(!m){ console.error('::error::no inline script found'); process.exit(1); }
+            try { new Function(m[1]); } catch(e){ console.error('::error::demo JS does not parse: '+e.message); process.exit(1); }
+          "
+
       - name: Protocol files are all present and linked
         shell: bash
         run: |
