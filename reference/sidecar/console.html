@@ -713,7 +713,10 @@
     var x = p.x * cy - p.z * sy;
     var z = p.x * sy + p.z * cy;
     var cp = Math.cos(WH.pitch), sp = Math.sin(WH.pitch);
-    var y2 = p.y * cp - z * sp;
+    // Canvas Y grows DOWNWARD, so world height must be negated on the way to
+    // screen space. Without this the floor renders upside down — racks hang
+    // below the deck and taller stacks read as deeper ones.
+    var y2 = z * sp - p.y * cp;
     var depth = p.y * sp + z * cp;
     var s = view.scale;
     return { x: view.cx + x * s, y: view.cy + y2 * s, d: depth };
@@ -838,7 +841,13 @@
     LEVELS = p.levels;   // height is part of the plan, not a constant
     var deckW = p.aisles * AISLE_PITCH + 1.1;
     var deckD = p.bays * BAY_PITCH + 3.0;
-    var span = Math.max(deckW, deckD) * 0.92;
+    // The parking lot sits off the +x edge of the deck, so the camera has to be
+    // fitted to deck PLUS lot or the lot clips off the side of the canvas.
+    // These mirror the lot constants used further down.
+    var LOT_GAP_ = 1.25, LOT_COLS_ = 2, LOT_BAY_W_ = 0.78, LOT_BAY_D_ = 0.62;
+    var lotExtraW = LOT_GAP_ + LOT_COLS_ * LOT_BAY_W_;
+    var lotExtraD = Math.ceil(Math.max(1, d.cranes.length) / LOT_COLS_) * LOT_BAY_D_;
+    var span = Math.max(deckW + lotExtraW, deckD, lotExtraD + 1.0) * 0.92;
     var vp = { cx: view.w / 2, cy: view.h / 2 + view.h * 0.13,
                scale: (Math.min(view.w, view.h) / span) * 0.86 * WH.zoom };
 
@@ -1151,8 +1160,15 @@
       ctx.beginPath(); ctx.moveTo(s2.x, s2.y + 3); ctx.lineTo(top2.x, top2.y); ctx.stroke();
       ctx.restore();
 
-      // Plate behind the text so it stays legible over the racks.
+      // Keep the label inside the canvas. A crane parked at the far edge of the
+      // lot would otherwise print its name half off-screen.
       var w2 = ctx.measureText(lbl).width;
+      var minX = w2 / 2 + 5, maxX = view.w - w2 / 2 - 5;
+      if (s2.x < minX) s2.x = minX;
+      if (s2.x > maxX) s2.x = maxX;
+      if (s2.y < 12) s2.y = 12;
+
+      // Plate behind the text so it stays legible over the racks.
       ctx.save();
       ctx.globalAlpha = 0.62; ctx.fillStyle = COL.bg || "#0e1116";
       ctx.fillRect(s2.x - w2/2 - 3, s2.y - 8, w2 + 6, 11);
