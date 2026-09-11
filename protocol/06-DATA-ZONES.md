@@ -1,92 +1,96 @@
-# 06 — DATA ZONES
+> **অনানুষ্ঠানিক অনুবাদ।** এই নথির normative সংস্করণ হলো `main` শাখার ইংরেজি সংস্করণ। এই অনুবাদ
+> সুবিধার জন্য দেওয়া হয়েছে এবং **কোনো স্থানীয় ভাষাভাষী এটি পর্যালোচনা করেননি**। যেখানে এটি ইংরেজি
+> মূল থেকে ভিন্ন, সেখানে **ইংরেজিই প্রযোজ্য**। প্রোটোকল শনাক্তকারী (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, বাস-ক্রিয়া ও ফাইলের নাম) ইচ্ছাকৃতভাবে ইংরেজিতে রাখা হয়েছে: এগুলো সেই
+> আক্ষরিক মান যা এজেন্টরা পার্স করে।
 
-**Status: normative.** Where a file is allowed to live.
+# ০৬ — উপাত্ত-অঞ্চল
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**অবস্থা: normative.** একটি ফাইল কোথায় থাকার অনুমতি পায়।
 
 ---
 
-## 2. The two zones
+## ১. নিষেধাজ্ঞা কেন কাজ করেনি
 
-| Zone | Property | Holds |
+মূল নিয়মটি ছিল *"কোনো গোপন তথ্য নয়, কখনো নয়, কোথাও নয়"* — অথচ **ব্যক্তিগত উপাত্ত রাখার বিকল্প কোনো
+জায়গাই ছিল না।**
+
+গন্তব্যহীন নিষেধাজ্ঞা মানা হয় না। তার চারপাশ দিয়ে পথ বের করা হয়, এবং ব্যক্তিগত উপকরণ দুর্ঘটনাক্রমে
+সিঙ্ক-হওয়া গাছে গিয়ে পড়ে। এটি বারবার ঘটেছে, এমনকি এমন একটি এজেন্টের দ্বারাও যে নিজেই ওই নিয়মের অধীন
+ছিল।
+
+**নিয়মটি একটি পথনির্দেশের সিদ্ধান্ত, নিষেধাজ্ঞা নয়।**
+
+---
+
+## ২. দুটি অঞ্চল
+
+| অঞ্চল | বৈশিষ্ট্য | কী রাখে |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | ক্লাউড-সংরক্ষণে সিঙ্ক হয়। **প্রতিটি বাইটকে প্রকাশিত ধরুন।** | মতবাদ, নির্দেশ, এজেন্ট-সংজ্ঞা, স্থাপত্য, ব্যবসায়িক প্রেক্ষাপট, গবেষণা, কারিগরি নথি |
+| **PRIVATE** | **প্রতিটি সিঙ্ক-মূলের বাইরে** — এবং ব্যবহারকারী-প্রোফাইলেরও বাইরে, যাতে পরিচিত-ফোল্ডার পুনর্নির্দেশও সেখানে পৌঁছাতে না পারে | গোপন তথ্য, প্রকৃত মানুষ ও তাঁদের ব্যক্তিগত তথ্য, ব্যক্তিগত প্রকল্প ও মিডিয়া, ব্যাকআপে পাওয়া গেলে ভুল হবে এমন সবকিছু |
 
-### The test
+### পরীক্ষা
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *এটি যদি এক বছর পরে কোনো ক্লাউড-স্ন্যাপশটে থাকত, তা কি সমস্যা হতো?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+হ্যাঁ → PRIVATE। না → PUBLIC। সত্যিই অনিশ্চিত হলে → **PRIVATE।** অতি-শ্রেণিবদ্ধকরণের মূল্য অসুবিধা।
+কম-শ্রেণিবদ্ধকরণের মূল্য ফেরানো যায় না।
 
-### Know what actually syncs
+### বাস্তবে কী সিঙ্ক হয় তা জানুন
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+এটি অনুমানে নয়, প্রকৃত মেশিনে যাচাই করুন। সাধারণ কর্মস্টেশনে একসঙ্গে একাধিক সিঙ্ক-ক্লায়েন্ট চলতে পারে,
+এবং ব্যবহারকারীর নথি, ডেস্কটপ বা ছবির ফোল্ডারের নিচের সবকিছু মেশিন ছেড়ে যায় এবং সংস্করণ-ইতিহাসে
+সপ্তাহের পর সপ্তাহ রাখা হয়। **স্থানীয়ভাবে মুছে ফেললে তা ফিরে আসে না।**
 
-Two consequences that each cause real failures:
+দুটি পরিণতি, যার প্রতিটি বাস্তব ব্যর্থতা ঘটায়:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+১. **বিল্ড-আউটপুট** সিঙ্ক-মূলের বাইরে পুনর্নির্দেশ করতে হবে, নইলে আয়না তা বিল্ডের মাঝপথেই নষ্ট করে দেয়।
+২. **চাবিগুলো বাইরে থাকে**, ইচ্ছাকৃতভাবে এবং সহজাতভাবে।
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## ৩. ব্যতিক্রম: শংসাপত্র কোনো অঞ্চলেরই নয়
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**সক্রিয় শংসাপত্র — পাসওয়ার্ড, API চাবি, টোকেন, স্ট্রিম-চাবি — কোনো ফাইল-সিস্টেমে নয়, একটি
+পাসওয়ার্ড-ব্যবস্থাপকে থাকে।**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+ব্যক্তিগত অঞ্চল রাখে *ব্যক্তিগত উপাত্ত*। পাসওয়ার্ড-ব্যবস্থাপক রাখে *শংসাপত্র*। এটি খুঁটিনাটি নিয়ে
+বাড়াবাড়ি নয়: ব্যক্তিগত ডিরেক্টরি সহজাতভাবে এনক্রিপ্ট করা নয়, আর ফাইল তো ফাইলই। এর কোনো একটি যে মুহূর্তে
+অনুলিপি হয়, কোনো প্রতিলিপিতে উদ্ধৃত হয়, বা কিছুর সঙ্গে সংযুক্ত হয়, সেটি ফাঁস হয়ে গেছে।
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**ব্যক্তিগত অঞ্চলের নিরাপত্তা-বৈশিষ্ট্য সংকীর্ণভাবে বলুন এবং কখনো বাড়িয়ে বলবেন না।** এর একমাত্র
+প্রমাণিত বৈশিষ্ট্য সাধারণত এটাই যে *কোনো কিছু এটিকে কোথাও অনুলিপি করে না*। যাচাইকৃত পূর্ণ-ডিস্ক বা
+প্রতি-ফাইল এনক্রিপশন না থাকলে, এটি এনক্রিপ্ট করা নয়, ব্যাকআপ করা নয়, এবং কোনো সিন্দুকও নয়।
 
 ---
 
-## 6. Pruning without loss
+## ৪. শ্রেণিবিন্যাস Operator-এর, এবং তা সমন্বয়যোগ্য
 
-Before anything leaves the working tree:
+সক্রিয় সারণিটি একটি ফাইলে রাখুন — `DATA-CLASSIFICATION.md` — যেখানে Operator শ্রেণিগুলো অঞ্চলের মধ্যে
+সরান এবং প্রতিটি এজেন্ট অনুমান না করে সেটি পড়ে।
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+এই প্রোটোকল-ফাইল **কার্যপদ্ধতি** বলে। ওই ফাইল **নীতি** বলে। দুটি অমিল হলে নীতি-ফাইলই জেতে।
 
-Never mass-delete under live concurrency.
+---
+
+## ৫. এজেন্টদের জন্য পরিণতি
+
+- **প্যাকেজ হওয়া কোনো গাছে কোনো গোপন তথ্য নয়।** প্রেক্ষাপট-প্যাকেজের অস্তিত্ব নতুন সেশনে সাঁটার জন্য।
+  কী রাখা আছে ও কোথায় তা বলুন; কখনো তার মান নয়।
+- **কোনো গোপন তথ্য `surface/`-এ পৌঁছায় না।** সেটি পর্দায় দেখানো হয়।
+- **কোনো গোপন তথ্য কোনো ব্রাউজারে পৌঁছায় না।** দেখুন [`07-INTERFACE.md`](07-INTERFACE.md) §৩।
+- **মুছে নয়, নির্দেশ দিয়ে আড়াল করুন।** `<api key — see password manager entry "acme-prod">` ঘটনাটিকে
+  খুঁজে পাওয়ার যোগ্য রাখে, মান প্রকাশ না করেই।
+
+---
+
+## ৬. ক্ষতি ছাড়া ছাঁটাই
+
+কাজের গাছ থেকে কিছু যাওয়ার আগে:
+
+১. সেটি **মূলগুলোর বাইরে** একটি সিলমোহরকৃত ভাণ্ডারে অনুলিপি করুন — একটি আর্কাইভ ফাইল, গ্লোবে অধরা।
+২. পথগুলো `marked-deletion.md` / `marked-archive.md`-এ প্রস্তুত করুন।
+৩. **নির্বাহ Operator-এর হাত**, এবং গাছ থিতু থাকা অবস্থায়।
+
+সরাসরি সমান্তরালতার নিচে কখনো গণহারে মুছবেন না।

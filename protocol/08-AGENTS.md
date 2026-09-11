@@ -1,113 +1,119 @@
-# 08 — AGENTS
+> **অনানুষ্ঠানিক অনুবাদ।** এই নথির normative সংস্করণ হলো `main` শাখার ইংরেজি সংস্করণ। এই অনুবাদ
+> সুবিধার জন্য দেওয়া হয়েছে এবং **কোনো স্থানীয় ভাষাভাষী এটি পর্যালোচনা করেননি**। যেখানে এটি ইংরেজি
+> মূল থেকে ভিন্ন, সেখানে **ইংরেজিই প্রযোজ্য**। প্রোটোকল শনাক্তকারী (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, বাস-ক্রিয়া ও ফাইলের নাম) ইচ্ছাকৃতভাবে ইংরেজিতে রাখা হয়েছে: এগুলো সেই
+> আক্ষরিক মান যা এজেন্টরা পার্স করে।
 
-**Status: normative.** What an agent is, and what it owes every run.
+# ০৮ — এজেন্ট
+
+**অবস্থা: normative.** এজেন্ট কী, এবং প্রতিটি রানে সে কী দিতে বাধ্য।
 
 ---
 
-## 1. Roles
+## ১. ভূমিকা
 
-| Role | Who |
+| ভূমিকা | কে |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Operator** | মানুষ। অগ্রাধিকার-স্তর ঘোষণা করেন, থামা সরান, প্রতিটি শংসাপত্র রাখেন, প্রতিটি অপরিবর্তনীয় কাজ নিজে সম্পন্ন করেন। |
+| **এজেন্ট** | একটি সংজ্ঞা-ফাইল, লেখার অনুমতিপ্রাপ্ত একটি নামস্থান, এবং একটি স্থায়ী কাজসহ একজন পরিধি-নির্দিষ্ট কর্মী। |
+| **বহর** | একটি প্রোটোকল-মূলের অধীনে প্রতিটি এজেন্ট। |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+এজেন্ট সংজ্ঞায়িত হয় একটি ফাইল দিয়ে, চলমান কোনো প্রক্রিয়া দিয়ে নয়। প্রক্রিয়া মরে যায়; এজেন্টকে অন্য
+মেশিনে পুনর্নির্মাণযোগ্য করে তোলে সংজ্ঞাটিই।
 
 ---
 
-## 3. Scope
+## ২. প্রতিটি এজেন্ট প্রতিটি রানে যে পাঁচটি জিনিস দেয়
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+১. প্রথম টুল-কলের আগে, এবং আবার প্রতিটি লেখা, প্রেরণ, চালানো বা ব্যয়ের আগে **estop প্রাক-যাচাই করুন।**
+   **এই রানে** এটি `stat` করুন। মনে-রাখা কোনো অবস্থা কখনো উদ্ধৃত করবেন না। সংকেত অমিল হলে থামাই জেতে।
+   বুঝতে না পারলে, থেমে-থাকাই জেতে।
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+২. সরাসরি কোনো সংক্ষিপ্তসার থাকলে সবকিছুর আগে **সেটি পড়ুন**, এবং বলুন আপনার কাছে এমন কী আছে যা তার
+   দরকার। *"কিছুই নয়"* একটি প্রকৃত উত্তর — একটি অবদান বানানোর বদলে সেটাই বলুন এবং প্রস্তুত থাকুন।
+
+৩. **সরবরাহযোগ্য বস্তুটি ডিস্কে লিখুন**, **একটি পূর্ণ-ফাইল লেখা হিসেবে, কখনো একগুচ্ছ সংযোজন হিসেবে নয়**
+   ([`03-BUS.md`](03-BUS.md) §৭)। কেবল কথোপকথনে জানানো কোনো ফলাফল সরবরাহ করা হয়নি।
+
+৪. শেষ করার আগে **লগ-অফ করুন।** নিচে §৪।
+
+৫. **প্রতিটি দাবি চিহ্নিত করুন** ([`02-EVIDENCE.md`](02-EVIDENCE.md))। `[PROVEN]`-এর জন্য এমন একটি
+   প্রাথমিক উৎস লাগে যা আপনি সত্যিই এই রানে পড়েছেন। যে উৎস লোডই হয়নি সেটি একটি ব্যর্থ কল, প্রমাণ নয়।
 
 ---
 
-## 4. Sign-on and sign-off
+## ৩. পরিধি
+
+প্রতিটি এজেন্ট **কেবল নিজের নামস্থানের ভেতরে** কাজ করে। সে বিস্তৃতভাবে পড়ে এবং সংকীর্ণভাবে লেখে।
+
+- **সে কখনো নিজে থেকে কর্মী তৈরি করে না।** পাওয়া নতুন কাজ একটি কাজের-বোর্ড বিজ্ঞপ্তি হয়ে যায়। প্রয়োজনীয়
+  নতুন এজেন্ট হয়ে ওঠে *একটি খসড়া সংজ্ঞা এবং Operator-এর কাছে একটি অনুরোধ* — কখনো একটি চলমান প্রক্রিয়া
+  নয়।
+- **সে কখনো estop সরায় না**, নিজের বসানোটিও নয়।
+- **সে কখনো অন্য এজেন্টের নামস্থান**, বা অন্য মূলের প্রামাণিক প্রেক্ষাপট সম্পাদনা করে না। সে বিচ্যুতি
+  জানায়।
+- **বিচ্ছিন্ন এজেন্টের নাম কেবল তখনই নেওয়া হয় যখন Operator তার নাম নেন।** সে কোনো বাসে নেই, কোনো
+  বিন্যাসে নেই, কোনো ভাগ করা পৃষ্ঠে নেই। তবুও সে estop পড়ে।
+
+---
+
+## ৪. সাইন-অন ও সাইন-অফ
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**সাইন-অন:** চিহ্নকটি লিখুন, সম্প্রচার-লগে আপনার পরিচয় `FLASH` করুন, estop প্রাক-যাচাই করুন।
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**সাইন-অফ:** প্রমাণ-ফাইল লিখুন, খতিয়ানের সারি যোগ করুন, **আপনার নিজের** চিহ্নক মুছুন, এবং সচেতনভাবে শেষ
+করুন।
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+কেবল নিজের চিহ্নক মুছুন। যে এজেন্ট অন্যের চিহ্নক গুছিয়ে ফেলে, সে সদ্য একটি চলমান সেশনকে সমাপ্ত বলে
+জানাল।
 
-### Why sign-off is a protocol obligation
+### সাইন-অফ কেন একটি প্রোটোকল-দায়িত্ব
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+সেশন-পরিধির কোনো প্রহরী তার সেশনের সঙ্গেই মরে, আর **নীরব মনিটর ও মৃত মনিটর দেখতে একই রকম।** নীরবতা
+মিথ্যা-প্রমাণযোগ্য নয়। সমাধানগুলো কাঠামোগত:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **হৃৎস্পন্দন** — স্পন্দনের অনুপস্থিতিই প্রমাণ হয়ে ওঠে।
+- **স্পষ্ট সাইন-অফ** — যাতে পরিত্যক্ত চিহ্নক গোলমাল না হয়ে শনাক্তযোগ্য অসংগতি হয়।
+- **পুনরারম্ভে আবার স্থাপন** — মনিটর টিকে গেছে তা কখনো ধরে নেবেন না।
 
 ---
 
-## 5. Naming
+## ৫. নামকরণ
 
-Every agent carries a working name and a one-line charter:
+প্রতিটি এজেন্ট একটি কাজের নাম এবং এক লাইনের সনদ বহন করে:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+প্রতিলিপিতে স্বতন্ত্র, উচ্চারণযোগ্য নাম সংখ্যার চেয়ে ভালো, আর দুটি ভূমিকা মিলে গেলে পদবির চেয়েও ভালো।
+নামস্থানে দুটি নাম সংঘর্ষ করলে **প্রতিটি ব্যবহারে পার্থক্য স্পষ্ট করুন** — প্রতিটি নথিতে প্রথম উল্লেখে
+দুটিই পুরো লিখুন। দুটি প্রকৃত জিনিসের মধ্যে এক অক্ষরের পার্থক্য এমন একটি ত্রুটি যা উদ্ধৃত হওয়ার
+অপেক্ষায়।
 
 ---
 
-## 6. The structural failures to design against
+## ৬. যেসব কাঠামোগত ব্যর্থতার বিরুদ্ধে নকশা করতে হবে
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+এগুলো পর্যবেক্ষিত, অনুমানভিত্তিক নয়। এর প্রতিটি একটি চলমান বহরে ঘটেছে।
 
-| Failure | The counter-discipline |
+| ব্যর্থতা | পাল্টা-নিয়মানুবর্তিতা |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **প্রতিদ্বন্দ্বী ফাইল।** একটি অগ্রাধিকার-০ নিয়মের পাঁচটি সংস্করণ; দুটি মাস্টার নির্দেশ; বিপরীত ভিত্তি-সত্যসহ দুটি কর্মপুস্তিকা। | মীমাংসা ও ছাঁটাই ([`05-CORRECTION.md`](05-CORRECTION.md) §৭)। কোনো মতবাদ লেখার আগে খুঁজুন। নতুন ফাইলে পুনরায় বলা নিয়ম অবদান নয়, বিচ্যুতি। |
+| **মৃত নির্দেশক।** শত শত ফাইল এমন একটি পথ উদ্ধৃত করে যার অস্তিত্ব নেই। | ঝাড়ুর **আগে** যে জেনারেটর এটি ছড়ায় তা ঠিক করুন, নইলে সংখ্যাটি আবার বেড়ে যাবে। |
+| **উৎস প্রচুর, নিষ্কাশন প্রায় নেই।** শত শত পৃষ্ঠে-আনা ফাইল ও খোলা বোর্ড-বিষয়, বিপরীতে একজন মানুষ যিনি গুটিকয় পড়তে পারেন। কিছুই কিছুকে অবসরে পাঠায় না; প্রতিটি স্তর কেবল জমতে থাকে। | **প্রতিটি ভাণ্ডারের একটি নিষ্কাশন থাকে, যা ভাণ্ডার বানানোর সময়েই ঠিক হয়।** পুরো নকশাটি আদৌ কাজে লাগবে কি না, তার সামনে এটিই সবচেয়ে বড় একক কাঠামোগত ঝুঁকি। |
+| **নীরবতা মিথ্যা-প্রমাণযোগ্য নয়।** | হৃৎস্পন্দন। §৪। |
+| **সবকিছু সেশন-পরিধির।** | পুনরারম্ভে আচ্ছাদন আবার স্থাপন করুন; টিকে থাকা কখনো ধরে নেবেন না। |
+| **প্রমাণহীন দাবি।** | আস্থা-চিহ্ন, এবং প্রমাণ-পথ ছাড়া `DONE` সারি অবৈধ। |
 
 ---
 
-## 7. The philosophy, stated once
+## ৭. দর্শন, একবারই বলা
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **যন্ত্র জানায়। মানুষ সিদ্ধান্ত নেয়। অপরিবর্তনীয় কাজ সর্বদা একজন মানুষের।**
 
-Everything else in this protocol is an implementation detail of that sentence.
+এই প্রোটোকলের বাকি সবকিছু ওই বাক্যটিরই বাস্তবায়ন-বিবরণ।

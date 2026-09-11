@@ -1,118 +1,124 @@
-# 02 — EVIDENCE
+> **অনানুষ্ঠানিক অনুবাদ।** এই নথির normative সংস্করণ হলো `main` শাখার ইংরেজি সংস্করণ। এই অনুবাদ
+> সুবিধার জন্য দেওয়া হয়েছে এবং **কোনো স্থানীয় ভাষাভাষী এটি পর্যালোচনা করেননি**। যেখানে এটি ইংরেজি
+> মূল থেকে ভিন্ন, সেখানে **ইংরেজিই প্রযোজ্য**। প্রোটোকল শনাক্তকারী (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, বাস-ক্রিয়া ও ফাইলের নাম) ইচ্ছাকৃতভাবে ইংরেজিতে রাখা হয়েছে: এগুলো সেই
+> আক্ষরিক মান যা এজেন্টরা পার্স করে।
 
-**Status: normative.** How an observation becomes a recorded fact.
+# ০২ — প্রমাণ
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**অবস্থা: normative.** একটি পর্যবেক্ষণ কীভাবে নথিভুক্ত ঘটনা হয়ে ওঠে।
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+এই ফাইল যে নিয়মানুবর্তিতার বর্ণনা দেয়, তা সাধারণত প্রয়োগ করা হয় *প্রস্তাবের* উপর — মানুষ সিদ্ধান্ত
+নেওয়ার আগে এজেন্ট বলে তার পরিকল্পনা কতটা কার্যকর হওয়ার সম্ভাবনা। এটি *দাবির* উপর প্রায় কখনোই প্রয়োগ
+হয় না। ফলে একটি বহর যত্নের সঙ্গে যুক্তি সাজায় কী **করার** অনুমতি চায় তা নিয়ে, আর অযত্নে যা **সত্য**
+বলে লিখে রাখে তা নিয়ে।
+
+অথচ এ দুটি একই কাজ। নথিতে ঢোকা একটি দাবি হলো নথিটি বদলানো উচিত — এই মর্মে একটি প্রস্তাব। Parvis দুটিতেই
+একই নিয়মানুবর্তিতা প্রয়োগ করে।
 
 ---
 
-## 1. Every claim carries a tag
+## ১. প্রতিটি দাবি একটি চিহ্ন বহন করে
 
-| Tag | Means | Admissible where |
+| চিহ্ন | অর্থ | কোথায় গ্রহণযোগ্য |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | উদ্ধৃত প্রাথমিক উৎসের বিপরীতে যাচাইকৃত, **যা আপনি এই রানে পড়েছেন**। কমান্ড, পঠন, পরিমাপের নাম বলুন। | যেকোনো জায়গায়, মাস্টার ফাইলসহ। |
+| `[CLAIMED]` | অন্য কিছু দ্বারা জানানো। অযাচাইকৃত। | কাজের ফাইলে। মাস্টার ফাইলে কখনো নয়। |
+| `[ASSUMED]` | কেউ যাচাই করেনি এমন একটি কার্যকরী ধারণা। | কাজের ফাইলে, স্পষ্টভাবে। |
+| `[PROPOSED]` | একটি প্রাক্কলন, একটি সুপারিশ, একটি পরিকল্পনা। | প্রস্তাবে। নথিতে কখনো নয়। |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**চিহ্নটি দাবির সঙ্গেই চলে।** আরও গুরুত্বপূর্ণ কোনো ফাইলে অনুলিপি হওয়ায় `[PROPOSED]` `[PROVEN]` হয়ে
+যায় না। উন্নীত হতে নতুন অবস্থান নয়, নতুন পরিমাপ লাগে।
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**কেবল `[PROVEN]` কোনো মাস্টার ফাইল বদলাতে পারে।**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## ২. উৎস দিন অথবা চিহ্নিত করুন — কখনো ধুয়ে ফেলবেন না
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+একটি সংখ্যা তার উৎস জানায়, নইলে সেটি সংখ্যা নয়, সেটি দশমিক বিন্দু পরা একটি অনুমান।
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+উৎস আপনার কাছে না থাকলে, **তা বলুন এবং বদলে আপনার যুক্তিটি দিন।** সেটি একটি কাজের উত্তর। ঘটনা হিসেবে
+উপস্থাপিত উৎসহীন সংখ্যা নয়।
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**কোনো ব্যর্থতাকে কখনো একটি ফলাফলে ধুয়ে দেবেন না।** যে অনুসন্ধানে ত্রুটি হয়েছে তা একটি ব্যর্থ কল,
+ফাঁকা ফলাফল-সেট নয়। যে পাতা লোডই হয়নি তা অনুপস্থিতির প্রমাণ নয়। যা ঘটেছে তা-ই লিখুন।
 
 ---
 
-## 5. A dropped call is not a finding
+## ৩. আত্ম-বর্ণনা `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+নিজের অবস্থা, নিজের আচ্ছাদন, বা নিজের সম্পন্ন কাজ সম্পর্কে এজেন্টের বিবরণ `[CLAIMED]` — সে যত
+আত্মবিশ্বাসীই হোক। কেবল বাইরের নথিই সেটিকে `[PROVEN]` করে: ডিস্কের একটি ফাইল, কোনো কমান্ডের প্রস্থান
+কোড, আপনি নন এমন কিছুর লেখা একটি লগ-লাইন।
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+এ কারণেই প্রমাণ-পথবিহীন একটি `DONE` সারি অবৈধ (দেখুন
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md))। "আমি করেছি" একটি দাবি। ফাইলটিই প্রমাণ।
 
 ---
 
-## 6. Negative findings count
+## ৪. ধাপ ০–২-এর যেকোনো কিছুর জন্য দুবার মাপুন
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+একটিমাত্র যাচাই কখনো কোনো নিরাপত্তা-অবস্থা সত্যায়িত করে না। যেকোনো অগ্রাধিকার-০ দাবির আগে, সর্বদা দুটি
+স্বাধীন পরিমাপ।
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**আবার মাপুন, কখনো মনে করবেন না।** সমান্তরাল সেশনের নিচে গাছ আলোড়িত হতে থাকে — পালার শুরুতে পড়া একটি
+পথ শেষে হয়তো নেই। অবস্থা কেবল *এই* রানে ডিস্ক থেকে জানা যায়। "পরিষ্কার" বা "সাম্প্রতিক" কখনো আগের
+পালা, স্মৃতি-ফাইল বা সারসংক্ষেপ থেকে বয়ে আনবেন না।
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**গণনা একটি পরিমাপ, ঘটনা নয়।** ব্যবহারের বিন্দুতে আবার গুনুন। ফাইল-সংখ্যা, এজেন্ট-সংখ্যা বা সংস্করণ
+কখনো স্মৃতি থেকে উদ্ধৃত করবেন না।
 
 ---
 
-## 8. Audit is a role, not a mood
+## ৫. ছিঁড়ে যাওয়া কল কোনো ফলাফল নয়
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+**পরিবহন হারানোয়** — DNS ব্যর্থতা, সংযোগ রিসেট, প্রত্যাখ্যান, উত্তরহীন টাইমআউট — একই কলটি সঙ্গে সঙ্গে
+ও বারবার পুনরায় চালান। যে কল কখনো পৌঁছায়নি তার জন্য কখনো "কোনো ফলাফল নেই" লিখবেন না, এবং ফাঁকটি কখনো
+স্মৃতি দিয়ে ভরবেন না।
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**যে উত্তর পৌঁছেছে তা একটি উত্তর, পুনঃচেষ্টা নয়।** একটি 403, একটি 404, ফাঁকা ফলাফল-সেট, স্পষ্ট
+প্রত্যাখ্যান — এগুলো উপাত্ত। ভিন্ন উত্তর পেতে প্রত্যাখ্যানের উপর বারবার চেষ্টা করা হলো শনাক্তকরণ এড়ানো,
+এবং তা ধাপ ২-এ নিষিদ্ধ, সেটি যার অ্যাকাউন্টে বা যার নেটওয়ার্কেই চলুক।
+
+এক লাইনে পার্থক্য: *যে কল কখনো পৌঁছায়নি তা পুনরায় চালান; যে উত্তর পছন্দ হয়নি তা কখনো পুনরায় চালাবেন
+না।*
 
 ---
 
-## 9. The rule these all serve
+## ৬. নেতিবাচক ফলাফলও গোনা হয়
 
-> A fact asserted in six files will be wrong in five of them.
+"X যাচাই করা হয়েছে, বিপদ নয়" — এটিই পরবর্তী তিনটি সেশনকে X আবার যাচাই করা থেকে থামায়। এটি নথিভুক্ত
+করুন।
 
-Evidence discipline is what makes the sixth one findable.
+**শিখতে শিখতে নথিভুক্ত করুন, শেষে নয়।** কেবল কাজের স্মৃতিতে ধরে রাখা এবং পরে হারিয়ে যাওয়া একটি ফলাফল
+কখনো-না-করা কাজ থেকে অভেদ্য।
+
+---
+
+## ৭. অপসারণই সততার সংকেত
+
+কোনো গাছকে ভিত্তিরেখার বিপরীতে যাচাই করার সময় প্রতিবেদনের তিনটি শ্রেণি — যোগ, পরিবর্তন, অপসারণ।
+বৃদ্ধি ও সম্পাদনা প্রত্যাশিত আলোড়ন। **সতর্কবার্তা দেওয়ার মতো সারিটি হলো অপসারণ।**
+
+অনিরীক্ষিত সমান্তরাল কাজের উপর নতুন ভিত্তিরেখা টানবেন না। আগে নিরীক্ষা, তারপর সিলমোহর।
+
+---
+
+## ৮. নিরীক্ষা একটি ভূমিকা, মেজাজ নয়
+
+নিরীক্ষক প্রতিটি এজেন্ট, কমান্ড ও নির্দেশ **ডিস্ক থেকে** গণনা করেন এবং প্রতিটিকে নির্দিষ্ট শ্রেণির
+বিপরীতে যাচাই করেন — ত্রুটির পাশাপাশি উত্তীর্ণ যাচাইগুলোও গুনে। যে রান কিছুই উত্তীর্ণ করে না, সে কিছুই
+নিরীক্ষা করেনি; সে কেবল অভিযোগ সংগ্রহ করেছে।
+
+**নিরীক্ষক কখনো মেরামত করেন না।** ফলাফল সংশোধন-প্রক্রিয়ায় ([`05-CORRECTION.md`](05-CORRECTION.md))
+অথবা মালিক এজেন্টের কাছে যায়। যে নিরীক্ষক নিজের পাওয়া জিনিস মেরামত করে ফেলে, সে নিজের প্রমাণই ধ্বংস
+করেছে এবং তাকে আর একটি পরিষ্কার রান জানানোর জন্য বিশ্বাস করা যায় না।
+
+---
+
+## ৯. যে নিয়মটির সেবা এরা সবাই করে
+
+> ছয়টি ফাইলে ঘোষিত একটি ঘটনা তার পাঁচটিতে ভুল হবে।
+
+প্রমাণের নিয়মানুবর্তিতাই ষষ্ঠটিকে খুঁজে পাওয়ার যোগ্য করে তোলে।

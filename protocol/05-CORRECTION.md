@@ -1,66 +1,69 @@
-# 05 — CORRECTION
+> **অনানুষ্ঠানিক অনুবাদ।** এই নথির normative সংস্করণ হলো `main` শাখার ইংরেজি সংস্করণ। এই অনুবাদ
+> সুবিধার জন্য দেওয়া হয়েছে এবং **কোনো স্থানীয় ভাষাভাষী এটি পর্যালোচনা করেননি**। যেখানে এটি ইংরেজি
+> মূল থেকে ভিন্ন, সেখানে **ইংরেজিই প্রযোজ্য**। প্রোটোকল শনাক্তকারী (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, বাস-ক্রিয়া ও ফাইলের নাম) ইচ্ছাকৃতভাবে ইংরেজিতে রাখা হয়েছে: এগুলো সেই
+> আক্ষরিক মান যা এজেন্টরা পার্স করে।
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# ০৫ — সংশোধন
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**অবস্থা: normative.** নথিভুক্ত কোনো ঘটনা ভুল প্রমাণিত হলে কী ঘটে।
 
 ---
 
-## 2. Reading is not free — it obligates
+## ১. সমস্যা
 
-Reading a governing file puts you under it. Two things follow:
+> ছয়টি ফাইলে ঘোষিত একটি ঘটনা তার পাঁচটিতে ভুল হবে।
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+আপনি ঘটনাচক্রে যে ফাইলটি দেখছেন কেবল সেটি ঠিক করা সংশোধন নয়। তাতে এমন একটি গাছ তৈরি হয় যেখানে সত্য ও
+ভুল দুটিরই উদ্ধৃতি আছে, এবং পরের সেশন যেটি আগে খোলে সেটিই বেছে নেয়। নথি-ভারী এজেন্ট-বহরের এটিই প্রধান
+ব্যর্থতা, এবং তা নীরবে জমতে থাকে।
+
+**একটি সংশোধন হয় ছড়িয়ে পড়ে, নয়তো তা ঘটেইনি।**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## ২. পড়া বিনামূল্যে নয় — তা দায়বদ্ধ করে
 
-One command, one turn, no proposal step.
+কোনো শাসক ফাইল পড়া আপনাকে তার অধীনে নিয়ে আসে। এ থেকে দুটি বিষয় আসে:
+
+১. এর মধ্যে যা কিছু **টেকসই, স্বতঃস্পষ্ট নয়, এবং গাছ থেকে উদ্ভূত করা যায় না** তা সেশন শেষ হওয়ার আগে
+   আপনার স্থায়ী স্মৃতিতে যায়।
+২. **আপনার প্রেক্ষাপট ফাইলের সঙ্গে সাংঘর্ষিক হলে, ফাইলই জেতে।** এর চারপাশ দিয়ে পথ বানাবেন না। নথিটি
+   সংশোধন করুন।
+
+---
+
+## ৩. তাৎক্ষণিক পথ-সংশোধন (ICC)
+
+একটি কমান্ড, একটি পালা, কোনো প্রস্তাব-ধাপ নেই।
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### ক্রম
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**১ · ঝাড়ু।** সংশোধন থেকে ২–৫টি অনুসন্ধান-শব্দ বের করুন: **পুরোনো** শব্দবন্ধ, তার সুস্পষ্ট রূপভেদ, এবং
+জড়িত নামবাচক পদ। নতুন শব্দবন্ধ নয়। কিছু পড়ার আগে প্রতি শব্দের জন্য একটি সূচিকৃত ঝাড়ু চালান। মিল খুঁজতে
+গাছে কখনো ফাইল-ধরে-ফাইল হাঁটবেন না — সূচি তো এ জন্যই।
 
-**2 · Classify every hit.**
+**২ · প্রতিটি মিল শ্রেণিবদ্ধ করুন।**
 
-| Hit | Action |
+| মিল | পদক্ষেপ |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **পুরোনো ঘটনাটি দাবি করে** | আবার লিখুন। |
+| **প্রসঙ্গক্রমে উল্লেখ করে**, দুই ক্ষেত্রেই সত্য | রেখে দিন। অকারণে লেখা আলোড়িত করবেন না। |
+| **নতুন ঘটনার পরোক্ষ বিরোধিতা করে** — কোনো পরবর্তী সিদ্ধান্ত, কোনো সারণি-সারি, পুরোনো মানের উপর গড়া কোনো নির্ধারিত কাজ | **সেটিও আবার লিখুন।** এটিই সবচেয়ে বেশি বাদ পড়ে। |
+| **সীমার বাইরে** (§৫) | কখনো সম্পাদনা করবেন না। *অস্পর্শিত* শিরোনামে টুকে রাখুন। |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**৩ · সব একসঙ্গে আবার লিখুন।** প্রতিটি ফাইলের বিদ্যমান কণ্ঠস্বর ও আস্থা-চিহ্নের রীতির সঙ্গে মেলান।
+সংশোধিত ঘটনা তার অর্জিত চিহ্নই রাখে — **এখন সাম্প্রতিক বলে কোনো দাবিকে `[PROVEN]`-এ উন্নীত করবেন না।**
+পুরোনো লেখায় তারিখ থাকলে আজকের তারিখ বসান।
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+কোনো ঘটনা তিনটির বেশি ফাইলে দাবি করা হলে সেটি **পুনরাবৃত্তি, অতিরিক্ততা নয়**: যে ফাইল এর মালিক সেখানে
+একবার বলুন, এবং বাকিদের সেদিকে নির্দেশ করান।
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**৪ · খতিয়ান ও স্মৃতি।** দুটিই, নইলে রান শেষ হয়নি। সংশোধন-খতিয়ানের শুরুতে একটি ভুক্তি যোগ করুন:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +76,72 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+তারপর ঘটনাটি স্থায়ী স্মৃতিতে লিখুন — **আগে যাচাই করে নিন এ বিষয়ে কোনো স্মৃতি আছে কি না এবং সেটিই
+হালনাগাদ করুন**, বরং এমন একটি ঘটনার দুটি সংস্করণ রেখে না দিয়ে যা একত্র করতে আপনি সদ্য একটি কমান্ড খরচ
+করেছেন।
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**৫ · সম্পাদনা-পরবর্তী দায়িত্ব।** সম্পাদনাগুলো যে জেনারেটর বা ব্যাকআপ বাধ্যতামূলক করেছে তা আবার চালান।
+ফাইল তৈরি বা মুছে ফেলা হয়ে থাকলে সূচি পুনর্নির্মাণ করুন।
 
 ---
 
-## 5. What is never rewritten
+## ৪. স্থায়ী সিদ্ধান্ত প্রকাশ্যে উল্টে দেওয়া হয়
 
-| Never touched | Why |
+কোনো সংশোধন যদি একটি স্থায়ী সিদ্ধান্তকে অকার্যকর করে — কোনো "আর তর্ক নয়" লাইন, কোনো `[PROVEN]` বিষয়,
+কোনো নীতি-নিয়ম — **তা নীরবে উল্টাবেন না।** তারিখ ও কারণসহ *উল্টানো হয়েছে* হিসেবে আবার লিখুন, যাতে
+পরের সেশন জানে এটি ভুলে যাওয়া হয়নি, বাতিল করা হয়েছে।
+
+যে সিদ্ধান্ত কোনো চিহ্ন না রেখে বদলায়, তা কখনো-না-নেওয়া সিদ্ধান্ত থেকে অভেদ্য।
+
+---
+
+## ৫. যা কখনো আবার লেখা হয় না
+
+| কখনো ছোঁয়া হয় না | কারণ |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | ইতিহাস। ইতিহাস সংশোধিত হয় না; তার স্থলাভিষিক্ত হয়। |
+| উৎপন্ন ফাইল | উৎস সম্পাদনা করুন এবং জেনারেটর আবার চালান। |
+| বিচ্ছিন্ন এজেন্টের গাছ | কেবল নাম ধরে প্রবেশ। |
+| অন্য কোনো মূলের প্রামাণিক মাস্টার প্রেক্ষাপট | বিচ্যুতি জানান। মালিকানা-সীমা পেরিয়ে সম্পাদনা করবেন না। |
+| গোপন তথ্য ধারণকারী যেকোনো কিছু | লেখা-ঝাড়ুর পরিধির সম্পূর্ণ বাইরে। |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**যে ঝাড়ু লেখা আবার লেখে সেটি বাইনারি ধ্বংস করবে।** প্রতিটি ঝাড়ুকে বর্জনের মাধ্যমে নয়, অনুমতি-তালিকার
+মাধ্যমে লেখা-এক্সটেনশনে সীমিত করুন।
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## ৬. ICC যা করে না
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` নথি সংশোধন করে। **এরপর সংশোধনটি যে কাজ বোঝায় তা করতে যায় না।** এগুলো পৃথক অনুমোদনসহ পৃথক কাজ,
+এবং দুটিকে মিলিয়ে ফেলাই এক লাইনের সংশোধনকে একটি অপর্যালোচিত পুনর্গঠনে পরিণত করার পথ।
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## ৭. প্রতিদ্বন্দ্বী ঘটনা মীমাংসিত ও ছাঁটাই হয় — তালিকাভুক্ত নয়
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+দুটি ফাইল পরস্পরবিরোধী ঘটনা দাবি করলে, **ঠিক করুন কোনটি সঠিক, সেটি রাখুন, এবং ভুল দাবিগুলো একই পর্বে
+সরিয়ে দিন।**
 
-### What still gets escalated instead of settled
+যে সংঘাত-প্রতিবেদন দুই প্রতিদ্বন্দ্বীকেই ডিস্কে রেখে দেয়, সে কিছুই মীমাংসা করেনি। পরের সেশন তবুও যেটি
+আগে খোলে সেটিই বেছে নেবে, এবং পাঁচটি সংস্করণ ঘুরতে থাকা একটি নিরাপত্তা-নিয়ম একক সংস্করণের চেয়ে *কম*
+নির্ভরযোগ্য, বেশি নয়।
 
-Three cases. Surface these; do not decide them:
+**গুণাগুণের ভিত্তিতে সিদ্ধান্ত নিন, কখনো সময়-চিহ্নে নয়।** বিজয়ী হলো সেই ফাইল যা ঘটনাটির মালিক; সেই
+সংস্করণ যার পেছনে একটি পরিমাপ আছে; যেটি পরীক্ষায় টিকে যায়। **সবচেয়ে নতুনটি সবচেয়ে সত্য নয়** — এখানকার
+আদর্শ ব্যর্থতা হলো একে অপরের নব্বই সেকেন্ডের মধ্যে লেখা চারটি অনুরূপ স্মৃতি-ফাইল, যেখানে সবচেয়ে নতুনটি
+মিথ্যা দাবিটি করেছিল, ফলে "নতুনটিই জেতে" নিয়ম ভুলটিই উত্তরাধিকারসূত্রে নিত।
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**মীমাংসা নথিভুক্ত করুন।** কোন ঘটনা জিতল, কী ছাঁটা হলো, এবং কেন — খতিয়ানে, যাতে ছাঁটাই নীরব না হয়ে
+পাঠযোগ্য হয়। চিহ্ন না রেখে অদৃশ্য হওয়া প্রতিদ্বন্দ্বী দেখতে ঠিক তেমনই, যেমন কখনো ছিলই না এমন একজন,
+আর পরের সেশন তাকে আবার বানিয়ে ফেলে।
 
-Everything ordinary gets decided and cleaned up.
+### যা মীমাংসার বদলে তবুও উপরে পাঠানো হয়
+
+তিনটি ক্ষেত্র। এগুলো পৃষ্ঠে আনুন; সিদ্ধান্ত নেবেন না:
+
+- বিরোধটি এমন তথ্যের উপর নির্ভর করে যা এজেন্টের কাছে নেই।
+- ভুল হওয়া **অনিরাপদ বা অপরিবর্তনীয়** হবে — ধাপ ০–২-এর যেকোনো কিছু।
+- পরাজিত দাবিটি **এজেন্টের মালিকানা-সীমার বাইরে** — অন্য কোনো মূলের প্রামাণিক মাস্টার প্রেক্ষাপট।
+  বিচ্যুতি জানান; সীমা পেরিয়ে সম্পাদনা করবেন না।
+
+বাকি সাধারণ সবকিছুর সিদ্ধান্ত নেওয়া হয় এবং পরিষ্কার করা হয়।

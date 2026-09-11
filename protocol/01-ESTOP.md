@@ -1,39 +1,45 @@
-# 01 — ESTOP
+> **অনানুষ্ঠানিক অনুবাদ।** এই নথির normative সংস্করণ হলো `main` শাখার ইংরেজি সংস্করণ। এই অনুবাদ
+> সুবিধার জন্য দেওয়া হয়েছে এবং **কোনো স্থানীয় ভাষাভাষী এটি পর্যালোচনা করেননি**। যেখানে এটি ইংরেজি
+> মূল থেকে ভিন্ন, সেখানে **ইংরেজিই প্রযোজ্য**। প্রোটোকল শনাক্তকারী (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, বাস-ক্রিয়া ও ফাইলের নাম) ইচ্ছাকৃতভাবে ইংরেজিতে রাখা হয়েছে: এগুলো সেই
+> আক্ষরিক মান যা এজেন্টরা পার্স করে।
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# ০১ — ESTOP
+
+**অবস্থা: normative. অগ্রাধিকার ০। প্রতিটি উদ্যোগের প্রতিটি এজেন্টের জন্য বাধ্যতামূলক।**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## ০. এটি কী পারে এবং কী পারে না — আগে এটি পড়ুন
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**এটি চলমান কোনো সেশন থামাতে পারে না।** কোনো ফাইলই পারে না। উত্তরের মাঝপথে থাকা এজেন্ট ডিস্ক পড়ছে
+না, তার কোনো ইন্টারাপ্ট লাইন নেই, এবং সে যা করছে তা শেষ করবে। কেউ যদি আপনাকে বলে একটি ফ্ল্যাগ-ফাইল
+একটি বহর থামিয়ে দেয়, সে একটি ইচ্ছার বর্ণনা দিচ্ছে।
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**চলমান এজেন্ট কেবল Operator থামান, তার উইন্ডো বন্ধ করে।** প্রকৃত estop এটিই, এবং কখনো অন্য কিছু
+ছিল না।
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+এই ফাইলটি যা করে তা হলো, এজেন্ট যে দুটি মুহূর্তে *সত্যিই* ডিস্ক পড়ে, সেই দুই মুহূর্তে তাকে বাঁধা:
 
-| Moment | Obligation |
+| মুহূর্ত | দায়িত্ব |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **শুরুতে** | আপনার মতবাদের আগে, আপনার স্মৃতির আগে, সবকিছুর আগে অবস্থা পড়ুন। |
+| **প্রতিটি চেকপয়েন্টে** | যেকোনো লেখা, যেকোনো বার্তা, পার্শ্বপ্রতিক্রিয়াসম্পন্ন যেকোনো টুল-কল, যেকোনো ব্যয়ের আগে। |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+যে এজেন্ট `STOP` দেখেও চালিয়ে যায়, সে ত্রুটিপূর্ণ এজেন্ট। পুরো প্রয়োগ-মডেল এটাই: কোনো যন্ত্র নয় —
+একটি কর্তব্য, যা ঘন ঘন যাচাই করা হয়।
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+সীমাটি সৎভাবে বলা প্রোটোকলের অংশ। যে থামাকে আপনি তাৎক্ষণিক মনে করেন, সেটি সেই থামার চেয়ে বেশি
+বিপজ্জনক যেটি তাৎক্ষণিক নয় বলে আপনি জানেন — কারণ আপনি তার উপর নির্ভর করে বসবেন।
 
 ---
 
-## 1. The two signals
+## ১. দুটি সংকেত
 
-### The sentinel is the fact
+### প্রহরী ফাইলটিই ঘটনা
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+ঠিক `estop` নামের একটি **সাধারণ ফাইল** — কোনো এক্সটেনশন নেই, শূন্য বাইট স্বাভাবিক — কোনো উদ্যোগ-মূলে
+**অথবা যে গাছটিতে কাজ চলছে তার যেকোনো ঊর্ধ্বতন ডিরেক্টরিতে**।
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+এটি **ফাইল** কি না তা পরীক্ষা করুন; কেবল অস্তিত্ব কখনো নয়, এবং কখনো গ্লোব দিয়ে নয়:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` মতবাদ। এটি কখনোই পরীক্ষাটি ট্রিগার করবে না। যে মিলকারী এটিকে ছাড় দেয়, সে এমন একটি থামা
+  তৈরি করবে যা Operator সরাতেই পারবেন না।
+- `_os/estop/` একটি ডিরেক্টরি। সেটিও ট্রিগার করে না।
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+একাধিক মূল **স্বাধীনভাবে** ট্রিগার হয়। প্রতিটি পরীক্ষা করুন। আপনি যে পথে `stat` করেছেন তা জানান —
+কখনো "the estop" বলবেন না, তাতে আপনি কোনটি দেখেছেন তা আড়াল হয়ে যায়।
 
-### The STATE file is a derived mirror
+### STATE ফাইল একটি উদ্ভূত আয়না
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — এক লাইন, আর কিছু নয়।
 
 ```
 RUN
@@ -66,117 +72,114 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| ক্ষেত্র | নিয়ম |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| ক্রিয়া | `RUN`, `YELLOW`, বা `STOP`। অন্য কিছু পার্স হয় না। |
+| সময় | UTC, ISO-8601। |
+| কে | কে ঘোষণা করেছে। `STOP` / `YELLOW` লেখা বা সরানোর অধিকার কেবল Operator-এর। |
+| কারণ | এক লাইন, সহজ ভাষায়, পরিভাষা ছাড়া। |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**প্রহরী ফাইল ও আয়না অমিল হলে, থেমে-থাকাই জেতে।** আয়না লেখে সরঞ্জাম এবং তা বাসি হয়ে যায়; প্রহরী
+ফাইলটিই ঘটনা।
 
 ---
 
-## 2. The three states
+## ২. তিনটি অবস্থা
 
-| STATE | What an agent does |
+| STATE | এজেন্ট কী করে |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **এগিয়ে যান।** কাজের প্রয়োজনীয় কমান্ডগুলো প্রতিটির জন্য অনুমতির অপেক্ষা না করে চালান। আটকে থাকবেন না, বিকল্প বর্ণনা করবেন না, নিয়মিত কাজ কোনো নিশ্চিতকরণের পেছনে সারিবদ্ধ করবেন না। |
+| `YELLOW` | **আগে জিজ্ঞাসা করুন।** প্রতিটি কমান্ড চালানোর আগে প্রস্তাব করা হয়। একই কাজ, একই দক্ষতা — পার্থক্য শুধু নিশ্চিতকরণে। |
+| `STOP` | থামুন। §৩। |
 
-### What `RUN` does not do
+### `RUN` যা করে না
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` সরায় *নিয়মিত কাজের আগের বিরতি*। এটি **বিদ্যমান কোনো ফটক সরায় না**, কারণ সেগুলো কাজের গতির নয়,
+প্রকৃতির বিষয়:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- শংসাপত্র, সাইন-ইন, ক্রয়, ব্যবস্থাপনা — **সর্বদা Operator-এর হাতে**;
+- বহির্মুখী কাজ — প্রকাশ, প্রেরণ, স্থাপন — **সর্বদা স্পষ্ট সম্মতিতে**;
+- যা কোনো মানুষ শারীরিকভাবে করবে — **তবুও নিরাপত্তা-ফটক দিয়ে**;
+- ধ্বংসাত্মক বা অপরিবর্তনীয় কাজ — **যেকোনো অবস্থায় তবুও নিশ্চিত করে**;
+- এজেন্টের নিজস্ব স্থায়ী সীমা — **STATE-এর অপেক্ষক নয় মোটেই**।
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` উত্তর দেয় *"প্রতিটি ধাপের আগে কি জিজ্ঞাসা করতেই হবে?"* — না। এটি উত্তর দেয় না *"আমি কি যা খুশি
+করতে পারি?"* যে এজেন্ট `RUN` পড়ে এই তালিকার কিছু করে, সে অবস্থাটি ভুল পড়েছে; অবস্থাটি তাকে অনুমোদন
+দেয়নি।
 
-### Fail-safe on an unreadable verb
+### অপাঠ্য ক্রিয়ায় নিরাপদ-পতন
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+**অনুপস্থিত, ফাঁকা, অপাঠ্য, বা অন্য যেকোনো শব্দ বহনকারী STATE ফাইল `YELLOW` হিসেবে পড়া হয়** — কখনো
+`RUN` হিসেবে নয়। জিজ্ঞাসা করুন।
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> কোনো বাস্তবায়নে এটিই সবচেয়ে বেশি উল্টে লেখা লাইন। `try { read } catch { return "RUN" }` প্রতিটি
+> ডিস্ক-ত্রুটি, অনুমতি-পরিবর্তন ও বানান-ভুলকে একটি নীরব অনুমোদনে পরিণত করে। রেফারেন্স sidecar
+> `YELLOW`-এ নামে এবং পঠন-ত্রুটিতে সেবা দিতে অস্বীকার করে; দেখুন
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs)।
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+প্রহরী ফাইল এই পুরো অনুচ্ছেদের উপরে: একটি `estop` ফাইলের উপস্থিতি মানে `STOP`, STATE যা-ই বলুক।
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**এই ফাইলটি কেবল Operator লেখেন।** কোনো এজেন্ট লেখে না — সমস্যাটি যে এজেন্ট খুঁজে পেয়েছে সেও নয়। যে
+এজেন্ট মনে করে বহরের থামা উচিত, সে বাসে একটি `GATE` তোলে এবং তা বলে। সে নিজের কর্তৃত্বে বহর থামায় না,
+আবার চালুও করে না।
 
 ---
 
-## 4. What clears it
+## ৩. `STOP`-এ এজেন্ট কী করে
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+১. **আর কিছু লিখবেন না।** স্মৃতি-ফাইল নয়, প্রতিবেদন নয়, বাস নয়।
+২. **যেখানে আছেন সেখানেই সংরক্ষণ করুন, তারপর থামুন।** এখনো লেখা হয়নি এমন কোনো ধাপ শেষ করবেন না। যা
+   আছে তা আংশিক হিসেবে চিহ্নিত করুন, এবং এক লাইনে লিখুন আপনি কোথায় থেমেছেন।
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > এই প্রোটোকলের আগের খসড়াগুলো বলত *ফেলে দিন*। সেটি ভুল ছিল: ফেলে দেওয়া অর্ধেক প্রতিবেদন সেই কাজই
+   > ধ্বংস করে যা রক্ষার জন্য পুনরারম্ভ-মতবাদের অস্তিত্ব। বিপদ হলো একটি কাটা ফাইল যা পরে সম্পূর্ণ ভেবে
+   > পড়া হয় — আর সেটি ঠেকায় **চিহ্ন**, মুছে ফেলা নয়।
+৩. **Operator-কে এক লাইন বলুন:** `ESTOP observed <timestamp> — <reason>. Holding.`
+৪. **থামুন।** চালিয়ে যাওয়ার অনুমতি চাইবেন না। কোনো বিকল্প উপায় প্রস্তাব করবেন না। কারণটি আপনার
+   ক্ষেত্রে প্রযোজ্য কি না তা যাচাই করবেন না — এটি আপনার ক্ষেত্রে প্রযোজ্য।
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**প্রত্যাখ্যান একটি উত্তর, পুনঃচেষ্টা নয়।** `RUN`-এর অপেক্ষায় লুপ করবেন না। জানান এবং শেষ করুন।
 
 ---
 
-## 6. Measure twice
+## ৪. কী এটি সরায়
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+Operator ফাইলটি আবার `RUN` করে দেন। আর কিছুই সরায় না — কোনো টাইমআউট নয়, সমস্যাটি মিটে গেছে ভাবা কোনো
+এজেন্ট নয়, সময়ের অতিক্রম নয়, থামাটি কখনো দেখেনি এমন কোনো নতুন সেশন নয়।
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+স্বয়ংক্রিয়ভাবে পরিষ্কার হওয়া কোনো হ্যান্ডলার নিরাপদ-পতনের উল্টোরূপ এবং গুণাগুণের ভিত্তিতেই প্রত্যাখ্যাত।
 
 ---
 
-## 7. The honest limit, stated once
+## ৫. পরিধি
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Estop **সহজাতভাবে বহর-ব্যাপী**। এজেন্টপ্রতি estop নেই, কারণ যে ব্যর্থতার জন্য থামা দরকার তা প্রায়
+কখনোই একটি এজেন্টে সীমিত থাকে না, আর আংশিক থামা ঠিক সেই যুক্তিকেই ডেকে আনে — *"ওটা তো অন্য কারও
+ব্যাপার"* — যা নিষিদ্ধ করতে এই ফাইলটির অস্তিত্ব।
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**বিচ্ছিন্ন এজেন্টও অন্তর্ভুক্ত।** যে এজেন্ট কোনো বাসে নেই এবং কোনো ভাগ করা পৃষ্ঠে নেই, সেও এই ফাইল
+পড়ে। বিচ্ছিন্নতা নিয়ন্ত্রণ করে এজেন্ট কী *বলতে* পারে। এটি কখনো নিয়ন্ত্রণ করে না তাকে *থামানো* যাবে
+কি না।
+
+---
+
+## ৬. দুবার মাপুন
+
+একটিমাত্র সবুজ টিক কখনো কোনো নিরাপত্তা-অবস্থা সত্যায়িত করে না। **এই রানে** ডিস্ক থেকে দুটি সংকেতই
+পড়ুন। মনে-রাখা কোনো অবস্থা কখনো উদ্ধৃত করবেন না — প্রেক্ষাপট থেকে নয়, স্মৃতি-ফাইল থেকে নয়, আগের
+পালা থেকে নয়। একটি বিকৃত `stat` বিন্যাসই একটি মিথ্যা "পরিষ্কার" বা মিথ্যা "থামানো" তৈরি করতে যথেষ্ট,
+এবং বাস্তবে দুটিই ঘটেছে।
+
+সবচেয়ে শক্তিশালী উপলব্ধ রূপ হলো STATE ফাইল ও প্রতিটি প্রহরী-পথের উপর একটি **স্থায়ী মনিটর**, যা কেবল
+পরিবর্তনে সংকেত দেয়: পরিষ্কার থাকলে নীরব, থামা স্থাপিত হওয়ামাত্র সক্রিয়। এটি "শুরুতে একবার যাচাই
+করেছিলাম"-কে সরাসরি আচ্ছাদনে পরিণত করে, এবং সেশনের মাঝপথে থামা স্থাপিত হওয়ার ফাঁকটি বন্ধ করে।
+
+---
+
+## ৭. সৎ সীমা, একবারই বলা
+
+এই প্রোটোকল থামাকে **প্রতিটি শুরুতে ও প্রতিটি চেকপয়েন্টে নির্ভরযোগ্য** করে। এটি থামাকে **তাৎক্ষণিক**
+করে না, এবং ফাইল-গাছে লেখা কোনো কিছুই কখনো করবে না।
+
+এই মুহূর্তে যদি সক্রিয়ভাবে কিছু ভুল হয়ে চলে: **উইন্ডোটি বন্ধ করুন।** তারপর ফাইলটি লিখুন, যাতে পরবর্তী
+জেগে-ওঠা এজেন্ট সেটি আবার চালু না করে।
