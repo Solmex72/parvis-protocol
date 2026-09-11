@@ -1,7 +1,9 @@
 # 09 — THE FLOOR
 
 **Status: normative for the visualiser; informative as a model.**
-Implemented by [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
+Implemented by the Warehouse tab in
+[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
+`/floor` route.
 
 ---
 
