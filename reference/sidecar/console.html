@@ -147,6 +147,70 @@
                   padding:15px 17px;font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:none;display:block}
   dialog textarea:focus{outline:none}
 
+  /* --- warehouse floor --- */
+  .whbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .crumb{font-family:var(--mono);font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
+  .crumb b{color:var(--ink)}
+  .crumb span{cursor:pointer;color:var(--blue)}
+  .crumb span:hover{text-decoration:underline}
+  .legend{font-family:var(--mono);font-size:10.5px;color:var(--ink3);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+  .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-left:9px}
+  .floor{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+         overflow:hidden;height:min(56vh,480px);min-height:280px;touch-action:none}
+  .floor canvas{display:block;width:100%;height:100%;cursor:grab}
+  .floor canvas:active{cursor:grabbing}
+  .floor .hud{position:absolute;left:11px;bottom:9px;font-family:var(--mono);font-size:10.5px;
+              color:var(--ink3);pointer-events:none;text-shadow:0 1px 3px var(--bg)}
+  .floor .tip{position:absolute;pointer-events:none;background:var(--raised);border:1px solid var(--line2);
+              border-radius:7px;padding:7px 10px;font-family:var(--mono);font-size:11.5px;
+              max-width:280px;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:5}
+  .floor .tip b{color:var(--amber)}
+  .floor.stopped{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+  /* equipment menu + floor */
+  .whgrid{display:grid;grid-template-columns:212px 1fr;gap:11px;align-items:stretch}
+  @media (max-width:760px){ .whgrid{grid-template-columns:1fr} }
+  .equip{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;
+         max-height:min(56vh,480px)}
+  .equip .grp{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+              color:var(--ink3);padding:9px 11px 5px;position:sticky;top:0;background:var(--panel);
+              border-bottom:1px solid var(--line)}
+  .equip .grp span{float:right;opacity:.7}
+  .equip .it{display:flex;align-items:center;gap:8px;padding:7px 11px;cursor:pointer;
+             font-family:var(--mono);font-size:11.5px;border-bottom:1px solid var(--line)}
+  .equip .it:hover{background:var(--raised)}
+  .equip .it[aria-selected="true"]{background:var(--raised);box-shadow:inset 2px 0 0 var(--amber)}
+  .equip .it .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .equip .it .mt{color:var(--ink3);font-size:10.5px;flex:none}
+  .equip .dot{width:8px;height:8px;border-radius:50%;background:var(--ink3);flex:none}
+
+  .ctl{margin-top:11px;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+  .ctl .ch{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--line2);
+           background:var(--raised);flex-wrap:wrap}
+  .ctl .ch .t{font-family:var(--mono);font-size:13px;font-weight:700}
+  .ctl .ch .sub{flex:1;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+                text-transform:uppercase;color:var(--ink3)}
+  .ctl .dot{width:10px;height:10px;border-radius:50%;background:var(--ink3);flex:none}
+  .ctl .cb{padding:11px 12px 13px}
+  .ctl .kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:3px 16px;margin-bottom:8px}
+  .ctl .kv{display:flex;gap:8px;font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+  .ctl .kv span{width:80px;flex:none}
+  .ctl .kv b{color:var(--ink2);font-weight:500;overflow-wrap:anywhere}
+  .ctl .last{font-family:var(--mono);font-size:11px;color:var(--ink2);margin:0 0 10px;
+             padding:7px 9px;background:var(--bg);border-radius:6px;overflow-wrap:anywhere}
+  .ctl .lb{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;
+           text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+  .ctl textarea{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--ink);
+                border-radius:7px;padding:8px 9px;font-family:var(--mono);font-size:12px;resize:vertical}
+  .ctl textarea:focus{outline:2px solid var(--amber);outline-offset:-1px}
+  .ctl .go{margin-top:7px;background:var(--amber);color:#14100a;border:0;font-weight:700;
+           padding:9px 20px;border-radius:7px;cursor:pointer;font:inherit;font-size:12.5px}
+  .ctl .go:disabled{background:var(--line2);color:var(--ink3);cursor:not-allowed}
+  .ctl .echo{margin-top:7px;font-size:11px;font-family:var(--mono);color:var(--ink2);overflow-wrap:anywhere}
+  .ctl .warn{margin:10px 0 0;font-size:11.5px;line-height:1.55;color:var(--ink3)}
+  .ctl .warn code{font-family:var(--mono);font-size:10.5px;background:var(--bg);padding:1px 4px;border-radius:3px}
+  .ctl .mini{font-family:var(--mono);font-size:11px;color:var(--ink2);max-height:150px;overflow:auto}
+  .ctl .mini div{padding:3px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+
   footer{border-top:1px solid var(--line);color:var(--ink3);font-family:var(--mono);font-size:11px;
          padding:12px 16px;overflow-wrap:anywhere}
   footer .inner{max-width:1140px;margin:0 auto}
@@ -164,6 +228,7 @@
 
 <nav role="tablist">
   <button role="tab" data-p="overview" aria-selected="true">Overview</button>
+  <button role="tab" data-p="warehouse">Warehouse<span class="count" id="c-wh"></span></button>
   <button role="tab" data-p="docs">Documents<span class="count" id="c-docs"></span></button>
   <button role="tab" data-p="tasks">Tasks<span class="count" id="c-tasks"></span></button>
   <button role="tab" data-p="bus">Bus<span class="count" id="c-bus"></span></button>
@@ -195,6 +260,70 @@
       An induction appends a <code>REQ</code> row to the task index and drops a pointer in
       <code>_os/events/surface/</code>. <b>No agent is spawned, no command runs, nothing is sent.</b>
       Committing the work stays your keystroke — that review is the whole point of the layer.
+    </p>
+  </section>
+
+  <!-- WAREHOUSE -->
+  <section class="panel" id="p-warehouse">
+    <div class="whbar">
+      <span class="crumb" id="wh-crumb">/</span>
+      <span class="spacer"></span>
+      <span class="legend">
+        <i style="background:var(--green)"></i>moving
+        <i style="background:var(--blue)"></i>scheduled
+        <i style="background:var(--amber)"></i>gated
+        <i style="background:var(--red)"></i>stopped
+        <i style="background:var(--ink3)"></i>no source
+      </span>
+      <button class="iconbtn" id="wh-up" title="Up one level">↰</button>
+      <button class="iconbtn" id="wh-top" title="Top-down view">⊞</button>
+    </div>
+    <div class="whgrid">
+      <!-- EQUIPMENT — every object on this floor, selectable. 09 §2. -->
+      <aside class="equip" id="wh-equip"><div class="empty">loading…</div></aside>
+
+      <div class="floor" id="wh-wrap">
+        <canvas id="wh-cv"></canvas>
+        <div class="hud" id="wh-hud">—</div>
+        <div class="tip" id="wh-tip" hidden></div>
+      </div>
+    </div>
+
+    <!-- CONTROL — the selected equipment. Inducts work; never executes. 09 §8. -->
+    <div class="ctl" id="wh-ctl" hidden>
+      <div class="ch">
+        <span class="dot" id="ctl-dot"></span>
+        <span class="t" id="ctl-name">—</span>
+        <span class="sub" id="ctl-kind">—</span>
+        <button class="iconbtn" id="ctl-x" title="Close">✕</button>
+      </div>
+      <div class="cb">
+        <div class="kvs" id="ctl-kvs"></div>
+        <div class="last" id="ctl-last" hidden></div>
+        <div id="ctl-form" hidden>
+          <label class="lb" for="ctl-p" id="ctl-lb">Induct work</label>
+          <textarea id="ctl-p" rows="3" spellcheck="false" placeholder="What should be picked up?"></textarea>
+          <button class="go" id="ctl-go">Induct</button>
+          <div class="echo" id="ctl-msg"></div>
+        </div>
+        <div id="ctl-listing" hidden></div>
+        <p class="warn" id="ctl-warn"></p>
+      </div>
+    </div>
+
+    <div class="readout" style="margin-top:12px">
+      <div class="cell"><div class="k">Cranes</div><div class="v" id="wh-cranes">—</div></div>
+      <div class="cell"><div class="k">Pallets</div><div class="v" id="wh-pallets">—</div></div>
+      <div class="cell"><div class="k">Inducts</div><div class="v" id="wh-inducts">—</div></div>
+      <div class="cell"><div class="k">Spurs</div><div class="v" id="wh-spurs">—</div></div>
+    </div>
+    <p class="note">
+      Directories are <b>pallets</b>; live agents are <b>cranes</b>. Drag to orbit, scroll to zoom,
+      click any equipment for its controls — <b>every level is a warehouse</b>, same controls all
+      the way down. A crane is placed only where its own last bus line names a directory on this
+      floor; otherwise it parks at the dock and renders grey rather than being put somewhere
+      invented. <b>The floor inducts; it never executes.</b> Addressing a crane queues work and
+      notifies it — no process is started, and the trucks at the boundary have no controls at all.
     </p>
   </section>
 
@@ -501,6 +630,558 @@
     }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
   }
 
+  // =========================================================================
+  // THE WAREHOUSE FLOOR — protocol/09-FLOOR.md
+  //
+  // Hand-rolled projection on a 2D canvas. No library, no CDN, per 07 §2.1:
+  // a yaw/pitch camera, painter's-algorithm depth sort, and extruded boxes.
+  // That is the whole 3D engine and it is about 120 lines.
+  //
+  // Directories are pallets. Live agents are cranes. A crane is placed only
+  // where the data actually says it is; where that is unknown it parks at the
+  // dock and renders grey. Never a guessed position. (09 §3.)
+  // =========================================================================
+  var WH = {
+    path: "", data: null, yaw: -0.62, pitch: 0.72, zoom: 1, top: false,
+    drag: null, hover: null, raf: null, t0: performance.now(), layout: [], cranePos: {}
+  };
+
+  var cv = $("wh-cv"), ctx = cv.getContext("2d");
+
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function fitCanvas(){
+    var r = cv.parentElement.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: r.width, h: r.height };
+  }
+
+  // World -> screen. Yaw spins the floor, pitch tilts it. Top-down is just
+  // pitch driven to vertical, so the controls never change as you descend.
+  function project(p, view){
+    var cy = Math.cos(WH.yaw), sy = Math.sin(WH.yaw);
+    var x = p.x * cy - p.z * sy;
+    var z = p.x * sy + p.z * cy;
+    var cp = Math.cos(WH.pitch), sp = Math.sin(WH.pitch);
+    var y2 = p.y * cp - z * sp;
+    var depth = p.y * sp + z * cp;
+    var s = view.scale;
+    return { x: view.cx + x * s, y: view.cy + y2 * s, d: depth };
+  }
+
+  function shade(hex, amt){
+    var c = hex.replace("#", "");
+    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    var n = parseInt(c, 16);
+    var r = Math.max(0, Math.min(255, (n >> 16) + amt));
+    var g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amt));
+    var b = Math.max(0, Math.min(255, (n & 255) + amt));
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
+  // An axis-aligned box, drawn as three visible faces.
+  function box(out, cxw, czw, w, d, h, color, meta){
+    var x0 = cxw - w/2, x1 = cxw + w/2, z0 = czw - d/2, z1 = czw + d/2;
+    var faces = [
+      { pts: [{x:x0,y:h,z:z0},{x:x1,y:h,z:z0},{x:x1,y:h,z:z1},{x:x0,y:h,z:z1}], c: shade(color, 26) },
+      { pts: [{x:x0,y:0,z:z1},{x:x1,y:0,z:z1},{x:x1,y:h,z:z1},{x:x0,y:h,z:z1}], c: shade(color, -16) },
+      { pts: [{x:x1,y:0,z:z0},{x:x1,y:0,z:z1},{x:x1,y:h,z:z1},{x:x1,y:h,z:z0}], c: shade(color, -38) }
+    ];
+    for (var i = 0; i < faces.length; i++) out.push({ pts: faces[i].pts, c: faces[i].c, meta: meta });
+  }
+
+  function drawFloor(){
+    if (!WH.data) return;
+    var view = fitCanvas();
+    var d = WH.data;
+    var stopped = d.estop === "STOP";
+    var COL = {
+      green: css("--green"), blue: css("--blue"), amber: css("--amber"),
+      red: css("--red"), grey: css("--ink3"), line: css("--line2"), ink: css("--ink")
+    };
+
+    ctx.clearRect(0, 0, view.w, view.h);
+
+    var n = d.pallets.length;
+    var cols = Math.max(1, Math.ceil(Math.sqrt(n * 1.6)));
+    var rows = Math.max(1, Math.ceil(n / cols));
+    var span = Math.max(cols, rows) + 3;
+    var vp = { cx: view.w / 2, cy: view.h / 2 + view.h * 0.10, scale: (Math.min(view.w, view.h) / (span * 2.1)) * WH.zoom };
+
+    var quads = [];
+    var GAP = 1.55;
+    var ox = -((cols - 1) * GAP) / 2, oz = -((rows - 1) * GAP) / 2;
+
+    // --- deck ---
+    var deckW = cols * GAP + 2.4, deckD = rows * GAP + 2.4;
+    quads.push({
+      pts: [{x:-deckW/2,y:-0.12,z:-deckD/2},{x:deckW/2,y:-0.12,z:-deckD/2},
+            {x:deckW/2,y:-0.12,z:deckD/2},{x:-deckW/2,y:-0.12,z:deckD/2}],
+      c: stopped ? "rgba(207,74,65,.10)" : "rgba(127,140,155,.07)", meta: null
+    });
+
+    // --- pallets ---
+    WH.layout = [];
+    for (var i = 0; i < n; i++) {
+      var p = d.pallets[i];
+      var cx = ox + (i % cols) * GAP, cz = oz + Math.floor(i / cols) * GAP;
+      // Height carries how much is inside. Null data stays flat and grey —
+      // a plausible-looking height would be an invented number. (07 §2.2)
+      var load = (p.dirs === null) ? null : (p.dirs + p.files);
+      var h = load === null ? 0.16 : Math.min(1.5, 0.22 + Math.log10(1 + load) * 0.62);
+      var col = stopped ? COL.red : load === null ? COL.grey : p.hot ? COL.green : COL.blue;
+      if (!stopped && load !== null && !p.hot) col = shade(COL.blue, -28);
+      var isHover = WH.hover && WH.hover.kind === "pallet" && WH.hover.name === p.name;
+      box(quads, cx, cz, 1.05, 1.05, h, isHover ? shade(col, 40) : col, { kind: "pallet", name: p.name, rel: p.rel, p: p });
+      WH.layout.push({ name: p.name, x: cx, z: cz, h: h, rel: p.rel, p: p });
+    }
+    if (n === 0) {
+      quads.push({ pts: [{x:-0.5,y:0,z:-0.5},{x:0.5,y:0,z:-0.5},{x:0.5,y:0,z:0.5},{x:-0.5,y:0,z:0.5}],
+                   c: "rgba(127,140,155,.12)", meta: null });
+    }
+
+    // --- docks: induct on one edge, spur on the other (09 §2) ---
+    var edge = deckD / 2 + 0.55;
+    box(quads, -deckW/2 + 0.9, -edge, 1.5, 0.5, 0.26, stopped ? COL.red : COL.blue, { kind: "induct" });
+    box(quads,  deckW/2 - 0.9,  edge, 1.5, 0.5, 0.26, stopped ? COL.red : shade(COL.green, -30), { kind: "spur" });
+
+    // --- trucks: outside the deck, never on the floor (09 §5) ---
+    box(quads, -deckW/2 + 0.9, -edge - 1.25, 1.15, 0.75, 0.5, shade(COL.grey, -30), { kind: "truck" });
+
+    // --- cranes ---
+    var now = performance.now();
+    for (var k = 0; k < d.cranes.length; k++) {
+      var cr = d.cranes[k];
+      var target = null;
+      if (cr.at) {
+        for (var q = 0; q < WH.layout.length; q++) if (WH.layout[q].name === cr.at) { target = WH.layout[q]; break; }
+      }
+      // No attribution -> park at the induct dock, grey. Never invented.
+      var tx = target ? target.x : -deckW/2 + 0.9;
+      var tz = target ? target.z - 0.95 : -edge;
+
+      var pos = WH.cranePos[cr.session || cr.agent] || { x: tx, z: tz };
+      pos.x += (tx - pos.x) * 0.07;          // eased travel = "realtime" motion
+      pos.z += (tz - pos.z) * 0.07;
+      WH.cranePos[cr.session || cr.agent] = pos;
+
+      var ccol = stopped ? COL.red
+               : cr.state === "moving" ? COL.green
+               : cr.state === "gated" ? COL.amber
+               : cr.state === "scheduled" ? COL.blue
+               : COL.grey;
+
+      // A moving crane bobs; an idle one does not. Motion means motion.
+      var bob = (cr.state === "moving" && !stopped) ? Math.sin((now - WH.t0) / 320 + k) * 0.06 : 0;
+      var mast = 1.85 + bob;
+      var hov = WH.hover && WH.hover.kind === "crane" && WH.hover.name === cr.agent;
+      box(quads, pos.x, pos.z, 0.2, 0.2, mast, hov ? shade(ccol, 45) : ccol, { kind: "crane", name: cr.agent, cr: cr });
+      box(quads, pos.x, pos.z, 0.74, 0.32, 0.13, shade(ccol, -20), { kind: "crane", name: cr.agent, cr: cr });
+      if (cr.state === "moving" && !stopped && target) {
+        box(quads, pos.x, pos.z, 0.42, 0.42, 0.3, shade(COL.amber, -6), { kind: "crane", name: cr.agent, cr: cr });
+      }
+    }
+
+    // --- project, depth sort, paint ---
+    var tris = [];
+    for (var f = 0; f < quads.length; f++) {
+      var q2 = quads[f], sp = [], dsum = 0;
+      for (var v = 0; v < q2.pts.length; v++) { var s = project(q2.pts[v], vp); sp.push(s); dsum += s.d; }
+      tris.push({ sp: sp, c: q2.c, d: dsum / q2.pts.length, meta: q2.meta });
+    }
+    tris.sort(function(a, b){ return b.d - a.d; });
+
+    for (var t = 0; t < tris.length; t++) {
+      var tr = tris[t];
+      ctx.beginPath();
+      ctx.moveTo(tr.sp[0].x, tr.sp[0].y);
+      for (var j = 1; j < tr.sp.length; j++) ctx.lineTo(tr.sp[j].x, tr.sp[j].y);
+      ctx.closePath();
+      ctx.fillStyle = tr.c;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,.22)";
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+    }
+    WH.tris = tris;
+
+    // --- labels ---
+    ctx.font = "600 10px " + css("--mono").split(",")[0] + ",monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = COL.ink;
+    for (var L = 0; L < WH.layout.length; L++) {
+      var it = WH.layout[L];
+      var sc = project({ x: it.x, y: it.h + 0.26, z: it.z }, vp);
+      var label = it.name.length > 13 ? it.name.slice(0, 12) + "…" : it.name;
+      ctx.globalAlpha = 0.92;
+      ctx.fillText(label, sc.x, sc.y);
+      ctx.globalAlpha = 1;
+    }
+    for (var m = 0; m < d.cranes.length; m++) {
+      var cc = d.cranes[m];
+      var cp2 = WH.cranePos[cc.session || cc.agent];
+      if (!cp2) continue;
+      var s2 = project({ x: cp2.x, y: 2.18, z: cp2.z }, vp);
+      ctx.fillStyle = stopped ? COL.red
+                    : cc.state === "moving" ? COL.green
+                    : cc.state === "gated" ? COL.amber
+                    : cc.state === "scheduled" ? COL.blue : COL.grey;
+      ctx.fillText(cc.agent, s2.x, s2.y);
+    }
+
+    $("wh-hud").textContent =
+      (d.path ? "/" + d.path : "/") + "   ·   " + d.pallets.length + " pallets · " +
+      d.cranes.length + " cranes   ·   read " + d.readAt.slice(11, 19) + "Z" +
+      (stopped ? "   ·   E-STOPPED" : "");
+
+    $("wh-wrap").classList.toggle("stopped", stopped);
+  }
+
+  function loop(){
+    if ($("p-warehouse").classList.contains("on") && WH.data) drawFloor();
+    WH.raf = requestAnimationFrame(loop);
+  }
+
+  // --- picking: which box is under the cursor -------------------------------
+  function pick(mx, my){
+    if (!WH.tris) return null;
+    for (var i = WH.tris.length - 1; i >= 0; i--) {
+      var tr = WH.tris[i];
+      if (!tr.meta) continue;
+      var pts = tr.sp, inside = false;
+      for (var a = 0, b = pts.length - 1; a < pts.length; b = a++) {
+        if (((pts[a].y > my) !== (pts[b].y > my)) &&
+            (mx < (pts[b].x - pts[a].x) * (my - pts[a].y) / (pts[b].y - pts[a].y) + pts[a].x)) inside = !inside;
+      }
+      if (inside) return tr.meta;
+    }
+    return null;
+  }
+
+  cv.addEventListener("pointerdown", function(e){
+    cv.setPointerCapture(e.pointerId);
+    WH.drag = { x: e.clientX, y: e.clientY, yaw: WH.yaw, pitch: WH.pitch, moved: 0 };
+  });
+  cv.addEventListener("pointermove", function(e){
+    var r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (WH.drag) {
+      var dx = e.clientX - WH.drag.x, dy = e.clientY - WH.drag.y;
+      WH.drag.moved = Math.max(WH.drag.moved, Math.abs(dx) + Math.abs(dy));
+      WH.yaw = WH.drag.yaw + dx * 0.008;
+      WH.pitch = Math.max(0.12, Math.min(1.52, WH.drag.pitch + dy * 0.006));
+      WH.top = false;
+      return;
+    }
+    var hit = pick(mx, my);
+    WH.hover = hit && (hit.kind === "pallet" || hit.kind === "crane") ? hit : null;
+    var tip = $("wh-tip");
+    if (!hit) { tip.hidden = true; return; }
+    var html = "";
+    if (hit.kind === "pallet") {
+      var p = hit.p;
+      html = "<b>" + esc(p.name) + "</b><br>" +
+             (p.dirs === null ? "unreadable — no live source"
+               : p.dirs + " dirs · " + p.files + " files") +
+             (p.mtime ? "<br>touched " + esc(p.mtime.replace("T", " ").slice(0, 16)) : "") +
+             "<br><span style=\"color:var(--ink3)\">click to descend</span>";
+    } else if (hit.kind === "crane") {
+      var c2 = hit.cr;
+      html = "<b>" + esc(c2.agent) + "</b> · " + esc(c2.state) +
+             (c2.at ? "<br>at " + esc(c2.at) : "<br><span style=\"color:var(--ink3)\">position unknown — parked at the dock</span>") +
+             (c2.note ? "<br>" + esc(c2.note) : "") +
+             (c2.scheduled ? "<br>" + c2.scheduled + " queued" : "");
+    } else if (hit.kind === "truck") {
+      html = "<b>truck</b><br>an external service<br><span style=\"color:var(--ink3)\">docks at the boundary, never on the floor</span>";
+    } else if (hit.kind === "induct") {
+      html = "<b>induct</b><br>work arriving — open REQ rows";
+    } else if (hit.kind === "spur") {
+      html = "<b>spur</b><br>deliverables leaving — surface files";
+    }
+    tip.innerHTML = html;
+    tip.hidden = false;
+    tip.style.left = Math.min(mx + 14, r.width - 290) + "px";
+    tip.style.top = Math.max(6, my - 12) + "px";
+  });
+  cv.addEventListener("pointerup", function(e){
+    var wasDrag = WH.drag && WH.drag.moved > 5;
+    WH.drag = null;
+    if (wasDrag) return;
+    var r = cv.getBoundingClientRect();
+    var hit = pick(e.clientX - r.left, e.clientY - r.top);
+    if (!hit) return;
+    // Clicking selects the equipment and opens its controls. A pallet still
+    // descends — but from its own control panel, so navigation is a deliberate
+    // second click rather than a side effect of inspecting something.
+    if (hit.kind === "pallet") select("pallet", hit.name);
+    else if (hit.kind === "crane") select("crane", hit.name);
+    else if (hit.kind === "induct" || hit.kind === "spur" || hit.kind === "truck") select(hit.kind, hit.kind);
+  });
+  cv.addEventListener("pointerleave", function(){ WH.drag = null; WH.hover = null; $("wh-tip").hidden = true; });
+  cv.addEventListener("wheel", function(e){
+    e.preventDefault();
+    WH.zoom = Math.max(0.35, Math.min(3.2, WH.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+  }, { passive: false });
+
+  $("wh-top").addEventListener("click", function(){
+    WH.top = !WH.top;
+    WH.pitch = WH.top ? 1.52 : 0.72;
+    WH.yaw = WH.top ? 0 : -0.62;
+  });
+  $("wh-up").addEventListener("click", function(){
+    if (WH.data && WH.data.parent !== null) loadFloor(WH.data.parent);
+  });
+
+  function crumb(d){
+    var el = $("wh-crumb");
+    var html = '<span data-r="">root</span>';
+    var acc = [];
+    d.breadcrumb.forEach(function(seg, i){
+      acc.push(seg);
+      var isLast = i === d.breadcrumb.length - 1;
+      html += ' / ' + (isLast ? '<b>' + esc(seg) + '</b>' : '<span data-r="' + esc(acc.join("/")) + '">' + esc(seg) + '</span>');
+    });
+    el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll("span[data-r]"), function(s){
+      s.addEventListener("click", function(){ loadFloor(s.getAttribute("data-r")); });
+    });
+  }
+
+  // --- equipment menu ------------------------------------------------------
+  // Every object the mapping defines gets a row: cranes, pallets, the two
+  // docks, the conveyor, and the trucks at the boundary. Selecting one opens
+  // its controls below the floor.
+  var SEL = null;   // {kind, id}
+
+  function craneColour(c3, stopped){
+    return stopped || c3.state === "stopped" ? "var(--red)"
+         : c3.state === "moving" ? "var(--green)"
+         : c3.state === "gated" ? "var(--amber)"
+         : c3.state === "scheduled" ? "var(--blue)" : "var(--ink3)";
+  }
+
+  function buildEquip(d){
+    var box2 = $("wh-equip");
+    var stopped = d.estop === "STOP";
+    var h = "";
+
+    h += '<div class="grp">Cranes<span>' + d.cranes.length + '</span></div>';
+    if (!d.cranes.length) {
+      h += '<div class="it" style="cursor:default;color:var(--ink3)">none signed on</div>';
+    } else {
+      d.cranes.forEach(function(c3){
+        h += '<div class="it" data-k="crane" data-i="' + esc(c3.agent) + '" aria-selected="false">' +
+             '<i class="dot" style="background:' + craneColour(c3, stopped) + '"></i>' +
+             '<span class="nm">' + esc(c3.agent) + '</span>' +
+             '<span class="mt">' + esc(c3.state) + '</span></div>';
+      });
+    }
+
+    h += '<div class="grp">Pallets<span>' + d.pallets.length + '</span></div>';
+    if (!d.pallets.length) {
+      h += '<div class="it" style="cursor:default;color:var(--ink3)">empty floor</div>';
+    } else {
+      d.pallets.forEach(function(p){
+        var col = stopped ? "var(--red)" : p.dirs === null ? "var(--ink3)" : p.hot ? "var(--green)" : "var(--blue)";
+        h += '<div class="it" data-k="pallet" data-i="' + esc(p.name) + '" aria-selected="false">' +
+             '<i class="dot" style="background:' + col + '"></i>' +
+             '<span class="nm">' + esc(p.name) + '</span>' +
+             '<span class="mt">' + (p.dirs === null ? "—" : (p.dirs + p.files)) + '</span></div>';
+      });
+    }
+
+    h += '<div class="grp">Docks</div>' +
+         '<div class="it" data-k="induct" data-i="induct" aria-selected="false">' +
+           '<i class="dot" style="background:' + (stopped ? "var(--red)" : "var(--blue)") + '"></i>' +
+           '<span class="nm">Induct</span><span class="mt">' + d.inducts + '</span></div>' +
+         '<div class="it" data-k="spur" data-i="spur" aria-selected="false">' +
+           '<i class="dot" style="background:' + (stopped ? "var(--red)" : "var(--green)") + '"></i>' +
+           '<span class="nm">Spur</span><span class="mt">' + d.spurs + '</span></div>';
+
+    h += '<div class="grp">Transport</div>' +
+         '<div class="it" data-k="conveyor" data-i="conveyor" aria-selected="false">' +
+           '<i class="dot" style="background:var(--ink3)"></i>' +
+           '<span class="nm">Conveyor</span><span class="mt">bus</span></div>' +
+         '<div class="it" data-k="truck" data-i="truck" aria-selected="false">' +
+           '<i class="dot" style="background:var(--ink3)"></i>' +
+           '<span class="nm">Trucks</span><span class="mt">edge</span></div>';
+
+    box2.innerHTML = h;
+    Array.prototype.forEach.call(box2.querySelectorAll(".it[data-k]"), function(el){
+      if (SEL && SEL.kind === el.dataset.k && SEL.id === el.dataset.i) el.setAttribute("aria-selected", "true");
+      el.addEventListener("click", function(){ select(el.dataset.k, el.dataset.i); });
+    });
+  }
+
+  function kv(k, v){ return '<div class="kv"><span>' + esc(k) + '</span><b>' + (v === null || v === undefined || v === "" ? "—" : esc(v)) + '</b></div>'; }
+
+  function select(kind, id){
+    SEL = { kind: kind, id: id };
+    var d = WH.data; if (!d) return;
+    var stopped = d.estop === "STOP";
+    Array.prototype.forEach.call($("wh-equip").querySelectorAll(".it[data-k]"), function(el){
+      el.setAttribute("aria-selected", (el.dataset.k === kind && el.dataset.i === id) ? "true" : "false");
+    });
+
+    var ctl = $("wh-ctl");
+    ctl.hidden = false;
+    $("ctl-form").hidden = true;
+    $("ctl-listing").hidden = true;
+    $("ctl-last").hidden = true;
+    $("ctl-msg").textContent = "";
+    $("ctl-kind").textContent = kind;
+
+    if (kind === "crane") {
+      var c3 = null;
+      d.cranes.forEach(function(x){ if (x.agent === id) c3 = x; });
+      if (!c3) { ctl.hidden = true; return; }
+      $("ctl-name").textContent = c3.agent;
+      $("ctl-dot").style.background = craneColour(c3, stopped);
+      $("ctl-kvs").innerHTML = kv("state", c3.state) + kv("at", c3.at || "position unknown") +
+        kv("signed on", c3.signedOn ? c3.signedOn.replace("T", " ").slice(0, 19) : null) +
+        kv("queued", c3.scheduled);
+      if (c3.note) { $("ctl-last").textContent = c3.note; $("ctl-last").hidden = false; }
+      $("ctl-form").hidden = false;
+      $("ctl-lb").textContent = "Induct work for " + c3.agent;
+      $("ctl-go").textContent = "Induct to " + c3.agent;
+      $("ctl-p").placeholder = "What should " + c3.agent + " pick up?";
+      $("ctl-go").disabled = stopped;
+      $("ctl-warn").innerHTML = stopped
+        ? "<b>E-stopped.</b> A red floor takes no orders — nothing can be inducted until the Operator clears it."
+        : "Writes a <code>REQ</code> row addressed to this agent and a <code>TELL</code> line to its inbox. " +
+          "<b>It does not start the agent.</b> Nothing here spawns a process or runs a command, and the inbox " +
+          "line informs rather than commands — the authority is you, in conversation, not a file.";
+
+    } else if (kind === "pallet") {
+      var p = null;
+      d.pallets.forEach(function(x){ if (x.name === id) p = x; });
+      if (!p) { ctl.hidden = true; return; }
+      $("ctl-name").textContent = p.name;
+      $("ctl-dot").style.background = stopped ? "var(--red)" : p.dirs === null ? "var(--ink3)" : p.hot ? "var(--green)" : "var(--blue)";
+      $("ctl-kvs").innerHTML = kv("path", "/" + p.rel) +
+        kv("contents", p.dirs === null ? "unreadable — no live source" : p.dirs + " dirs · " + p.files + " files") +
+        kv("touched", p.mtime ? p.mtime.replace("T", " ").slice(0, 19) : null) +
+        kv("recent", p.hot ? "yes — within 10 min" : "no");
+      $("ctl-listing").hidden = false;
+      $("ctl-listing").innerHTML = '<button class="go" id="ctl-desc">Descend into ' + esc(p.name) + '</button>';
+      $("ctl-desc").addEventListener("click", function(){ loadFloor(p.rel); });
+      $("ctl-warn").innerHTML = "Open a pallet and you are looking at <b>another whole warehouse</b> — " +
+        "its own cranes, pallets and docks, navigated exactly the same way.";
+
+    } else if (kind === "induct") {
+      $("ctl-name").textContent = "Induct";
+      $("ctl-dot").style.background = stopped ? "var(--red)" : "var(--blue)";
+      $("ctl-kvs").innerHTML = kv("open REQ rows", d.inducts) + kv("dock", "inbound");
+      $("ctl-form").hidden = false;
+      $("ctl-lb").textContent = "Induct unaddressed work";
+      $("ctl-go").textContent = "Induct";
+      $("ctl-p").placeholder = "What arrived?";
+      $("ctl-go").disabled = stopped;
+      $("ctl-warn").innerHTML = stopped
+        ? "<b>E-stopped.</b> Nothing inducts while the floor is red."
+        : "Work enters here. It gets a <code>REQ</code> row before any crane touches it, so an " +
+          "interrupted induction is still visible. Unaddressed — no agent is named.";
+
+    } else if (kind === "spur") {
+      $("ctl-name").textContent = "Spur";
+      $("ctl-dot").style.background = stopped ? "var(--red)" : "var(--green)";
+      $("ctl-kvs").innerHTML = kv("staged", d.spurs) + kv("dock", "outbound");
+      $("ctl-listing").hidden = false;
+      $("ctl-listing").innerHTML = '<div class="mini" id="ctl-spurs">reading…</div>';
+      api("/surface").then(function(r){
+        var el = $("ctl-spurs"); if (!el) return;
+        if (!r.ok || !r.body.present) { el.textContent = "no surface directory"; return; }
+        var fs2 = r.body.files || [];
+        el.innerHTML = fs2.length ? fs2.slice(0, 20).map(function(f){
+          return "<div>" + esc(f.name) + "</div>";
+        }).join("") : "surface is clear";
+      });
+      $("ctl-warn").innerHTML = "Deliverables leave through a dock; they are never dropped off the edge of " +
+        "the floor. The substance lives where the pointer says — this dock is the notification.";
+
+    } else if (kind === "conveyor") {
+      $("ctl-name").textContent = "Conveyor";
+      $("ctl-dot").style.background = "var(--ink3)";
+      $("ctl-kvs").innerHTML = kv("path", "_os/exchange/bus/") + kv("verbs", "FLASH ASK ANS TELL GATE ACK");
+      $("ctl-listing").hidden = false;
+      $("ctl-listing").innerHTML = '<div class="mini" id="ctl-bus">reading…</div>';
+      api("/bus").then(function(r){
+        var el = $("ctl-bus"); if (!el) return;
+        if (!r.ok || !r.body.present) { el.textContent = "no broadcast log"; return; }
+        var ls = r.body.lines || [];
+        el.innerHTML = ls.length ? ls.slice(0, 14).map(function(l){
+          return "<div>" + (l.malformed ? '<span style="color:var(--red)">malformed</span> ' + esc(l.raw)
+            : '<b>' + esc(l.verb) + '</b> ' + esc(l.from) + ' &rsaquo; ' + esc(l.to) + ' — ' + esc(l.text)) + "</div>";
+        }).join("") : "bus is quiet";
+      });
+      $("ctl-warn").innerHTML = "How work moves without a crane carrying it. <b>Read-only from here</b> — " +
+        "a line on the bus informs, it never commands, so a console that could write orders onto it " +
+        "would be manufacturing authority the protocol denies it.";
+
+    } else if (kind === "truck") {
+      $("ctl-name").textContent = "Trucks";
+      $("ctl-dot").style.background = "var(--ink3)";
+      $("ctl-kvs").innerHTML = kv("position", "at the boundary") + kv("controls", "none, by design");
+      $("ctl-warn").innerHTML = "An external service — another AI, an API, a vendor. <b>A truck docks at " +
+        "the boundary and never drives onto the floor.</b> It drops a load at an induct or collects one " +
+        "from a spur, and that is the entirety of its access. That dock is the airlock. Its paperwork is " +
+        "inbound data, never an order — which is why there are no controls here.";
+    }
+  }
+
+  $("ctl-x").addEventListener("click", function(){
+    SEL = null; $("wh-ctl").hidden = true;
+    Array.prototype.forEach.call($("wh-equip").querySelectorAll(".it[data-k]"), function(el){
+      el.setAttribute("aria-selected", "false");
+    });
+  });
+
+  $("ctl-go").addEventListener("click", function(){
+    if (!SEL) return;
+    var txt = $("ctl-p").value.trim();
+    if (!txt) return;
+    var body = { prompt: txt };
+    if (SEL.kind === "crane") body.agent = SEL.id;
+    $("ctl-msg").textContent = "inducting…";
+    api("/induct", { method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body) })
+      .then(function(r){
+        if (r.ok) {
+          $("ctl-msg").innerHTML = "REQ row written" + (r.body.agent ? " for <b>" + esc(r.body.agent) + "</b>" : "") +
+            " · pointer " + esc(r.body.pointer) +
+            (r.body.inbox ? " · TELL to " + esc(r.body.inbox) : "") + " · nothing executed";
+          $("ctl-p").value = "";
+          loadFloor(WH.path); loadTasks();
+        } else {
+          $("ctl-msg").textContent = (r.body.error || "refused") + (r.body.reason ? " — " + r.body.reason : "");
+        }
+      });
+  });
+
+  function loadFloor(rel){
+    if (rel === null || rel === undefined) rel = WH.path;
+    api("/floor?path=" + encodeURIComponent(rel)).then(function(r){
+      if (!r.ok) { $("wh-equip").innerHTML = '<div class="empty">' + esc(r.body.error || "sidecar unreachable") + '</div>'; return; }
+      var changed = r.body.path !== WH.path;
+      WH.path = r.body.path;
+      WH.data = r.body;
+      if (changed) { WH.cranePos = {}; SEL = null; $("wh-ctl").hidden = true; }
+      crumb(r.body);
+      $("c-wh").textContent = r.body.cranes.length ? r.body.cranes.length : "";
+      show($("wh-cranes"), r.body.cranes.length);
+      show($("wh-pallets"), r.body.pallets.length);
+      show($("wh-inducts"), r.body.inducts);
+      show($("wh-spurs"), r.body.spurs);
+      buildEquip(r.body);
+      if (SEL) select(SEL.kind, SEL.id);   // keep the panel live as data refreshes
+      drawFloor();
+    }).catch(function(){ $("wh-equip").innerHTML = '<div class="empty">sidecar unreachable</div>'; });
+  }
+
+  window.addEventListener("resize", function(){ if (WH.data) drawFloor(); });
+  WH.raf = requestAnimationFrame(loop);
+
   // --- settings ------------------------------------------------------------
   var CFG = null;
 
@@ -595,7 +1276,8 @@
     loadDocs();
   });
 
-  var loaders = { overview: refresh, docs: loadDocs, tasks: loadTasks, bus: loadBus,
+  var loaders = { overview: refresh, warehouse: function(){ loadFloor(WH.path); },
+                  docs: loadDocs, tasks: loadTasks, bus: loadBus,
                   surface: loadSurface, board: loadBoard, settings: loadConfig };
 
   // --- editor --------------------------------------------------------------
@@ -652,8 +1334,16 @@
   $("p").addEventListener("keydown", function(e){ if (e.key === "Enter") induct(); });
 
   // --- boot ----------------------------------------------------------------
-  refresh().then(function(){ loadDocs(); loadTasks(); loadBus(); loadSurface(); });
+  refresh().then(function(){ loadDocs(); loadTasks(); loadBus(); loadSurface(); loadFloor(""); });
   setInterval(refresh, 5000);   // the colours are the state — keep them live
+
+  // The floor polls faster than the rest: a crane that moved five seconds ago
+  // should already have moved on screen. It is still a poll, not telemetry —
+  // the HUD shows the read time so a stalled feed is visible rather than
+  // silently stale. (09 §8.)
+  setInterval(function(){
+    if ($("p-warehouse").classList.contains("on")) loadFloor(WH.path);
+  }, 2000);
 })();
 </script>
 </body>

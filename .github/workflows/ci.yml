@@ -116,7 +116,7 @@ jobs:
         shell: bash
         run: |
           for f in 00-PRECEDENCE 01-ESTOP 02-EVIDENCE 03-BUS 04-OUTPUT-CONTRACT \
-                   05-CORRECTION 06-DATA-ZONES 07-INTERFACE 08-AGENTS; do
+                   05-CORRECTION 06-DATA-ZONES 07-INTERFACE 08-AGENTS 09-FLOOR; do
             test -f "protocol/$f.md" || { echo "::error::protocol/$f.md missing"; exit 1; }
             grep -q "$f" README.md || { echo "::error::$f not linked from README"; exit 1; }
           done

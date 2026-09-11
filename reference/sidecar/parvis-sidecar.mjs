@@ -43,7 +43,8 @@ export function createServer(cfg) {
   const STATE_FILE = path.join(ROOT, "_os", "estop", "STATE");
   const TASK_INDEX = path.join(ROOT, "_os", "tasks", "INDEX.md");
   const SURFACE_DIR = path.join(ROOT, "_os", "events", "surface");
-  const BUS_LOG = path.join(ROOT, "_os", "exchange", "bus", "broadcast.log");
+  const BUS_DIR = path.join(ROOT, "_os", "exchange", "bus");
+  const BUS_LOG = path.join(BUS_DIR, "broadcast.log");
   const BOARD_FILE = path.join(ROOT, "_os", "exchange", "board", "BOARD.md");
   const LOCKED = new Set(cfg.lockedFiles);
 
@@ -217,6 +218,11 @@ export function createServer(cfg) {
   }
 
   const ROW_RE = /^(REQ|DONE|BLOCKED|REFUSED)\s*\|/;
+  // A real row carries a real date. The template ships example rows reading
+  // `YYYY-MM-DD | who | ...` inside a fenced block, and without this guard the
+  // placeholder is parsed as a live task and an agent called "who" appears on
+  // the floor. A documented example must never register as fleet state.
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
   function taskRows(limit = 80) {
     const lines = tailLines(TASK_INDEX, 5000);
@@ -225,7 +231,8 @@ export function createServer(cfg) {
     for (const l of lines) {
       if (!ROW_RE.test(l)) continue;
       const p = l.split("|").map((s) => s.trim());
-      rows.push({ status: p[0] || "", date: p[1] || "", who: p[2] || "", what: p[3] || "", evidence: p[4] || "" });
+      if (!DATE_RE.test(p[1] || "")) continue;
+      rows.push({ status: p[0] || "", date: p[1], who: p[2] || "", what: p[3] || "", evidence: p[4] || "" });
     }
     return rows.slice(-limit).reverse();
   }
@@ -262,34 +269,220 @@ export function createServer(cfg) {
   }
 
   // -------------------------------------------------------------------------
+  // THE FLOOR — 09-FLOOR.md. One directory level rendered as a warehouse:
+  // directories are pallets, live agents are cranes, REQ rows are inducts,
+  // surface files are spurs.
+  //
+  // Every value here is measured from disk this request. Where a thing cannot
+  // be determined, the field is null and the renderer draws grey — it never
+  // guesses a position or a state, because a floor that shows green over a red
+  // zone is lying (09 §3).
+  // -------------------------------------------------------------------------
+
+  const SESSION_DIR = path.join(ROOT, "_os", "exchange", "bus", "session");
+  const HOT_MS = 10 * 60 * 1000;   // "recently touched" window
+  const LIVE_MS = 90 * 1000;       // a crane counts as moving within this
+
+  // A path from the UI is a relative directory inside the root. Same
+  // containment discipline as the document editor: resolve, then confirm.
+  function resolveDir(rel) {
+    const clean = String(rel || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+    if (clean.split("/").includes("..")) return null;
+    let real, realRoot;
+    try {
+      real = fs.realpathSync(path.resolve(ROOT, clean));
+      realRoot = fs.realpathSync(ROOT);
+    } catch { return null; }
+    if (real !== realRoot && !real.startsWith(realRoot + path.sep)) return null;
+    try { if (!fs.statSync(real).isDirectory()) return null; } catch { return null; }
+    return { abs: real, rel: clean };
+  }
+
+  function floor(relPath) {
+    const dir = resolveDir(relPath);
+    if (!dir) return null;
+    const now = Date.now();
+    const g = gate();
+
+    // --- pallets: the directories on this level ---------------------------
+    const pallets = [];
+    let loose = 0;
+    let entries = [];
+    try { entries = fs.readdirSync(dir.abs, { withFileTypes: true }); } catch { /* unreadable */ }
+
+    for (const e of entries) {
+      if (e.name === "node_modules" || e.name === ".git") continue;
+      if (!e.isDirectory()) { loose++; continue; }
+      const abs = path.join(dir.abs, e.name);
+      let dirs = null, files = null, mtime = null;
+      try {
+        const kids = fs.readdirSync(abs, { withFileTypes: true });
+        dirs = kids.filter((k) => k.isDirectory()).length;
+        files = kids.length - dirs;
+        mtime = fs.statSync(abs).mtime.toISOString();
+      } catch { /* leave null -> renders grey */ }
+      pallets.push({
+        name: e.name,
+        rel: dir.rel ? dir.rel + "/" + e.name : e.name,
+        dirs, files,
+        mtime,
+        hot: mtime ? (now - Date.parse(mtime)) < HOT_MS : false,
+      });
+    }
+    pallets.sort((a, b) => a.name.localeCompare(b.name));
+
+    // --- cranes: agents with a session marker ------------------------------
+    // A marker is written at sign-on and deleted by its own owner at sign-off
+    // (08 §4), so the set of markers is the set of agents that believe they
+    // are on the floor.
+    const cranes = [];
+    let markers = [];
+    try { markers = fs.readdirSync(SESSION_DIR).filter((f) => f.endsWith(".on")); } catch { /* none */ }
+
+    // Last bus line per agent gives recency and a hint of what it is doing.
+    const lastByAgent = new Map();
+    const busAll = tailLines(BUS_LOG, 600) || [];
+    for (const l of busAll) {
+      const m = BUS_RE.exec(l);
+      if (!m) continue;
+      lastByAgent.set(m[2], { time: m[1], verb: m[4], text: m[5] });
+    }
+
+    // Open REQ rows per agent — scheduled work, blue.
+    const openByAgent = new Map();
+    for (const r of taskRows(400) || []) {
+      if (r.status !== "REQ") continue;
+      openByAgent.set(r.who, (openByAgent.get(r.who) || 0) + 1);
+    }
+
+    const palletNames = new Set(pallets.map((p) => p.name));
+
+    for (const f of markers) {
+      // <AGENT>-<id>.on
+      const id = f.replace(/\.on$/, "");
+      const agent = id.includes("-") ? id.slice(0, id.lastIndexOf("-")) : id;
+      let signedOn = null;
+      try { signedOn = fs.statSync(path.join(SESSION_DIR, f)).mtime.toISOString(); } catch {}
+
+      const last = lastByAgent.get(agent) || null;
+      const lastMs = last ? Date.parse(last.time) : (signedOn ? Date.parse(signedOn) : NaN);
+      const recent = Number.isFinite(lastMs) && (now - lastMs) < LIVE_MS;
+
+      // Where is it working? Only if the agent's own last message names a
+      // directory on THIS floor. Otherwise null — the crane parks at the dock
+      // and renders grey rather than being placed somewhere invented.
+      let at = null;
+      if (last) {
+        for (const name of palletNames) {
+          if (new RegExp("(^|[\\s/\"'`])" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([\\s/\"'`,.]|$)").test(last.text)) { at = name; break; }
+        }
+      }
+
+      const gated = last && last.verb === "GATE";
+      cranes.push({
+        agent,
+        session: id,
+        signedOn,
+        at,
+        state: g.verb === "STOP" ? "stopped"
+             : gated ? "gated"
+             : recent ? "moving"
+             : "idle",
+        last: last ? last.time : null,
+        note: last ? (last.verb + " " + last.text).slice(0, 120) : null,
+        scheduled: openByAgent.get(agent) || 0,
+      });
+    }
+    cranes.sort((a, b) => a.agent.localeCompare(b.agent));
+
+    // Agents with queued work but no session marker: scheduled, not on the
+    // floor. Drawn blue at the induct dock.
+    for (const [who, n] of openByAgent) {
+      if (cranes.some((cr) => cr.agent === who)) continue;
+      cranes.push({ agent: who, session: null, signedOn: null, at: null, state: "scheduled", last: null, note: null, scheduled: n });
+    }
+
+    const spurs = (surfaceFeed(500) || []).length;
+    const inducts = [...openByAgent.values()].reduce((a, b) => a + b, 0);
+
+    const parts = dir.rel ? dir.rel.split("/") : [];
+    return {
+      path: dir.rel,
+      parent: parts.length ? parts.slice(0, -1).join("/") : null,
+      breadcrumb: parts,
+      pallets,
+      looseFiles: loose,
+      cranes,
+      inducts,
+      spurs,
+      estop: g.verb,
+      reason: g.reason || "",
+      readAt: new Date().toISOString(),
+    };
+  }
+
+  // -------------------------------------------------------------------------
   // INDUCTION — 07 §1. A prompt becomes a REQ row. It does not become a
   // process. This function contains no exec, no spawn, and no network call,
   // and that is load-bearing rather than incidental.
   // -------------------------------------------------------------------------
-  function induct(prompt) {
+  // An agent id is a bare name. Anything else could escape the inbox path.
+  const AGENT_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
+
+  function induct(prompt, agent) {
     const stamp = new Date().toISOString();
     const day = stamp.slice(0, 10);
     const oneLine = String(prompt).replace(/[\r\n]+/g, " ").trim().slice(0, 500);
-    const who = cfg.operator || "parvis-console";
+    const by = cfg.operator || "parvis-console";
+    const target = agent && AGENT_RE.test(agent) ? agent : null;
 
     fs.mkdirSync(path.dirname(TASK_INDEX), { recursive: true });
     fs.mkdirSync(SURFACE_DIR, { recursive: true });
 
     // 04 §3 — the REQ row is appended before any work starts, so an
     // interrupted task is still visible. Append-only: this is a log.
-    const row = `REQ     | ${day} | ${who} | ${oneLine} | inducted from the console, awaiting the Operator\n`;
+    // The row is the canonical record; the inbox line below only points at it.
+    const who = target || by;
+    const note = target ? `inducted from the crane control by ${by}, awaiting ${target}`
+                        : "inducted from the console, awaiting the Operator";
+    const row = `REQ     | ${day} | ${who} | ${oneLine} | ${note}\n`;
     fs.appendFileSync(TASK_INDEX, row, "utf8");
+
+    // Addressed work also drops a line in that agent's inbox — as a TELL, and
+    // deliberately never as an order.
+    //
+    // 03 §5: an inbox informs, it never commands, and a file that claims the
+    // Operator's authority from inside the tree is a security event. So this
+    // line reports that a REQ row exists and names who inducted it. The
+    // authority is the Operator in conversation; this is a notification that
+    // points at the record, which is the only shape a file may take.
+    let inbox = null;
+    if (target) {
+      const dir = path.join(BUS_DIR, "in");
+      fs.mkdirSync(dir, { recursive: true });
+      inbox = path.join(dir, `${target}.log`);
+      fs.appendFileSync(inbox,
+        `${stamp}  CONSOLE > ${target}  TELL  REQ row inducted for you by ${by}: ${oneLine}\n`, "utf8");
+    }
 
     // 04 §2 — the substance goes to its home, a pointer goes to the surface.
     const slug = oneLine.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "induction";
     const ptr = path.join(SURFACE_DIR, `${stamp.replace(/[:.]/g, "").slice(0, 15)}-${slug}.md`);
     fs.writeFileSync(ptr,
       `# Induction from the Parvis console\n\n` +
-      `- **When:** ${stamp}\n- **By:** ${who}\n- **Prompt:** ${oneLine}\n` +
-      `- **Row:** appended to \`_os/tasks/INDEX.md\`\n\n` +
-      `Nothing was executed. This is a request awaiting the Operator.\n`, "utf8");
+      `- **When:** ${stamp}\n- **By:** ${by}\n` +
+      (target ? `- **Addressed to:** ${target}\n` : "") +
+      `- **Prompt:** ${oneLine}\n` +
+      `- **Row:** appended to \`_os/tasks/INDEX.md\`\n` +
+      (inbox ? `- **Notified:** \`${path.relative(ROOT, inbox)}\` (TELL — informs, does not command)\n` : "") +
+      `\nNothing was executed and no process was started. This is a request awaiting the Operator.\n`, "utf8");
 
-    return { row: row.trim(), pointer: path.relative(ROOT, ptr) };
+    return {
+      row: row.trim(),
+      pointer: path.relative(ROOT, ptr),
+      inbox: inbox ? path.relative(ROOT, inbox) : null,
+      agent: target,
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -349,6 +542,12 @@ export function createServer(cfg) {
         const files = surfaceFeed();
         return json(res, { files, present: files !== null, path: path.relative(ROOT, SURFACE_DIR) });
       }
+      if (url.pathname === "/floor" && req.method === "GET") {
+        const f = floor(url.searchParams.get("path") || "");
+        if (!f) return json(res, { error: "not a directory inside the root" }, 404);
+        return json(res, f);
+      }
+
       if (url.pathname === "/board" && req.method === "GET") {
         let content = null;
         try { content = fs.readFileSync(BOARD_FILE, "utf8").slice(0, 80000); } catch { /* absent */ }
@@ -408,9 +607,12 @@ export function createServer(cfg) {
       if (url.pathname === "/induct" && POST) {
         const g = gate();
         if (g.verb !== "RUN") return json(res, { error: `estop ${g.verb} — no orders`, reason: g.reason }, 423);
-        const { prompt } = await readJson(req);
+        const { prompt, agent } = await readJson(req);
         if (typeof prompt !== "string" || !prompt.trim()) return json(res, { error: "empty prompt" }, 400);
-        try { return json(res, { ok: true, ...induct(prompt) }); }
+        if (agent !== undefined && agent !== null && !AGENT_RE.test(String(agent))) {
+          return json(res, { error: "bad agent id" }, 400);
+        }
+        try { return json(res, { ok: true, ...induct(prompt, agent) }); }
         catch (e) { return json(res, { error: String(e.message) }, 500); }
       }
 

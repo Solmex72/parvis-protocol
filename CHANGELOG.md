@@ -33,6 +33,10 @@ was decided, what stayed open, and what was removed is in [DECISIONS.md](DECISIO
   not an execution; plus the sidecar's seven security requirements.
 - **08 AGENTS** — what an agent owes every run, sign-on and sign-off, and the six structural
   failures to design against.
+- **09 FLOOR** — the warehouse mapping. Agents are cranes, directories are pallets, work arrives
+  at an induct and leaves by a spur, and an external service is a truck that docks at the boundary
+  and never drives onto the floor — which puts the airlock where it belongs and makes it visible.
+  Opening a pallet is entering another whole warehouse, navigated identically, all the way down.
 
 ### Added — reference implementation
 
@@ -40,9 +44,19 @@ was decided, what stayed open, and what was removed is in [DECISIONS.md](DECISIO
   dependencies, Node 18+.
 - Loopback sidecar with `Host` allowlist, `Origin` check, per-process session token, path
   allowlist plus `realpath` containment, and non-editable safety anchors.
-- Full browser console: overview, documents with in-place editing, task ledger, bus, surface feed,
-  job board, and settings. Self-contained single file — inline CSS and JS, no CDN, renders
-  offline, light and dark.
+- Full browser console: overview, warehouse floor, documents with in-place editing, task ledger,
+  bus, surface feed, job board, and settings. Self-contained single file — inline CSS and JS, no
+  CDN, renders offline, light and dark.
+- **Warehouse tab** — a 3D floor of the tree, rendered on a 2D canvas with a hand-rolled
+  yaw/pitch camera and painter's-algorithm depth sort. No library, because no CDN. Drag to orbit,
+  scroll to zoom, top-down mode, click any equipment to descend or open its controls. Cranes are
+  driven by live session markers and bus recency, and animate toward the directory their own last
+  message names — parking grey at the dock when that cannot be determined rather than being placed
+  somewhere invented.
+- **Equipment side menu and controls** — cranes, pallets, both docks, the conveyor, and the
+  trucks, each selectable with its own panel. Addressing a crane inducts work to it: a `REQ` row
+  naming that agent plus a `TELL` in its inbox. It starts nothing. The conveyor is read-only and
+  trucks have no controls at all, both deliberately.
 - Configuration by file (`parvis.config.json`), environment, and flags, resolved with a stated
   precedence and shown with its source in the settings panel.
 - `parvis check` exits non-zero when not `RUN`, so a hook or a CI job can gate on the stop.

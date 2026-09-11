@@ -221,7 +221,8 @@ omissions are not mistaken for oversights.
 | Three rival mandate documents and one pre-version backup | D-04. |
 | `catch { return "RUN" }` | D-03. An inverted fail-safe. |
 | `admin: true` | D-07. |
-| Status claims about unbuilt components | The source honestly labelled several subsystems `SPEC ONLY`, `NEVER RAN`, `PARKED`, or `DESIGNED, not armed`. Rather than ship those labels, the components are simply absent — except the 3D HMI, which is named in [`07`](protocol/07-INTERFACE.md) §4 as aspirational because the protocol would otherwise imply it exists. |
+| Status claims about unbuilt components | The source honestly labelled several subsystems `SPEC ONLY`, `NEVER RAN`, `PARKED`, or `DESIGNED, not armed`. Rather than ship those labels, the components are simply absent. |
+| Third-party system names in the floor design | The warehouse model was learned from real commercial systems, and the source named them. [`07`](protocol/07-INTERFACE.md) §2.6 makes their absence a rule rather than a scrub: the pattern is ours, and a surface shipping someone else's trade name is wrong. |
 
 ## What this means for you
 

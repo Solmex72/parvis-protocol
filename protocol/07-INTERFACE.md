@@ -81,13 +81,14 @@ these and is commented at the point of each one.
 
 | Surface | What | State |
 |---|---|---|
-| **Parvis Console** | 2D tile menu, tiered by access, the required baseline | Reference implementation ships. |
-| **Parvis HMI** | 3D floor view — units, state, orbit and drill-in | Aspirational. Not shipped. |
-| **Prompt bar** | At the bottom of both. The induction input. | Ships with the console. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Reference implementation ships. |
+| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
+| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
+| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
+| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
 
-**Ship the 2D tile menu first.** The 3D fly-through is the part everyone wants to build and the
-part nobody needs.
+**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
+worthless without the ledger underneath it — it renders state the rest of the protocol produces,
+and on an empty tree it correctly shows nothing.
 
 ---
 

@@ -24,7 +24,7 @@ it stop.
 
 Parvis is the set of rules that answers those three questions. It is **doctrine plus a small
 reference implementation** — not a framework, not a runtime, and not something you install.
-There is no dependency to add to your project. You copy eight markdown files into your tree,
+There is no dependency to add to your project. You copy nine markdown files into your tree,
 adapt them, and hold your agents to them.
 
 It was extracted from a working multi-agent system that ran daily for months, and it is
@@ -50,11 +50,16 @@ opinionated in the specific way that only a system that has already failed a few
 │  THE SURFACE     the page shows and collects                 │
 │                  the sidecar writes · the human commits      │
 └─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│  THE FLOOR       agents are cranes · directories are pallets │
+│                  trucks dock at the edge, never on the floor │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## The five ideas
+## The six ideas
 
 **1 · A stop that is honest about what it cannot do.**
 No file halts a running session. An agent mid-response is not reading the disk and will finish
@@ -88,11 +93,18 @@ feature. A loopback sidecar does the small real work at the edge. A prompt submi
 UI is an **induction, not an execution** — it writes a request row and stops. The review still
 stands between a prompt and a moving machine.
 
+**6 · A fleet is a warehouse, and warehouses have been legible for forty years.**
+Agents are **cranes**, directories are **pallets**, work arrives at an **induct** and leaves by a
+**spur**, and an external service is a **truck** — which docks at the boundary and never drives
+onto the floor. That last one is not decoration: it puts the airlock exactly where it belongs and
+makes it visible on screen. Open a pallet and you are inside another whole warehouse, navigated
+the same way, all the way down. [`09`](protocol/09-FLOOR.md).
+
 ---
 
 ## The protocol
 
-Eight files. Read them in order; each is short.
+Nine files. Read them in order; each is short.
 
 | | File | Settles |
 |---|---|---|
@@ -105,6 +117,7 @@ Eight files. Read them in order; each is short.
 | 06 | [**DATA ZONES**](protocol/06-DATA-ZONES.md) | Public vs private, why a ban with no destination fails, credentials are neither. |
 | 07 | [**INTERFACE**](protocol/07-INTERFACE.md) | The Parvis surface rules and the sidecar's security requirements. |
 | 08 | [**AGENTS**](protocol/08-AGENTS.md) | What an agent owes every run; the structural failures to design against. |
+| 09 | [**FLOOR**](protocol/09-FLOOR.md) | The warehouse mapping: agents are cranes, directories are pallets, external services are trucks that dock at the boundary. |
 
 [`DECISIONS.md`](DECISIONS.md) records which contradictions were settled during extraction, which
 version won, and why.
@@ -155,8 +168,8 @@ The longer version, and how to verify it actually took, is in
 npx parvis serve          # → http://127.0.0.1:7843/
 ```
 
-Overview, documents with in-place editing, the task ledger, the bus, the surface feed, the job
-board, and settings. One self-contained HTML file, light and dark, no CDN.
+Overview, a 3D **Warehouse** floor, documents with in-place editing, the task ledger, the bus, the
+surface feed, the job board, and settings. One self-contained HTML file, light and dark, no CDN.
 
 **Stopping it, from anywhere in the tree:**
 
@@ -200,8 +213,12 @@ Stated here rather than discovered later:
   [`08`](protocol/08-AGENTS.md) §6.
 - **One machine, one operator.** The origin system ran on a single Windows workstation with one
   human. Multi-operator authority, and anything about who may override whom, is undesigned.
-- **The 3D HMI does not exist.** [`07`](protocol/07-INTERFACE.md) §4 describes it as
-  aspirational and it ships as nothing.
+- **The floor polls; it is not telemetry.** The Warehouse tab reads every two seconds and shows
+  its read time. Between reads it is stale, and it goes grey rather than showing a stale number as
+  if it were live. [`09`](protocol/09-FLOOR.md) §8.
+- **Crane placement is best-effort.** An agent is drawn at a directory only when its own last bus
+  line names one on that floor. Otherwise it parks at the dock in grey — never placed somewhere
+  invented to make the picture look complete.
 
 ---
 
