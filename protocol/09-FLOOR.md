@@ -1,181 +1,178 @@
-# 09 — THE FLOOR
+> **Неофіційний переклад.** Нормативною версією цього документа є англійська, у гілці `main`. Цей
+> переклад надано для зручності й **його не перевіряв носій мови**. У разі розбіжності з англійським
+> оригіналом **переважає англійська**. Ідентифікатори протоколу (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`,
+> `[CLAIMED]`, дієслова шини та імена файлів) навмисно залишено англійською: це буквальні значення, які
+> розбирають агенти.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — ЦЕХ
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Статус: нормативний для візуалізатора; довідковий як модель.**
+Реалізовано в [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## 1. Твердження
 
-| On the floor | In the fleet | Read from |
+Флот агентів важко побачити. Дерево файлів — це список, таблиця процесів — список, журнал — список, тож
+єдина картина працюючого флоту, яку хтось має, — це кілька списків, що не сходяться.
+
+**Автоматизований склад — та сама машина, і він читається вже сорок років.** Крани переміщують вантажі між
+стелажами під керуванням системи, а людина, яка за цим наглядає, читає цех із сотнями одночасних рухів одним
+поглядом, за кольором, не читаючи жодного рядка тексту.
+
+Parvis це запозичує. Не як оздобу — як *відображення*, у якому кожен об'єкт складу відповідає рівно одній
+речі в дереві, а власні правила безпеки складу виявляються правилами безпеки протоколу, вже намальованими в
+потрібному місці.
+
+---
+
+## 2. Відображення
+
+| У цеху | У флоті | Читається з |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Кран** | агент або живий сеанс | маркери сеансів у `_os/exchange/bus/session/` |
+| **Палета** | каталог | саме дерево; ярлик палети — це її шлях |
+| **Комірка стелажа** | де живе цей каталог | його батьківський каталог |
+| **Відкрити палету** | зійти в каталог | **ще один цілий склад** — §4 |
+| **Induct** (док приймання) | робота, що надходить | рядок `REQ` у `_os/tasks/INDEX.md` |
+| **Spur** (док відвантаження) | результат, що відходить | файл у `_os/events/surface/`, експорт |
+| **Конвеєр** | файлова шина | `_os/exchange/bus/` — як робота переміщується без того, щоб її ніс кран |
+| **Вантажівка** | зовнішня служба або інший ШІ | межа. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Річ не в малюнку. Річ у тім, що **ви вже вмієте читати цей екран**, якщо колись стояли перед системою
+керування складом, — а якщо ні, модель усе одно конкретна так, як список каталогу не буває.
 
 ---
 
-## 3. The colours
+## 3. Кольори
 
-One glance, before any navigation:
+Один погляд, до будь-якої навігації:
 
-| Colour | On the floor | In the fleet |
+| Колір | У цеху | У флоті |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **ЗЕЛЕНИЙ** | у русі — кран несе вантаж | агент працює; живий сеанс посеред завдання |
+| **СИНІЙ** | заплановано — у черзі, ще не почато | оголошення на дошці: замовлено, чекає на агента |
+| **БУРШТИНОВИЙ** | увага — комірка потребує рішення | `YELLOW`: питати перед кожною дією |
+| **ЧЕРВОНИЙ** | аварійна зупинка — ця зона стоїть | `STOP`: зупинку зведено, і цей корінь заморожено |
+| **СІРИЙ** | порожньо або немає живого джерела | немає даних. Ніколи не здогад. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Це не нова схема. Це стан, який дерево вже містить, показаний.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Червоний завжди виграє погляд.** Одна червона зона спиняє око раніше за будь-який зелений — так само, як
+зупинка переважає всякий інший сигнал ([`01`](01-ESTOP.md)). **Цех, що показує зелене над червоною зоною,
+бреше** — і це саме та відмова, яку це правило має заборонити.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
+**Сірий обов'язковий там, де немає живого джерела.** Комірка без даних показується сірою й читає `—`. Вона
+ніколи не показується зеленою, бо зелений — приємне значення за замовчуванням
 ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 4. The nested warehouse
+## 4. Вкладений склад
 
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
+**Відкрийте палету — і ви дивитесь не на ящик. Ви дивитесь на ще один цілий склад** — зі своїми кранами,
+своїми палетами, своїми доками.
 
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
+Це достеменно дерево файлів. Починання — це склад; його відділи — проходи; їхні файли — палети; а палета,
+яка сама є каталогом, — це ще один цех. Тому візуалізатор є **одним виглядом, що спускається**, з тим самим
+керуванням на будь-якій глибині, бо кожен рівень *є* складом. Дорогою вниз немає нічого нового, чого треба
+було б учитися.
 
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
-
----
-
-## 5. Trucks dock at the boundary — they never drive onto the floor
-
-This is where the model stops being a visualisation and starts enforcing something.
-
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
-
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+Рекурсія — уся причина, з якої метафора тримається, а не є оболонкою. Панель, що відображає лише верхній
+рівень, — це світлина флоту; та, що спускається, — його вигляд.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. Вантажівки швартуються біля межі — вони ніколи не в'їжджають у цех
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+Тут модель перестає бути візуалізацією й починає дещо примушувати.
+
+Зовнішня служба — інший ШІ, API, постачальник — це **вантажівка**. А на справжньому складі вантажівка подає
+задом до дока. Вона не в'їжджає в цех, не рухає кран, не заходить у стелаж і не відкриває вкладеного складу.
+Вона лишає вантаж біля induct або забирає вантаж зі spur, і це весь її доступ.
+
+**Цей док і є шлюз.** Усякий зовнішній обмін відбувається на краю, відфільтрованим, і ніщо зовнішнє не гуляє
+всередині дерева.
+
+**Документам вантажівки не довіряють, доки їх не перевірять.** Вантаж, що прибуває вантажівкою, є вхідними
+*даними*, а не наказом цехові. Його вводять і розглядають, як і все інше, і ніколи не виконують після
+прибуття. Це межа джерела вказівок із [`03`](03-BUS.md) §5, намальована як вантажний док, — і намальована в
+єдиному місці, де той, хто дивиться на екран, може побачити її дотримання.
+
+Якщо ваше відображення ставить вантажівку в цех, відображення хибне, і хибна архітектура, яку воно малює.
+
+---
+
+## 6. Дві поверхні, дві роботи
+
+| | **Цех** (цей файл) | **Консоль** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Що це | тривимірний цех, спостережуваний наживо | плиткове меню, ступінчасте за доступом |
+| Що показує | **який стан системи** — кожен агент, каталог і стан водночас | **що ви можете зробити** — оберіть інструмент, зробіть роботу |
+| Дієслово | дивитися, розуміти, вирішувати | виконувати, використовувати, виробляти |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**Цех показує, як машина мислить; консоль слугує для дії за вашими висновками.** Одне — мапа, інше —
+верстак. Керівній поверхні потрібні обидві, а помилка — збудувати лише гарну.
 
 ---
 
-## 7. Controls
+## 7. Керування
 
-Navigation is what made the original usable, not colour alone:
+Саме навігація робила оригінал придатним, а не сам колір:
 
-| Control | Does |
+| Керування | Робить |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Перетягування** | обліт цеху — обертання, нахил, погляд уздовж проходу |
+| **Згори** | перехід до плану згори. Обліт — для глибини, план — для планування |
+| **Клацання палети** | спуск у неї — ще один склад, те саме керування |
+| **Прокручування** | масштаб |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Те саме керування на будь-якій глибині. Не обговорюється: вигляд, чия взаємодія змінюється в міру спуску,
+порушив обіцянку, що кожен рівень є складом.
 
-### The camera is orthographic, on purpose
+### Камера ортографічна, навмисно
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**Перспективного сходження немає.** Паралельні лінії ніколи не сходяться, а комірка в дальньому кінці
+проходу показується рівно такого самого розміру, що й комірка біля ваших ніг.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+На мить це видається хибним — око чекає сходження й читає його відсутність так, ніби стоїть усередині ящиків
+і дивиться назовні. Це все одно правильний обмін, і саме так влаштовані керівні екрани справжніх
+автоматизованих цехів: **увесь сенс у тому, щоб порівнювати комірки по всьому цеху одним поглядом**, а
+перспективна камера робить дальній кінець проходу меншим, тьмянішим і важчим для оцінки, ніж ближній. У
+перспективі «той стелаж повніший» і «той стелаж ближчий» виглядають однаково. За ортографічної камери — ні.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+Перекриття лишається справжнім — відвернені грані відкидаються, а ближча геометрія зафарбовує дальшу. Це
+пласка камера, а не пласка сцена.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Обладнання також досяжне з **бічного меню**, згрупованого за видами — крани, палети, обидва доки, конвеєр,
+вантажівки. Вибір із меню або з цеху відкриває те саме керування, бо цех, яким можна пересуватися лише
+клацаючи маленькі ящики у тривимірній сцені, — це демонстрація, а не інструмент.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Що цехові можна й чого не можна
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+Діє кожне обмеження з [`07`](07-INTERFACE.md) §5. Риску проводять в одному певному місці:
 
-**The floor may induct. It may never execute.**
+**Цех може вводити. Він ніколи не може виконувати.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+Це та сама риска, яку [`07`](07-INTERFACE.md) §1 вже проводить для консолі, і саме вона взагалі дозволяє
+обладнанню мати керування. Обрати кран і скерувати йому роботу — означає записати рядок `REQ` з іменем цього
+агента й покласти `TELL` у його вхідні. **Це нічого не запускає.** Жоден процес не стартує, жодна команда не
+виконується, а агент візьме роботу у свій наступний прогін — або не візьме.
 
-Two consequences that are easy to get wrong:
+Два наслідки, які легко переплутати:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Скерована робота все одно не наказ.** Рядок `REQ` — канонічний запис; рядок у вхідних лише вказує на
+  нього. Файл, який *наказував* би агентові — чи привласнював владу Оператора зсередини дерева, — був би
+  подією безпеки, визначеною в [`03`](03-BUS.md) §5, і вбудувати це в поверхню було б гірше, ніж зробити
+  вручну. Влада — це Оператор у розмові. Цех пише запис, а не вказівку.
+- **Частина обладнання навмисно не дістає керування.** Конвеєр лише для читання: консоль, здатна писати
+  рядки на шину, виготовляла б владу, в якій протокол їй відмовляє. Вантажівки не мають керування зовсім —
+  §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**При `STOP` цех показується червоним і нічого не вводить.** Червоний цех не приймає доручень.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+Чесна межа, сказана один раз: **це світлина дерева в одну мить, а не живий потік телеметрії.** Він опитує з
+проміжками. Між опитуваннями він застарілий, показує, коли читав востаннє, і сіріє замість удавати інше, коли
+sidecar перестає відповідати.

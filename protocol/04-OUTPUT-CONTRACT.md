@@ -1,38 +1,42 @@
-# 04 — THE OUTPUT CONTRACT
+> **Неофіційний переклад.** Нормативною версією цього документа є англійська, у гілці `main`. Цей
+> переклад надано для зручності й **його не перевіряв носій мови**. У разі розбіжності з англійським
+> оригіналом **переважає англійська**. Ідентифікатори протоколу (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`,
+> `[CLAIMED]`, дієслова шини та імена файлів) навмисно залишено англійською: це буквальні значення, які
+> розбирають агенти.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — КОНТРАКТ ВИВОДУ
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**Статус: нормативний.** Куди йде робота, коли її закінчено.
 
 ---
 
-## 2. Where output goes
+## 1. Правило
 
-| Kind of output | Lands at |
+**Не звітуйте в чат. Працюйте в дереві файлів, пишіть вивід на диск і виставляйте покажчик.**
+
+Агент, який закінчує тим, що пише довгу відповідь у вікно чату, помістив свій вивід туди, де ніщо інше у
+флоті не може його прочитати — ані інший агент, ані монітор, ані консоль, ані наступний сеанс. Файл є
+тривким записом; чат є стенограмою, якої ніхто нижче за течією не бачить.
+
+---
+
+## 2. Куди йде вивід
+
+| Різновид виводу | Опиняється в |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| Результат роботи, знахідки, звіт | відповідальний файл або `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Усе, що Оператор має побачити зараз | короткий файл-покажчик у `_os/events/surface/` |
+| Запит, що потребує Оператора | `_os/exchange/requests/REQ-<slug>.md` |
+| Рядок реєстру | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**Каталог `surface/` — це сповіщення. Файл — це суть.** Запишіть суть у її власне місце, а тоді залишіть
+однорядковий покажчик у `surface/`, щоб консоль показала Операторові, куди вона лягла.
 
 ---
 
-## 3. The task index
+## 3. Індекс завдань
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+Один рядок на доручення. Допишіть рядок `REQ` **до** початку, щоб перерване завдання лишалося видимим.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +45,44 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**Рядок `DONE` без шляху до доказу недійсний.** Якщо файлу немає, робота не лягла нікуди, де Оператор міг
+би її побачити. Самозвіт є `[CLAIMED]`; файл — це те, що робить його `[PROVEN]`.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**Відмові тут місце назавжди.** Так флот припиняє переглядати вирішені питання. Не видаляйте її згодом.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
+**Чесна межа:** цей індекс нічого не спостерігає. Він рівно настільки повний, наскільки повні агенти, які в
+нього пишуть. Відсутнє завдання не є доказом того, що завдання не було, — лише того, що ніхто його не
+записав. Вважайте рядок *твердженням із доданим шляхом до доказу*, ніколи — доказом. Перевірте, що файл
+доказу існує, перш ніж покладатися на будь-який `DONE`.
 
 ---
 
-## 4. Completion is the Operator seeing it
+## 4. Завершення — це коли Оператор це побачив
 
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
-
----
-
-## 5. The counter-rule that outranks routing
-
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+Не коли агент оголосив. Відповідь не є точкою зупинки: монітори лишаються зведеними крізь неї, робота
+триває, а потім настає свідоме завершення сеансу.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. Контрправило, що переважає маршрутизацію
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**Аварійна зупинка й відвертість і далі йдуть людині, негайно й помітно.**
+
+Невдачу показують так само помітно, як успіх. Спрямування виводу у файли ніколи не повинне стати місцем, де
+ховають поганий результат. Якщо добрі звістки флоту надходять у чат, а погані — у файл, якого ніхто не
+відкриває, контракт перевернуто, і флот тепер бреше маршрутизацією.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. Чесна межа самого контракту
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+Агент, що працює всередині чат-обв'язки, все одно видає текст асистента в цей чат — цей контракт не може
+перенаправити обв'язку. Він зобов'язує **те, що агент обирає записати**: суть у файли, а текст чату —
+короткий покажчик: *«записано в `<path>`, виставлено на консоль»*, — ніколи повний звіт.
+
+---
+
+## 7. Жодна таємниця не сягає поверхні
+
+`surface/` читає консоль, і його може бути показано на екрані, на знімку екрана чи у спільному вікні.
+Правила зон даних ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) діють тут на повну силу.

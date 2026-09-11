@@ -1,113 +1,120 @@
-# 08 — AGENTS
+> **Неофіційний переклад.** Нормативною версією цього документа є англійська, у гілці `main`. Цей
+> переклад надано для зручності й **його не перевіряв носій мови**. У разі розбіжності з англійським
+> оригіналом **переважає англійська**. Ідентифікатори протоколу (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`,
+> `[CLAIMED]`, дієслова шини та імена файлів) навмисно залишено англійською: це буквальні значення, які
+> розбирають агенти.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — АГЕНТИ
+
+**Статус: нормативний.** Що таке агент і що він винен у кожному прогоні.
 
 ---
 
-## 1. Roles
+## 1. Ролі
 
-| Role | Who |
+| Роль | Хто |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Оператор** | Людина. Оголошує рівні пріоритету, знімає зупинку, тримає всі облікові дані, фіксує кожну незворотну дію. |
+| **Агент** | Один обмежений працівник із файлом визначення, простором імен, куди він може писати, і постійним завданням. |
+| **Флот** | Усі агенти під одним коренем протоколу. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+Агента визначає файл, а не працюючий процес. Процеси вмирають; визначення — це те, що робить агента
+відтворюваним на іншій машині.
 
 ---
 
-## 3. Scope
+## 2. П'ять речей, які кожен агент винен у кожному прогоні
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **Попередньо перевірте аварійну зупинку** перед першим викликом інструмента й знову перед кожним
+   записом, надсиланням, запуском чи витратою. Виконайте `stat` **у цьому прогоні**. Ніколи не цитуйте
+   запам'ятаний стан. Якщо сигнали розходяться, перемагає зупинка. Якщо визначити не можна, перемагає
+   зупинка.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **Прочитайте живе зведення**, якщо воно є, перед усім іншим, і скажіть, що у вас є з того, що йому
+   потрібне. *«Нічого»* — це справжня відповідь: скажіть це й будьте напоготові, замість вигадувати внесок.
+
+3. **Запишіть результат роботи на диск** як **один запис файлу цілком, ніколи як серію дозаписів**
+   ([`03-BUS.md`](03-BUS.md) §7). Знахідка, повідомлена лише в розмові, не доставлена.
+
+4. **Завершіть сеанс** перш ніж закінчити. §4 нижче.
+
+5. **Позначайте кожне твердження** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` вимагає первинного
+   джерела, яке ви справді прочитали в цьому прогоні. Джерело, що не завантажилося, — це невдалий виклик, а
+   не доказ.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Обсяг дії
+
+Кожен агент працює **лише в межах власного простору імен**. Він читає широко, а пише вузько.
+
+- **Він ніколи сам не набирає екіпаж.** Знайдена нова робота стає оголошенням на дошці. Потрібний новий
+  агент стає *складеним визначенням плюс запитом до Оператора* — ніколи працюючим процесом.
+- **Він ніколи не знімає аварійної зупинки**, зокрема поставленої ним самим.
+- **Він ніколи не править простір імен іншого агента** й авторитетний контекст іншого кореня. Він повідомляє
+  про розбіжність.
+- **Ізольованого агента називають лише тоді, коли його називає Оператор.** Він не на шині, не в строю й не
+  на спільній поверхні. Він усе одно читає аварійну зупинку.
+
+---
+
+## 4. Вхід і вихід із сеансу
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Вхід:** запишіть маркер, надішліть `FLASH` зі своєю особою до широкомовного журналу, попередньо перевірте
+аварійну зупинку.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Вихід:** запишіть файл доказу, допишіть рядок реєстру, видаліть **власний** маркер і закінчіть свідомо.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Видаляйте лише власний маркер. Агент, що прибирає чужий, щойно повідомив про живий сеанс як про
+завершений.
 
-### Why sign-off is a protocol obligation
+### Чому вихід із сеансу — обов'язок протоколу
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+Спостерігач, прив'язаний до сеансу, помирає разом зі своїм сеансом, а **мовчазний монітор і мертвий монітор
+виглядають однаково.** Мовчання неспростовне. Засоби виправлення структурні:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Серцебиття** — відсутність удару стає доказом.
+- **Явний вихід** — щоб покинутий маркер був виявною аномалією, а не шумом.
+- **Повторне зведення при перезапуску** — ніколи не припускайте, що монітор вцілів.
 
 ---
 
-## 5. Naming
+## 5. Іменування
 
-Every agent carries a working name and a one-line charter:
+Кожен агент носить робоче ім'я та однорядковий статут:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Розрізнювані, вимовні імена кращі за номери в стенограмі й кращі за назви ролей, коли дві ролі
+перетинаються. Якщо два імені стикаються у просторі імен, **розрізняйте їх при кожному вживанні** — пишіть
+обидва повністю при першій згадці в кожному документі. Різниця в один символ між двома справжніми речами —
+це дефект, що чекає, коли на нього зішлються.
 
 ---
 
-## 6. The structural failures to design against
+## 6. Структурні відмови, проти яких проєктують
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+Вони спостережені, а не гіпотетичні. Кожна з них траплялася у працюючому флоті.
 
-| Failure | The counter-discipline |
+| Відмова | Протидисципліна |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Суперницькі файли.** П'ять версій одного правила Пріоритету 0; два головні доручення; два посібники з протилежними даними. | Вирішити й обтяти ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Шукайте, перш ніж писати будь-яку доктрину. Правило, переформульоване в новому файлі, — це дрейф, а не внесок. |
+| **Мертві покажчики.** Сотні файлів, що посилаються на неіснуючий шлях. | Полагодьте генератор, який це поширює, **до** обходу, інакше число відросте знову. |
+| **Джерела й майже жодних стоків.** Сотні показаних файлів і відкритих пунктів дошки проти людини, здатної прочитати одиниці. Ніщо нічого не прибирає; кожен шар лише накопичує. | **Кожне сховище дістає сток, визначений при його побудові.** Це найбільший структурний ризик для корисності всієї конструкції. |
+| **Мовчання неспростовне.** | Серцебиття. §4. |
+| **Усе прив'язане до сеансу.** | Зводьте покриття заново при перезапуску; ніколи не припускайте виживання. |
+| **Твердження без доказів.** | Позначки впевненості, і рядок `DONE` недійсний без шляху до доказу. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. Філософія, сказана один раз
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **Машина повідомляє. Людина вирішує. Незворотна дія завжди належить людині.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Усе інше в цьому протоколі — подробиця втілення цієї фрази.
