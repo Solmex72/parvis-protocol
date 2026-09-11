@@ -1,38 +1,46 @@
-# 04 — THE OUTPUT CONTRACT
+> **Traducción no oficial.** La versión normativa de este documento es la inglesa, en la rama `main`.
+> Esta traducción se ofrece por comodidad y **no ha sido verificada por un hablante nativo**. Si
+> difiere del original en inglés, **prevalece el inglés**. Los identificadores del protocolo
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, los verbos del bus y los nombres de archivo)
+> se conservan en inglés de forma deliberada: son valores literales que los agentes analizan.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — EL CONTRATO DE SALIDA
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**Estado: normativo.** Adónde va el trabajo cuando está terminado.
 
 ---
 
-## 2. Where output goes
+## 1. La regla
 
-| Kind of output | Lands at |
+**No informes al chat. Trabaja en el árbol de archivos, escribe la salida en disco y expón un
+puntero.**
+
+Un agente que termina escribiendo una respuesta larga en una ventana de chat ha puesto su salida
+donde nada más en la flota puede leerla — ningún otro agente, ningún monitor, ninguna consola,
+ninguna sesión siguiente. El archivo es el registro duradero; el chat es una transcripción que
+nadie aguas abajo ve.
+
+---
+
+## 2. Adónde va la salida
+
+| Tipo de salida | Aterriza en |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| Producto de trabajo, hallazgos, un informe | el archivo propietario, o `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Cualquier cosa que el Operador deba ver ahora | un archivo puntero corto en `_os/events/surface/` |
+| Una petición que necesita al Operador | `_os/exchange/requests/REQ-<slug>.md` |
+| La fila del libro mayor | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**El directorio `surface/` es la notificación. El archivo es la sustancia.** Escribe la sustancia
+en su sitio propio, y después deja un puntero de una línea en `surface/` para que la consola
+muestre al Operador dónde aterrizó.
 
 ---
 
-## 3. The task index
+## 3. El índice de tareas
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+Una fila por orden. Añade una fila `REQ` **antes** de empezar, para que una tarea interrumpida
+siga siendo visible.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +49,51 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**Una fila `DONE` sin ruta de evidencia es inválida.** Si no hay archivo, el trabajo no aterrizó
+en ningún sitio que el Operador pueda ver. El autoinforme es `[CLAIMED]`; el archivo es lo que lo
+hace `[PROVEN]`.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**Un rechazo pertenece aquí de forma permanente.** Es como la flota deja de volver a litigar
+cuestiones zanjadas. No lo borres después.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
-
----
-
-## 4. Completion is the Operator seeing it
-
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
+**El límite honesto:** este índice no observa nada. Es exactamente tan completo como los agentes
+que escriben en él. Una tarea ausente de él no es prueba de que la tarea nunca ocurriera — solo
+de que nadie la registró. Trata una fila como *una afirmación con una ruta de evidencia
+adjunta*, nunca como prueba. Verifica que el archivo de evidencia existe antes de fiarte de
+cualquier `DONE`.
 
 ---
 
-## 5. The counter-rule that outranks routing
+## 4. Terminar es que el Operador lo vea
 
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+No que un agente lo declare. Una respuesta no es un punto de parada: los monitores siguen armados
+a través de ella, el trabajo continúa, y después hay una despedida deliberada.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. La contrarregla que se impone al encaminamiento
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**La parada de emergencia y la franqueza siguen yendo al humano, de inmediato y de forma
+prominente.**
+
+Un fallo se expone con la misma prominencia que un éxito. Encaminar la salida a archivos nunca
+debe convertirse en un lugar donde enterrar un mal resultado. Si las buenas noticias de la flota
+llegan por chat y las malas llegan en un archivo que nadie abre, el contrato se ha invertido y la
+flota está mintiendo por encaminamiento.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. El límite honesto del propio contrato
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+Un agente que se ejecuta dentro de un arnés de chat sigue representando texto de asistente en ese
+chat — este contrato no puede redirigir el arnés. Lo que sí obliga es **lo que un agente elige
+escribir**: la sustancia en archivos, y el texto del chat reducido a un puntero corto —
+*"escrito en `<path>`, expuesto a la consola"* — nunca el informe completo.
+
+---
+
+## 7. Ningún secreto llega a la superficie
+
+`surface/` lo lee una consola y puede mostrarse en una pantalla, en una captura o en una ventana
+compartida. Las reglas de zonas de datos ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) se aplican aquí
+con toda su fuerza.

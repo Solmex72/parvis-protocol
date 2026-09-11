@@ -1,101 +1,111 @@
-# 07 — THE INTERFACE LAYER
+> **Traducción no oficial.** La versión normativa de este documento es la inglesa, en la rama `main`.
+> Esta traducción se ofrece por comodidad y **no ha sido verificada por un hablante nativo**. Si
+> difiere del original en inglés, **prevalece el inglés**. Los identificadores del protocolo
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, los verbos del bus y los nombres de archivo)
+> se conservan en inglés de forma deliberada: son valores literales que los agentes analizan.
 
-**Status: normative.** This is the file the project is named for.
+# 07 — LA CAPA DE INTERFAZ
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**Estado: normativo.** Este es el archivo que da nombre al proyecto.
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+Toda superficie que un humano toca es **Parvis**. La vista de planta de solo lectura es el
+*Parvis HMI*; el menú de mosaicos desde el que gobiernas la flota es la *Parvis Console*.
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. La regla que hace que el HTML funcione
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> Una página de navegador es una **pantalla y un teclado**, no un programa con acceso a disco.
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+Ese único hecho gobierna toda la capa:
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **La página muestra y recoge.** Representa estado y toma entrada. Abierta desde una ruta de
+  archivo, por sí sola, **no puede leer el árbol ni escribir una orden.** El aislamiento del
+  navegador prohíbe ambas cosas, y eso es una virtud.
+- **El sidecar hace de puente.** Un pequeño servicio de bucle local — enlazado a `127.0.0.1` y a
+  nada más — es lo único que lee el árbol para la página y escribe lo que la página envía. La
+  página le hace `GET` del estado; la página le hace `POST` de un prompt; el sidecar hace el
+  trabajo de disco. **Sin sidecar, no hay Parvis en vivo — solo una instantánea.**
+- **Nada sortea la revisión.** Un prompt enviado desde Parvis es una **inducción, no una
+  ejecución**. El sidecar escribe una fila `REQ` en el índice de tareas y se detiene. Nunca lanza
+  un agente, nunca ejecuta un comando, nunca envía. Comprometer trabajo nuevo sigue siendo la
+  pulsación del Operador.
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+Por eso la página "funciona": la página es honesta sobre ser una ventana, el sidecar hace el
+pequeño trabajo real en el borde, y **la revisión sigue interponiéndose entre un prompt y una
+máquina en movimiento.**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. Requisitos duros — toda superficie Parvis
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **Autocontenida.** Un solo archivo HTML: CSS y JS en línea, sin scripts externos, sin CDN.
+   Fuentes web solo con una pila de reserva real. Debe representarse sin conexión desde una ruta
+   de archivo.
 
-| Requirement | Why |
+2. **Los colores son el estado, leídos en vivo, nunca fingidos.** Verde = en marcha, ámbar =
+   pregunta antes, rojo = detenido — derivados del archivo STATE y del libro mayor en vivo. **Un
+   valor sin fuente en vivo muestra `—`, nunca un número de apariencia plausible.** El rojo se
+   impone a todo otro color y a toda la interfaz.
+
+3. **El sidecar es solo de bucle local y no guarda ningún secreto que la página pueda ver.**
+   Ninguna clave de API, ninguna credencial, ningún token de valor llega al navegador. El sidecar
+   autentica la página con un token de sesión local y hace él mismo el trabajo privilegiado. **La
+   página nunca guarda nada que merezca la pena robar.**
+
+4. **Una instantánea se etiqueta como instantánea,** con su hora de lectura. Solo una página que
+   habla con un sidecar vivo puede presentarse como en vivo. Una página obsoleta que parece viva
+   es peor que ninguna página.
+
+5. **La parada de emergencia se impone a la interfaz.** Bajo `STOP`, Parvis no induce nada y el
+   sidecar no escribe más que la línea de cierre de sesión. **Una planta en rojo no acepta
+   órdenes.**
+
+6. **Marca Parvis, y ningún nombre de empresa de terceros.** Sean cuales sean los sistemas reales
+   de los que se aprendió el patrón, el patrón es tuyo y se llama Parvis. Una superficie que
+   distribuye el nombre comercial de otro está mal y se corrige.
+
+---
+
+## 3. Requisitos de seguridad del sidecar
+
+Un servicio HTTP de bucle local en una estación de trabajo de desarrollo es una superficie de
+ataque real. Esto no es opcional.
+
+| Requisito | Por qué |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **Enlaza `127.0.0.1` explícitamente**, nunca `0.0.0.0` | Enlazar todas las interfaces publica la consola de tu flota en la red local. |
+| **Valida la cabecera `Host`** contra una lista de permitidos de `127.0.0.1:<port>` / `localhost:<port>` | Derrota el DNS rebinding, que es como una página web que visitas alcanza un servicio de bucle local. |
+| **Rechaza peticiones que traigan un `Origin` que no emitiste** | Misma clase de ataque, distinto vector. |
+| **Exige un token de sesión** en toda ruta que mute algo, emitido al cargar la página, nunca registrado | La página demuestra que es tu página. |
+| **Pon en lista de permitidos cada ruta** que el servicio vaya a leer o escribir, luego vuelve a resolverla y confirma la contención | Derrota el recorrido de rutas. Una lista de permitidos por sí sola no basta si existen enlaces simbólicos. |
+| **Falla de forma segura ante una estop ilegible** — rechaza, no vuelvas por defecto a `RUN` | Véase [`01-ESTOP.md`](01-ESTOP.md) §2. |
+| **Sin `eval`, sin salida a shell, sin interpolación de plantillas con entrada del usuario** | La barra de prompt es una entrada de inducción, no una línea de comandos. |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+La implementación de referencia en [`reference/sidecar/`](../reference/sidecar/) implementa todos
+estos requisitos y está comentada en el punto de cada uno.
 
 ---
 
-## 4. What the surfaces are
+## 4. Cuáles son las superficies
 
-| Surface | What | State |
+| Superficie | Qué | Estado |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | Paneles con pestañas — estado, documentos, libro mayor, bus, superficie, ajustes | Se distribuye. |
+| **Parvis Floor** | La pestaña Almacén: planta 3D, órbita y descenso, controles de equipo | Se distribuye. Véase [`09-FLOOR.md`](09-FLOOR.md). |
+| **Barra de prompt** | La entrada de inducción, en la consola y en cada pieza de equipo de la planta | Se distribuye. |
+| **El sidecar** | Puente de bucle local: lee el árbol, escribe filas `REQ`, no guarda ningún secreto | Se distribuye. |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**Distribuye los paneles primero.** La planta 3D es la parte que todo el mundo quiere construir y
+la parte que no vale nada sin el libro mayor debajo — representa estado que el resto del protocolo
+produce, y sobre un árbol vacío muestra correctamente nada.
 
 ---
 
-## 5. Standing
+## 5. Posición
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
+- **La página lee. El sidecar escribe. El Operador compromete.**
+- Ninguna superficie lanza, envía, despliega ni levanta una parada de emergencia.
+- Ningún secreto llega al navegador, jamás.
+- La salida va a archivos y a la consola, no a una ventana de chat
   ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).

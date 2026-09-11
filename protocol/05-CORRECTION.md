@@ -1,66 +1,72 @@
-# 05 — CORRECTION
+> **Traducción no oficial.** La versión normativa de este documento es la inglesa, en la rama `main`.
+> Esta traducción se ofrece por comodidad y **no ha sido verificada por un hablante nativo**. Si
+> difiere del original en inglés, **prevalece el inglés**. Los identificadores del protocolo
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, los verbos del bus y los nombres de archivo)
+> se conservan en inglés de forma deliberada: son valores literales que los agentes analizan.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — CORRECCIÓN
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**Estado: normativo.** Qué ocurre cuando un hecho registrado resulta ser erróneo.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. El problema
 
-Reading a governing file puts you under it. Two things follow:
+> Un hecho afirmado en seis archivos será erróneo en cinco de ellos.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+Corregir el archivo que casualmente tienes delante no es una corrección. Crea un árbol donde la
+verdad y el error tienen ambos citas, y la sesión siguiente elige el que abra primero. Este es el
+modo de fallo que define a una flota de agentes cargada de documentación, y se agrava en
+silencio.
+
+**Una corrección se propaga, o no ocurrió.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. Leer no es gratis — obliga
 
-One command, one turn, no proposal step.
+Leer un archivo rector te pone bajo él. De ahí se siguen dos cosas:
+
+1. Todo lo que contenga que sea **duradero, no obvio y no derivable del árbol** pasa a tu memoria
+   persistente antes de que la sesión termine.
+2. **Si tu contexto contradice al archivo, gana el archivo.** No lo sortees. Corrige el registro.
+
+---
+
+## 3. Corrección Inmediata de Rumbo (ICC)
+
+Un comando, un turno, sin paso de propuesta.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### La secuencia
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · Barrido.** Deriva de la corrección entre 2 y 5 términos de búsqueda: la redacción
+**antigua**, sus variantes obvias y los nombres propios implicados. No la redacción nueva. Ejecuta
+un barrido indexado por término antes de leer nada. Nunca recorras el árbol archivo por archivo
+para encontrar coincidencias — para eso está el índice.
 
-**2 · Classify every hit.**
+**2 · Clasifica cada coincidencia.**
 
-| Hit | Action |
+| Coincidencia | Acción |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **Afirma el hecho antiguo** | Reescríbela. |
+| **Lo menciona de pasada**, cierto en cualquier caso | Déjala. No agites la prosa. |
+| **Contradice el hecho nuevo de forma indirecta** — una conclusión derivada, una fila de tabla, un trabajo programado construido sobre el valor antiguo | **Reescríbela también.** Esta es la que más a menudo se pasa por alto. |
+| **Fuera de límites** (§5) | Nunca la edites. Anótala en *Left alone*. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · Reescribe, todo de una vez.** Ajústate a la voz existente de cada archivo y a su convención
+de etiquetas de confianza. Un hecho corregido conserva la etiqueta que se gane — **no promuevas
+una afirmación a `[PROVEN]` porque ahora esté vigente.** Si el texto antiguo llevaba fecha, pon
+la de hoy.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+Cuando un hecho se afirma en más de tres archivos, eso es **duplicación, no redundancia**:
+enúncialo una vez en el archivo que lo posee, y haz que los demás apunten allí.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · Libro mayor y memoria.** Ambos, o la ejecución no ha terminado. Antepón una entrada al libro
+mayor de correcciones:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +79,76 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+Después escribe el hecho en la memoria persistente — **comprobando primero si ya existe una
+memoria sobre el asunto y actualizando esa**, en vez de dejar dos versiones de un hecho que
+acabas de dedicar un comando a unificar.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · Obligaciones posteriores a la edición.** Vuelve a ejecutar el generador o la copia de
+seguridad que las ediciones hayan obligado. Reconstruye el índice si se crearon o borraron
+archivos.
 
 ---
 
-## 5. What is never rewritten
+## 4. Una decisión permanente se revierte a la vista
 
-| Never touched | Why |
+Si una corrección invalida una decisión permanente — una línea de "no volver a litigar", un
+elemento `[PROVEN]`, una regla de política — **no la cambies en silencio.** Reescríbela como
+*revertida*, con la fecha y el motivo, para que la sesión siguiente sepa que fue anulada y no
+olvidada.
+
+Una decisión que cambia sin dejar rastro es indistinguible de una decisión que nunca se tomó.
+
+---
+
+## 5. Lo que nunca se reescribe
+
+| Nunca se toca | Por qué |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | Historia. La historia no se corrige; se supera. |
+| Archivos generados | Edita la fuente y vuelve a ejecutar el generador. |
+| El árbol de un agente aislado | Acceso solo por nombre. |
+| El contexto maestro autoritativo de otra raíz | Informa de la desviación. No edites cruzando una frontera de propiedad. |
+| Cualquier cosa que contenga un secreto | Totalmente fuera del alcance de un barrido de texto. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**Un barrido que reescribe texto destruirá binarios.** Acota cada barrido a extensiones de texto
+por lista de permitidos, nunca por exclusión.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. Lo que ICC no hace
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` corrige el registro. **No va después a hacer el trabajo que la corrección implica.** Son
+actos separados con autorizaciones separadas, y confundirlos es como una corrección de una línea
+se convierte en una refactorización no revisada.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. Los hechos rivales se zanjan y se podan — no se catalogan
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+Cuando dos archivos afirman hechos contradictorios, **decide cuál es el correcto, consérvalo y
+elimina las afirmaciones erróneas en el mismo pase.**
 
-### What still gets escalated instead of settled
+Un informe de conflicto que deja ambos rivales en disco no ha resuelto nada. La sesión siguiente
+sigue eligiendo el archivo que abra primero, y una regla de seguridad con cinco versiones en
+circulación es *menos* fiable que una con una sola versión, no más.
 
-Three cases. Surface these; do not decide them:
+**Decide por el fondo, nunca por marca de tiempo.** El ganador es el archivo que posee el hecho,
+la versión respaldada por una medición, la que sobrevive al escrutinio. **Lo más nuevo no es lo
+más cierto** — el fallo canónico aquí son cuatro archivos de memoria duplicados escritos con
+noventa segundos de diferencia, donde el más nuevo afirmaba la afirmación falsa, de modo que una
+regla de "gana el más nuevo" habría heredado el error.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**Registra la resolución.** Qué hecho ganó, qué se podó y por qué — en el libro mayor, para que la
+poda sea legible en lugar de silenciosa. Un rival que se desvanece sin dejar rastro parece
+idéntico a un rival que nunca estuvo, y la sesión siguiente lo vuelve a crear.
 
-Everything ordinary gets decided and cleaned up.
+### Lo que aun así se escala en vez de zanjarse
+
+Tres casos. Exponlos; no los decidas:
+
+- La contradicción depende de información que el agente no tiene.
+- Equivocarse sería **inseguro o irreversible** — cualquier cosa de los peldaños 0–2.
+- La afirmación perdedora queda **fuera de la frontera de propiedad del agente** — el contexto
+  maestro autoritativo de otra raíz. Informa de la desviación; no edites cruzando la frontera.
+
+Todo lo ordinario se decide y se limpia.

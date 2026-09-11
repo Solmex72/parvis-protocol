@@ -1,118 +1,133 @@
-# 02 — EVIDENCE
+> **Traducción no oficial.** La versión normativa de este documento es la inglesa, en la rama `main`.
+> Esta traducción se ofrece por comodidad y **no ha sido verificada por un hablante nativo**. Si
+> difiere del original en inglés, **prevalece el inglés**. Los identificadores del protocolo
+> (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, los verbos del bus y los nombres de archivo)
+> se conservan en inglés de forma deliberada: son valores literales que los agentes analizan.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — EVIDENCIA
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**Estado: normativo.** Cómo una observación se convierte en un hecho registrado.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+La disciplina que describe este archivo suele aplicarse a *propuestas* — un agente dice qué
+probabilidad tiene su plan de funcionar antes de que el humano decida. Casi nunca se aplica a las
+*afirmaciones*. Así que una flota razona con cuidado sobre lo que quiere permiso para **hacer**,
+y con descuido sobre lo que anota como **cierto**.
+
+Son el mismo acto. Una afirmación que entra en el registro es una propuesta de que el registro
+cambie. Parvis aplica una sola disciplina a ambos.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. Toda afirmación lleva una etiqueta
 
-| Tag | Means | Admissible where |
+| Etiqueta | Significa | Admisible en |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | Verificado contra una fuente primaria citada **que has leído en esta ejecución**. Nombra el comando, la lectura, la medición. | En cualquier sitio, incluido un archivo maestro. |
+| `[CLAIMED]` | Informado por otra cosa. Sin verificar. | Archivos de trabajo. Nunca un archivo maestro. |
+| `[ASSUMED]` | Una premisa de trabajo que nadie ha comprobado. | Archivos de trabajo, de forma explícita. |
+| `[PROPOSED]` | Una estimación, una recomendación, un plan. | Propuestas. Nunca el registro. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**La etiqueta viaja con la afirmación.** Un `[PROPOSED]` no se convierte en `[PROVEN]` por
+copiarse a un archivo más importante. La promoción exige una medición nueva, no una ubicación
+nueva.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**Solo `[PROVEN]` puede cambiar un archivo maestro.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. Cita o marca — nunca blanquees
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+Un número declara su fuente o no es un número: es una intuición con un punto decimal puesto.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+Si no tienes la fuente, **dilo y da el razonamiento en su lugar.** Esa es una respuesta útil. Un
+número sin fuente presentado como hecho, no.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**Nunca blanquees un fallo convirtiéndolo en un hallazgo.** Una búsqueda que dio error es una
+llamada fallida, no un conjunto de resultados vacío. Una página que no cargó no es prueba de
+ausencia. Escribe lo que ocurrió.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. La autodescripción es `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+El relato que un agente hace de su propio estado, su propia cobertura o su propio trabajo
+terminado es `[CLAIMED]` — por muy seguro que esté. Solo un registro externo lo hace `[PROVEN]`:
+un archivo en disco, el código de salida de un comando, una línea de registro escrita por algo
+que no eres tú.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+Por eso una fila `DONE` sin ruta de evidencia es inválida (véase
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "Lo hice" es una afirmación. El archivo es la
+prueba.
 
 ---
 
-## 6. Negative findings count
+## 4. Mide dos veces para cualquier cosa de los peldaños 0–2
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+Una sola comprobación nunca certifica un estado de seguridad. Dos mediciones independientes antes
+de cualquier afirmación de Prioridad 0, siempre.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**Vuelve a medir, nunca recuerdes.** Un árbol se agita bajo sesiones concurrentes — una ruta leída
+al principio de un turno puede haber desaparecido al final. El estado solo se conoce desde el
+disco en *esta* ejecución. Nunca arrastres "despejado" o "actual" desde un turno anterior, un
+archivo de memoria o un resumen.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**Un recuento es una medición, no un hecho.** Vuelve a contar en el punto de uso. Nunca cites de
+memoria un número de archivos, un número de agentes ni una versión.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. Una llamada caída no es un hallazgo
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+Ante **pérdida de transporte** — fallo de DNS, conexión reiniciada, rechazada, tiempo de espera
+agotado sin respuesta — reintenta la misma llamada de inmediato y repetidamente. Nunca escribas
+"sin resultados" para una llamada que nunca llegó, y nunca rellenes el hueco de memoria.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**Una respuesta que llegó es una respuesta, no un reintento.** Un 403, un 404, un conjunto de
+resultados vacío, un rechazo explícito — eso son datos. Reintentar contra un rechazo para obtener
+otra respuesta es evasión de detección, y está vetado en el peldaño 2 sin importar de quién sea la
+cuenta o la red en que se ejecute.
+
+La distinción en una línea: *reintenta la llamada que nunca aterrizó; nunca reintentes la
+respuesta que no te gustó.*
 
 ---
 
-## 9. The rule these all serve
+## 6. Los hallazgos negativos cuentan
 
-> A fact asserted in six files will be wrong in five of them.
+"Comprobado X, no es un peligro" es lo que evita que las tres sesiones siguientes vuelvan a
+comprobar X. Regístralo.
 
-Evidence discipline is what makes the sixth one findable.
+**Registra según aprendes, no al final.** Un hallazgo que solo se guarda en la memoria de trabajo
+y después se pierde es indistinguible de un trabajo nunca hecho.
+
+---
+
+## 7. Las eliminaciones son la señal de integridad
+
+Al verificar un árbol contra una línea base, el informe tiene tres clases — añadido, modificado,
+eliminado. El crecimiento y las ediciones son agitación esperable. **Una eliminación es la línea
+por la que merece la pena alarmarse.**
+
+No vuelvas a fijar la línea base sobre trabajo concurrente sin auditar. Audita primero, sella
+después.
+
+---
+
+## 8. La auditoría es un papel, no un estado de ánimo
+
+Un auditor enumera cada agente, comando y mandato **desde el disco** y comprueba cada uno contra
+clases fijas — contando tanto las comprobaciones limpias como los defectos. Una ejecución que no
+despeja nada no ha auditado nada; solo ha recogido quejas.
+
+**El auditor nunca arregla.** Los hallazgos se encaminan al proceso de corrección
+([`05-CORRECTION.md`](05-CORRECTION.md)) o al agente propietario. Un auditor que repara lo que
+encuentra ha destruido su propia evidencia y ya no se le puede confiar informar de una ejecución
+limpia.
+
+---
+
+## 9. La regla a la que todas sirven
+
+> Un hecho afirmado en seis archivos será erróneo en cinco de ellos.
+
+La disciplina de evidencia es lo que hace que el sexto se pueda encontrar.
