@@ -1,66 +1,65 @@
-# 05 — CORRECTION
+> **ترجمة غير رسمية.** النسخة المعيارية من هذا المستند هي الإنجليزية، في الفرع `main`. هذه الترجمة مقدَّمة
+> للتيسير و**لم يراجعها ناطق أصلي**. وعند الاختلاف عن الأصل الإنجليزي **تُقدَّم الإنجليزية**. أمّا معرّفات
+> البروتوكول (`RUN` و`YELLOW` و`STOP` و`[PROVEN]` و`[CLAIMED]` وأفعال الناقل وأسماء الملفات) فقد أُبقيت
+> بالإنجليزية عمدًا: فهي قيم حرفية تحلّلها الوكلاء.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — التصحيح
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**الحالة: معيارية.** ماذا يحدث حين تتبيَّن واقعةٌ مسجَّلة خاطئة.
 
 ---
 
-## 2. Reading is not free — it obligates
+## ١. المشكلة
 
-Reading a governing file puts you under it. Two things follow:
+> الواقعة المدَّعاة في ستة ملفات ستكون خاطئة في خمسة منها.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+تصحيح الملف الذي يصادف أن يكون أمامك ليس تصحيحًا. فهو ينشئ شجرةً للحقيقة فيها مراجع وللخطأ مراجع، فتأخذ الجلسة
+التالية أيّهما فتحت أولًا. وهذا هو نمط الإخفاق المميِّز لأسطول وكلاء مثقل بالوثائق، وهو يتفاقم في صمت.
+
+**التصحيح إمّا أن ينتشر وإمّا أنه لم يقع.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## ٢. القراءة ليست مجانية — بل تُلزِم
 
-One command, one turn, no proposal step.
+قراءة ملفٍ حاكم تضعك تحته. ويترتب على ذلك أمران:
+
+١. كل ما فيه مما هو **باقٍ وغير بديهي ولا يمكن استنتاجه من الشجرة** ينتقل إلى ذاكرتك الدائمة قبل انتهاء الجلسة.
+٢. **وإن ناقض سياقُك الملفَّ، فالملف هو الغالب.** لا تلتفّ حوله. صحّح السجل.
+
+---
+
+## ٣. التصحيح الفوري للمسار (ICC)
+
+أمر واحد، ودور واحد، بلا مرحلة اقتراح.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### التسلسل
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**١ · المسح.** استخرج من التصحيح من ٢ إلى ٥ مصطلحات بحث: الصياغة **القديمة**، وتنويعاتها البيّنة، وأسماء الأعلام
+المعنيّة. لا الصياغة الجديدة. ونفّذ مسحًا مفهرسًا واحدًا لكل مصطلح قبل أن تقرأ شيئًا. ولا تمشِ في الشجرة ملفًا
+ملفًا بحثًا عن التطابقات — فالفهرس موجود لهذا.
 
-**2 · Classify every hit.**
+**٢ · صنِّف كل تطابق.**
 
-| Hit | Action |
+| التطابق | الإجراء |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **يدّعي الواقعة القديمة** | أعد كتابته. |
+| **يذكرها عرَضًا**، وهو صحيح في الحالتين | اتركه. لا تحرّك النص. |
+| **يناقض الواقعة الجديدة بطريق غير مباشر** — استنتاج لاحق، أو سطر جدول، أو مهمة مجدولة بُنيت على القيمة القديمة | **أعد كتابته هو أيضًا.** وهذا أكثر ما يُغفل. |
+| **خارج الحدود** (§5) | لا تحرّره أبدًا. دوّنه تحت *Left alone*. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**٣ · أعد الكتابة دفعةً واحدة.** وافِق صوت كل ملف القائم وعرفه في وسم الثقة. والواقعة المصحَّحة تحتفظ بالوسم الذي
+تستحقه — **ولا ترفع دعوى إلى `[PROVEN]` لمجرد أنها صارت راهنة.** وإن كان النص القديم يحمل تاريخًا، فضع تاريخ
+اليوم.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+وحيث تُدَّعى واقعة في أكثر من ثلاثة ملفات، فذلك **تكرار لا احتياط**: اذكرها مرة واحدة في الملف الذي يملكها، واجعل
+البقية تشير إلى هناك.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**٤ · الدفتر والذاكرة.** كلاهما، وإلا فالتشغيل لم ينتهِ. أضِف مدخلًا في صدر دفتر التصحيحات:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +72,66 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+ثم اكتب الواقعة في الذاكرة الدائمة — **متحققًا أولًا من وجود مدخل ذاكرة في الموضوع ومحدِّثًا ذلك المدخل**، بدلًا
+من ترك نسختين من واقعةٍ أنفقت لتوّك أمرًا في توحيدها.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**٥ · واجبات ما بعد التحرير.** أعد تشغيل المولِّد أو النسخ الاحتياطي الذي اقتضته التحريرات. وأعد بناء الفهرس إن
+أُنشئت ملفات أو حُذفت.
 
 ---
 
-## 5. What is never rewritten
+## ٤. القرار الدائم يُنقض علنًا
 
-| Never touched | Why |
+إن أبطل تصحيحٌ قرارًا دائمًا — سطر «لا يُعاد فتحه»، أو بند `[PROVEN]`، أو قاعدة سياسة — **فلا تقلبه في صمت.** أعد
+كتابته بوصفه *منقوضًا*، مع التاريخ والسبب، لتعلم الجلسة التالية أنه أُلغي لا أنه نُسي.
+
+فالقرار الذي يتغير بلا أثر لا يُميَّز عن قرار لم يُتَّخذ قط.
+
+---
+
+## ٥. ما لا يُعاد كتابته أبدًا
+
+| لا يُمسّ أبدًا | لماذا |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/` و`archive/` | التاريخ. والتاريخ لا يُصحَّح؛ بل يُتجاوَز. |
+| الملفات المولَّدة | حرّر المصدر وأعد تشغيل المولِّد. |
+| شجرة وكيل معزول | لا وصول إليها إلا بتسميةٍ صريحة. |
+| السياق الرئيسي ذو الحجية لجذر آخر | أبلغ عن الانحراف. ولا تحرّر عبر حدّ ملكية. |
+| كل ما يحوي سرًّا | خارج نطاق أي مسح نصّي بالكلية. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**والمسح الذي يعيد كتابة النصّ سيُتلف الملفات الثنائية.** فاحصر كل مسح في امتدادات نصّية بقائمة سماح، لا بالاستثناء
+أبدًا.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## ٦. ما لا يفعله ICC
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` يصحّح السجل. **ولا يمضي بعدها ليؤدي العمل الذي يقتضيه التصحيح.** فهما فعلان منفصلان بإذنين منفصلين، وخلطهما
+هو الطريق الذي يحوّل تصحيحًا من سطر واحد إلى إعادة بناء بلا مراجعة.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## ٧. الوقائع المتنازعة تُحسم وتُقلَّم — لا تُفهرَس
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+حين يدّعي ملفان واقعتين متناقضتين، **قرّر أيّهما الصواب، وأبقِه، واحذف الدعاوى الخاطئة في المرور نفسه.**
 
-### What still gets escalated instead of settled
+فتقرير التعارض الذي يترك المتنازعين كليهما على القرص لم يحسم شيئًا. وستظل الجلسة التالية تأخذ الملف الذي تفتحه
+أولًا، وقاعدةُ سلامةٍ بخمس نسخ متداولة *أقلّ* موثوقية من واحدة بنسخة واحدة، لا أكثر.
 
-Three cases. Surface these; do not decide them:
+**احسم بالموضوع، لا بالطابع الزمني أبدًا.** فالغالب هو الملف الذي يملك الواقعة، والنسخة التي يسندها قياس، وتلك
+التي تصمد للفحص. **والأحدث ليس الأصدق** — والإخفاق النموذجي هنا أربعة ملفات ذاكرة مكرّرة كُتبت في تسعين ثانية،
+وكان أحدثها يحمل الدعوى الكاذبة، فقاعدة «الأحدث يغلب» كانت سترث الخطأ.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**وسجّل الحسم.** أيّ واقعة غلبت، وما الذي قُلِّم، ولماذا — في الدفتر، ليكون التقليم مقروءًا لا صامتًا. فالمتنازع
+الذي يختفي بلا أثر يبدو تمامًا كمتنازع لم يوجد قط، فتعيد الجلسة التالية إنشاءه.
 
-Everything ordinary gets decided and cleaned up.
+### ما يُرفَع مع ذلك بدل أن يُحسَم
+
+ثلاث حالات. أظهِرها، ولا تحسمها:
+
+- أن يتوقّف التناقض على معلومة لا يملكها الوكيل.
+- أن يكون الخطأ **غير آمن أو غير قابل للتراجع** — أي شيء على الدرجات ٠–٢.
+- أن تقع الدعوى الخاسرة **خارج حدّ ملكية الوكيل** — أي في السياق الرئيسي ذي الحجية لجذر آخر. أبلغ عن الانحراف؛
+  ولا تحرّر عبر الحدّ.
+
+وكل ما هو اعتيادي يُحسم ويُنظَّف.

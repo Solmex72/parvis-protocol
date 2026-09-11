@@ -1,39 +1,41 @@
-# 01 — ESTOP
+> **ترجمة غير رسمية.** النسخة المعيارية من هذا المستند هي الإنجليزية، في الفرع `main`. هذه الترجمة مقدَّمة
+> للتيسير و**لم يراجعها ناطق أصلي**. وعند الاختلاف عن الأصل الإنجليزي **تُقدَّم الإنجليزية**. أمّا معرّفات
+> البروتوكول (`RUN` و`YELLOW` و`STOP` و`[PROVEN]` و`[CLAIMED]` وأفعال الناقل وأسماء الملفات) فقد أُبقيت
+> بالإنجليزية عمدًا: فهي قيم حرفية تحلّلها الوكلاء.
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP (الإيقاف الطارئ)
+
+**الحالة: معيارية. الأولوية ٠. مُلزِمة لكل وكيل في كل مشروع.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## ٠. ما يستطيعه هذا وما لا يستطيعه — اقرأ هذا أولًا
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**لا يستطيع إيقاف جلسة جارية.** لا ملف يستطيع ذلك. فالوكيل في منتصف ردٍّ لا يقرأ القرص، ولا يملك خط مقاطعة،
+وسيُتمّ ما هو فيه. ومن يخبرك أن ملف علامة يوقف أسطولًا فإنما يصف أمنية.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**المشغِّل وحده يوقف وكيلًا جاريًا، بإغلاق نافذته.** ذاك هو الإيقاف الطارئ الحقيقي، ولم يكن يومًا شيئًا سواه.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+ما يفعله هذا الملف هو إلزام كل وكيل في اللحظتين اللتين *يقرأ* فيهما القرص فعلًا:
 
-| Moment | Obligation |
+| اللحظة | الواجب |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **الإقلاع** | اقرأ الحالة قبل عقيدتك، وقبل ذاكرتك، وقبل كل شيء. |
+| **كل نقطة تفتيش** | قبل أي كتابة، وأي رسالة، وأي استدعاء أداة له أثر جانبي، وأي إنفاق. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+الوكيل الذي يرى `STOP` ثم يمضي وكيلٌ معطوب. وهذا هو نموذج الإنفاذ كله: ليس آليّة — بل واجبٌ يُتفقَّد كثيرًا.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+وذكر الحدّ بصدق جزء من البروتوكول. فالإيقاف الذي تحسبه فوريًّا أخطر من إيقافٍ تعلم أنه ليس كذلك، لأنك ستتّكئ
+عليه.
 
 ---
 
-## 1. The two signals
+## ١. الإشارتان
 
-### The sentinel is the fact
+### الحارس هو الواقعة
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+**ملف عادي** اسمه بالضبط `estop` — بلا امتداد، وصفر بايت أمر طبيعي — في جذر المشروع، أو في **أي مجلد أعلى** من
+الشجرة التي يجري العمل عليها.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +45,17 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+اختبر **ملفًا**، لا مجرد وجود، ولا نمط glob أبدًا:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` عقيدة. ويجب ألّا يُطلق الفحص أبدًا. فالمطابقة التي تسمح بذلك تُنشئ إيقافًا لا يستطيع المشغِّل رفعه.
+- و`_os/estop/` مجلد. وهو أيضًا لا يُطلق الفحص.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+الجذور المتعددة تُطلق **كلٌّ على حدة**. افحص كل واحد. وأبلغ عن المسار الذي نفّذت عليه `stat` — لا تقل «الـestop»
+أبدًا، فذلك يُخفي أيّها نظرت.
 
-### The STATE file is a derived mirror
+### ملف STATE مرآة مشتقّة
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — سطر واحد، لا غير.
 
 ```
 RUN
@@ -66,117 +67,105 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| الحقل | القاعدة |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| الفعل | `RUN` أو `YELLOW` أو `STOP`. ولا يُحلَّل سواها. |
+| الوقت | UTC، بصيغة ISO-8601. |
+| مَن | مَن أعلنه. والمشغِّل وحده يكتب `STOP` / `YELLOW` أو يرفعهما. |
+| السبب | سطر واحد، بلغة واضحة، بلا مصطلحات. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**إذا اختلف الحارس والمرآة، فالإيقاف هو الغالب.** المرآة تكتبها الأدوات فتبلى؛ أما الحارس فهو الواقعة.
 
 ---
 
-## 2. The three states
+## ٢. الحالات الثلاث
 
-| STATE | What an agent does |
+| STATE | ما يفعله الوكيل |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **امضِ.** نفّذ الأوامر التي يقتضيها العمل دون استئذان عند كل واحد. لا تتوقف، ولا تسرد الخيارات، ولا تصفّ العمل الاعتيادي خلف تأكيد. |
+| `YELLOW` | **اسأل أولًا.** يُعرَض كل أمر قبل تنفيذه. العمل نفسه والكفاءة نفسها — والفرق هو التأكيد. |
+| `STOP` | قف. §٣. |
 
-### What `RUN` does not do
+### ما لا يفعله `RUN`
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` يزيل *الوقفة التي تسبق العمل الاعتيادي*. ولا يزيل **أي حاجز قائم**، لأن تلك الحواجز تخصّ طبيعة الفعل لا
+سرعته:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- بيانات الاعتماد وتسجيلات الدخول والمشتريات وتهيئة الموارد — **دائمًا بيد المشغِّل**؛
+- الأفعال الموجَّهة إلى الخارج — النشر والإرسال والنشر التشغيلي — **دائمًا بإذن صريح**؛
+- كل ما سينفّذه إنسان بيده — **يمرّ كما كان عبر حاجز السلامة**؛
+- الأفعال المدمِّرة أو غير القابلة للتراجع — **تُؤكَّد كما كانت، في أي حالة**؛
+- حدود الوكيل الدائمة الخاصة به — **لا تتعلق بـSTATE البتة**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` يجيب عن سؤال *«هل عليّ أن أسأل قبل كل خطوة؟»* — لا. ولا يجيب عن سؤال *«هل لي أن أفعل أي شيء؟»* والوكيل الذي
+يقرأ `RUN` ثم يفعل شيئًا من هذه القائمة قد أساء قراءة الحالة، لا أنها أذنت له.
 
-### Fail-safe on an unreadable verb
+### الفشل الآمن عند فعلٍ غير مقروء
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+ملف STATE **المفقود أو الفارغ أو غير المقروء أو الحامل لأي كلمة أخرى يُقرأ على أنه `YELLOW`** — لا `RUN` أبدًا.
+اسأل.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> هذا هو السطر الأكثر انقلابًا في التطبيقات. فـ`try { read } catch { return "RUN" }` يحوّل كل خطأ قرص، وكل تغيير
+> صلاحيات، وكل خطأ مطبعي إلى إذنٍ صامت. أما الـsidecar المرجعي فيهبط إلى `YELLOW` ويمتنع عن الخدمة عند خطأ
+> القراءة؛ انظر [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+وملف الحارس يعلو على هذا القسم كله: فوجود ملف `estop` يعني `STOP` مهما قال STATE.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
+**المشغِّل وحده يكتب هذا الملف.** لا يكتبه أي وكيل — بمن في ذلك الوكيل الذي وجد المشكلة. والوكيل الذي يرى أن
+الأسطول ينبغي أن يقف يرفع `GATE` على الناقل ويقول ذلك. لا يوقف الأسطول بسلطته، ولا يعيد تشغيل أي منه.
 
 ---
 
-## 3. What an agent does on `STOP`
+## ٣. ما يفعله الوكيل عند `STOP`
 
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
+١. **لا تكتب شيئًا بعد.** لا ملف الذاكرة، ولا التقرير، ولا الناقل.
+٢. **احفظ في مكانه، ثم قف.** لا تُتمّ أي خطوة لم تُكتب بعد. وسِمْ ما هو موجود بأنه جزئي، مع سطر واحد عن الموضع
+   الذي توقفت عنده.
 
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
+   > كانت مسوّدات سابقة من هذا البروتوكول تقول *اطرح*. وكان ذلك خطأ: فطرح نصف تقرير يُتلف عملًا وُجدت عقيدة إعادة
+   > التشغيل لحمايته. والخطر هو ملف مبتور يُقرأ لاحقًا على أنه مكتمل — والذي يمنع ذلك هو **الوسم**، لا الحذف.
+٣. **قل للمشغِّل سطرًا واحدًا:** `ESTOP observed <timestamp> — <reason>. Holding.`
+٤. **قف.** لا تستأذن في المتابعة. ولا تقترح التفافًا. ولا تتحقق مما إذا كان السبب ينطبق عليك — إنه ينطبق عليك.
 
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**الرفض جواب، لا محاولة أخرى.** لا تدخل حلقة انتظار `RUN`. أبلغ ثم أنهِ.
 
 ---
 
-## 4. What clears it
+## ٤. ما الذي يرفعه
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+المشغِّل يعيد الملف إلى `RUN`. ولا شيء سواه يفعل ذلك — لا مهلة زمنية، ولا وكيل يرى المشكلة قد حُلَّت، ولا مرور
+الوقت، ولا جلسة جديدة لم تشهد الإيقاف قط.
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
-
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+والمعالج الذي يرفع نفسه بنفسه قلبٌ لمبدأ الفشل الآمن، ويُرفض من حيث الموضوع.
 
 ---
 
-## 6. Measure twice
+## ٥. النطاق
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+الإيقاف الطارئ **يعمّ الأسطول كله افتراضًا**. ولا وجود لإيقافٍ لكل وكيل على حدة، لأن العطل الذي يستدعي إيقافًا
+لا ينحصر في وكيل واحد إلا نادرًا، ولأن الإيقاف الجزئي يستدعي بالضبط ذلك الاستنتاج — *«ذاك كان بشأن شخص آخر»* —
+الذي وُجد هذا الملف ليحظره.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+**والوكلاء المعزولون مشمولون.** فالوكيل الذي ليس على أي ناقل ولا على أي سطح مشترك يقرأ هذا الملف كذلك. العزل
+يحكم ما *يقوله* الوكيل. ولا يحكم أبدًا ما إذا كان يجوز *إيقافه*.
 
 ---
 
-## 7. The honest limit, stated once
+## ٦. قِسْ مرتين
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+الفحص الأخضر الواحد لا يشهد بحالة سلامة أبدًا. اقرأ الإشارتين كلتيهما، من القرص، **في هذا التشغيل**. ولا تستشهد
+أبدًا بحالة محفوظة في الذاكرة — لا من السياق، ولا من ملف ذاكرة، ولا من دور سابق. فسوء قراءة صيغة `stat` وحده
+يكفي لإنتاج «خالٍ» زائف أو «موقوف» زائف، وقد وقع كلاهما فعلًا.
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+وأقوى صورة متاحة هي **مراقبة دائمة** على ملف STATE وعلى كل مسار حارس، لا تُبلِّغ إلا عند التغيّر: صامتة ما دام
+الأمر خاليًا، وتنطلق لحظة تسليح الإيقاف. وهذا يحوّل «تفقّدت مرة عند الإقلاع» إلى تغطية حيّة، ويسدّ الثغرة التي
+يُسلَّح فيها الإيقاف في منتصف الجلسة.
+
+---
+
+## ٧. الحدّ الصادق، يُقال مرة
+
+هذا البروتوكول يجعل الإيقاف **موثوقًا عند كل إقلاع وكل نقطة تفتيش**. ولا يجعله **فوريًّا**، ولن يفعل ذلك شيء
+يُكتب في شجرة ملفات أبدًا.
+
+إن كان ثمة خطبٌ يجري الآن: **أغلق النافذة.** ثم اكتب الملف، حتى لا يعيد الوكيل التالي الذي يستيقظ تشغيله.

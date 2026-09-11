@@ -1,92 +1,93 @@
-# 06 — DATA ZONES
+> **ترجمة غير رسمية.** النسخة المعيارية من هذا المستند هي الإنجليزية، في الفرع `main`. هذه الترجمة مقدَّمة
+> للتيسير و**لم يراجعها ناطق أصلي**. وعند الاختلاف عن الأصل الإنجليزي **تُقدَّم الإنجليزية**. أمّا معرّفات
+> البروتوكول (`RUN` و`YELLOW` و`STOP` و`[PROVEN]` و`[CLAIMED]` وأفعال الناقل وأسماء الملفات) فقد أُبقيت
+> بالإنجليزية عمدًا: فهي قيم حرفية تحلّلها الوكلاء.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — مناطق البيانات
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**الحالة: معيارية.** أين يُسمح للملف أن يسكن.
 
 ---
 
-## 2. The two zones
+## ١. لماذا لم ينجح المنع
 
-| Zone | Property | Holds |
+كانت القاعدة الأصلية *«لا أسرار، أبدًا، في أي مكان»* — **دون أي موضع تُوضع فيه البيانات الخاصة بدلًا من ذلك.**
+
+والمنع بلا وجهة لا يُلتزم به. بل يُلتفّ حوله، فتحطّ المواد الخاصة في الشجرة المتزامنة مصادفةً. وقد تكرّر ذلك،
+حتى من وكيل كان هو نفسه خاضعًا للقاعدة.
+
+**فالقاعدة قرار توجيه، لا منع.**
+
+---
+
+## ٢. المنطقتان
+
+| المنطقة | الخاصية | تحوي |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | تتزامن إلى التخزين السحابي. **عامِل كل بايت على أنه منشور.** | العقيدة والتكليفات وتعريفات الوكلاء والبنية وسياق العمل والبحث والوثائق التقنية |
+| **PRIVATE** | **خارج كل جذر مزامنة** — وخارج ملف تعريف المستخدم كذلك، حتى لا تبلغها إعادة توجيه المجلدات المعروفة | الأسرار، والأشخاص الحقيقيون وبياناتهم الشخصية، والمشاريع والوسائط الخاصة، وكل ما يسوء العثور عليه في نسخة احتياطية |
 
-### The test
+### الاختبار
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *هل يكون وجود هذا في لقطة سحابية بعد سنة مشكلة؟*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+نعم → PRIVATE. لا → PUBLIC. وعند تردّد حقيقي → **PRIVATE.** فثمن المبالغة في التصنيف إزعاج، أما ثمن التقصير فيه
+فلا يُستدرك.
 
-### Know what actually syncs
+### اعرف ما يتزامن فعلًا
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+تحقّق من هذا على الجهاز الحقيقي، لا بالافتراض. ففي محطة عمل معتادة قد تعمل عدة برامج مزامنة في آنٍ واحد، وكل ما
+يقع تحت مجلدات المستندات أو سطح المكتب أو الصور يغادر الجهاز ويُحفظ في تاريخ الإصدارات أسابيع. **والحذف محليًّا لا
+يستردّه.**
 
-Two consequences that each cause real failures:
+ولذلك نتيجتان تُحدث كلٌّ منهما أعطالًا حقيقية:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+١. **يجب تحويل مخرجات البناء** إلى خارج جذر المزامنة، وإلا أفسدتها المرآة في منتصف البناء.
+٢. **والمفاتيح تسكن في الخارج**، قصدًا وافتراضًا.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## ٣. الاستثناء: بيانات الاعتماد لا تنتمي إلى أيّ من المنطقتين
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**بيانات الاعتماد الحيّة — كلمات المرور ومفاتيح واجهات البرمجة والرموز ومفاتيح البثّ — تنتمي إلى مدير كلمات مرور،
+لا إلى أيٍّ من نظامَي الملفات.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+فالمنطقة الخاصة تحوي *بيانات خاصة*. أما مدير كلمات المرور فيحوي *بيانات اعتماد*. وليس هذا تدقيقًا لفظيًّا: فالمجلد
+الخاص غير مشفَّر افتراضًا، والملف يبقى ملفًا. وفي اللحظة التي يُنسخ فيها أحدها أو يُقتبس في محضر أو يُرفق بشيء،
+يكون قد أُفشي.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**وصِف الخاصية الأمنية للمنطقة الخاصة وصفًا ضيّقًا ولا تبالغ فيها أبدًا.** فخاصيتها المثبتة الوحيدة عادةً أن *لا
+شيء ينسخها إلى أي مكان*. وما لم يوجد تشفير مُتحقَّق منه للقرص كاملًا أو لكل ملف، فهي ليست مشفَّرة، ولا منسوخة
+احتياطيًّا، وليست خزنة.
 
 ---
 
-## 6. Pruning without loss
+## ٤. التصنيف للمشغِّل، وهو قابل للضبط
 
-Before anything leaves the working tree:
+احفظ الجدول الحيّ في ملف واحد — `DATA-CLASSIFICATION.md` — ينقل فيه المشغِّل الفئات بين المنطقتين ويقرؤه كل وكيل
+بدل أن يخمّن.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+فملف البروتوكول هذا يذكر **الآلية**. وذلك الملف يذكر **السياسة**. وحيث يختلفان، فملف السياسة هو الغالب.
 
-Never mass-delete under live concurrency.
+---
+
+## ٥. ما يترتب على الوكلاء
+
+- **لا سرّ في أي شجرة تُحزَم.** فحزمة السياق موجودة لتُلصق في جلسة جديدة. سمِّ ما هو محفوظ وأين؛ ولا تذكر القيمة
+  أبدًا.
+- **ولا يبلغ أي سرٍّ `surface/`.** فهي تُعرض على الشاشة.
+- **ولا يبلغ أي سرٍّ متصفحًا.** انظر [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **واحجب بالإحالة، لا بالحذف.** فـ`<api key — see password manager entry "acme-prod">` تُبقي الواقعة قابلة
+  للتتبّع دون إفشاء القيمة.
+
+---
+
+## ٦. التقليم بلا فقدان
+
+قبل أن يغادر أي شيء شجرة العمل:
+
+١. انسخه إلى مخزن مختوم **خارج الجذور** — ملف أرشيف، لا يمكن بلوغه بنمط glob.
+٢. جهّز المسارات في `marked-deletion.md` / `marked-archive.md`.
+٣. **والتنفيذ بيد المشغِّل**، والشجرة ساكنة.
+
+ولا تحذف بالجملة أبدًا في أثناء تزامن جارٍ.

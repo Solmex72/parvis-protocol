@@ -1,181 +1,163 @@
-# 09 — THE FLOOR
+> **ترجمة غير رسمية.** النسخة المعيارية من هذا المستند هي الإنجليزية، في الفرع `main`. هذه الترجمة مقدَّمة
+> للتيسير و**لم يراجعها ناطق أصلي**. وعند الاختلاف عن الأصل الإنجليزي **تُقدَّم الإنجليزية**. أمّا معرّفات
+> البروتوكول (`RUN` و`YELLOW` و`STOP` و`[PROVEN]` و`[CLAIMED]` وأفعال الناقل وأسماء الملفات) فقد أُبقيت
+> بالإنجليزية عمدًا: فهي قيم حرفية تحلّلها الوكلاء.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — الأرضية
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**الحالة: معيارية للمُصوِّر؛ إرشادية بوصفها نموذجًا.**
+ينفّذها [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## ١. الدعوى
 
-| On the floor | In the fleet | Read from |
+أسطول الوكلاء يصعب رؤيته. فشجرة الملفات قائمة، وجدول العمليات قائمة، والسجلّ قائمة — ومن ثمّ فالصورة الوحيدة التي
+يملكها أحد عن أسطول عامل هي عدة قوائم لا تتسق.
+
+**والمستودع المؤتمت هو الآلة نفسها، وقد ظلّ مقروءًا أربعين عامًا.** فالرافعات تنقل الأحمال بين الرفوف تحت نظام
+تحكّم، والشخص المشرف يقرأ أرضيةً فيها مئات الحركات المتزامنة بنظرة واحدة، باللون، دون أن يقرأ سطرًا واحدًا من نصّ.
+
+ويستعير Parvis ذلك. لا زينةً — بل بوصفه *تناظرًا*، يقابل فيه كل جسم في المستودع شيئًا واحدًا بعينه في الشجرة،
+وتتبيَّن فيه قواعد سلامة المستودع نفسها أنها قواعد سلامة البروتوكول، مرسومةً سلفًا في موضعها الصحيح.
+
+---
+
+## ٢. التناظر
+
+| على الأرضية | في الأسطول | يُقرأ من |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **رافعة** | وكيل، أو جلسة حيّة | علامات الجلسات في `_os/exchange/bus/session/` |
+| **منصّة نقل** | مجلد | الشجرة نفسها؛ وبطاقة المنصّة هي مسارها |
+| **موضع في الرفّ** | حيث يسكن ذلك المجلد | مجلده الأعلى |
+| **فتح منصّة** | النزول إلى المجلد | **مستودع كامل آخر** — §٤ |
+| **Induct** (رصيف الوارد) | العمل الوارد | سطر `REQ` في `_os/tasks/INDEX.md` |
+| **Spur** (رصيف الصادر) | ناتج يغادر | ملف في `_os/events/surface/`، أو تصدير |
+| **سير ناقل** | ناقل الملفات | `_os/exchange/bus/` — كيف ينتقل العمل دون أن تحمله رافعة |
+| **شاحنة** | خدمة خارجية أو ذكاء اصطناعي آخر | الحدّ. §٥ |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+وليس المقصود الصورة. المقصود أنك **تعرف قراءة هذه الشاشة سلفًا** إن سبق أن وقفت أمام نظام تحكّم بمستودع — وإن لم
+تقف، فالنموذج يبقى ملموسًا على نحو لا تبلغه قائمة مجلدات.
 
 ---
 
-## 3. The colours
+## ٣. الألوان
 
-One glance, before any navigation:
+نظرة واحدة، قبل أي تنقّل:
 
-| Colour | On the floor | In the fleet |
+| اللون | على الأرضية | في الأسطول |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **أخضر** | يتحرك — رافعة تحمل حملًا | وكيل يعمل؛ جلسة حيّة في منتصف مهمة |
+| **أزرق** | مجدول — في الطابور ولم يبدأ بعد | إعلان على اللوحة: مطلوب، بانتظار وكيل |
+| **كهرماني** | انتباه — موضعٌ يقتضي قرارًا | `YELLOW`: اسأل قبل كل إجراء |
+| **أحمر** | إيقاف طارئ — تلك المنطقة متوقفة | `STOP`: الإيقاف مسلَّح وهذا الجذر مجمَّد |
+| **رمادي** | فارغ، أو بلا مصدر حيّ | لا بيانات. ولا تخمين أبدًا. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+وليس هذا مخططًا جديدًا. بل هو الحالة التي تحملها الشجرة أصلًا، معروضةً.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**والأحمر يكسب النظرة دائمًا.** فمنطقة حمراء واحدة توقف العين قبل أي أخضر، تمامًا كما يعلو الإيقاف على كل إشارة
+أخرى ([`01`](01-ESTOP.md)). **والأرضية التي تعرض أخضر فوق منطقة حمراء تكذب** — وهذا بعينه الإخفاق الذي وُجدت هذه
+القاعدة لتحظره.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**والرمادي واجبٌ حيث لا مصدر حيّ.** فالموضع الذي بلا بيانات يُعرض رماديًّا ويُظهر `—`. ولا يُعرض أخضر أبدًا، لأن
+الأخضر هو القيمة الافتراضية المريحة ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## ٤. المستودع المتداخل
 
-This is where the model stops being a visualisation and starts enforcing something.
+**افتح منصّة، فلستَ تنظر إلى صندوق. أنت تنظر إلى مستودع كامل آخر** — له رافعاته ومنصّاته وأرصفته.
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+وهذه هي شجرة الملفات بعينها. فالمشروع مستودع؛ وأقسامه ممرّات؛ وملفاتها منصّات؛ والمنصّة التي هي نفسها مجلد أرضيةٌ
+أخرى. ومن ثمّ فالمُصوِّر **عرضٌ واحد ينزل**، بالتحكّم نفسه عند كل عمق، لأن كل مستوى *هو* مستودع. ولا شيء جديد
+يُتعلَّم في طريق النزول.
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+والتكرار الذاتي هو كل سبب صمود الاستعارة بدل أن تكون قشرة. فلوحةٌ تعرض المستوى الأعلى وحده صورةٌ لأسطول؛ وتلك التي
+تنزل عرضٌ له.
 
 ---
 
-## 6. Two surfaces, two jobs
+## ٥. الشاحنات ترسو عند الحدّ — ولا تدخل الأرضية أبدًا
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+هنا يكفّ النموذج عن كونه تصويرًا ويبدأ في فرض شيء.
+
+فالخدمة الخارجية — ذكاء اصطناعي آخر، أو واجهة برمجة، أو مورّد — **شاحنة**. وفي مستودع حقيقي ترجع الشاحنة إلى
+رصيف. لا تدخل الأرضية، ولا تحرّك رافعة، ولا تدخل رفًّا، ولا تفتح مستودعًا متداخلًا. تُنزل حملًا عند induct أو
+تستلم حملًا من spur، وذلك هو وصولها كله.
+
+**وذلك الرصيف هو الغرفة المعزولة.** فكل تبادل خارجي يجري عند الحافة، مفحوصًا، ولا ينفلت شيء خارجي داخل الشجرة.
+
+**وأوراق الشاحنة غير موثوقة حتى تُفحص.** فالحمل القادم على شاحنة *بيانات* واردة، لا أمرًا للأرضية. يُدخل ويُراجَع
+كسائر الأشياء، ولا يُطاع عند الوصول أبدًا. وذلك هو حدّ مصدر التعليمات من [`03`](03-BUS.md) §5، مرسومًا رصيفَ
+تحميل — ومرسومًا في الموضع الوحيد الذي يستطيع فيه الناظر إلى الشاشة أن يراه مُحترَمًا.
+
+وإن وضع عرضُك شاحنةً على الأرضية، فالعرض خطأ، وكذلك البنية التي يرسمها.
+
+---
+
+## ٦. سطحان، مهمّتان
+
+| | **الأرضية** (هذا الملف) | **وحدة التحكم** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| ما هي | أرضية ثلاثية الأبعاد، تُشاهَد حيّة | قائمة بلاطات، مدرَّجة بحسب الصلاحية |
+| ماذا تُظهر | **كيف حال النظام** — كل وكيل ومجلد وحالة دفعةً واحدة | **ما الذي تستطيع فعله** — اختر الأداة وأنجز العمل |
+| الفعل | أن ترى وتفهم وتقرّر | أن تشغّل وتستعمل وتُنتج |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**فالأرضية تُظهر كيف تفكّر الآلة؛ ووحدة التحكم للعمل بمقتضى ما تستنتجه.** إحداهما خريطة والأخرى طاولة عمل. وسطح
+الإدارة يحتاج إليهما معًا، والخطأ أن تُبنى الجميلة وحدها.
 
 ---
 
-## 7. Controls
+## ٧. التحكّم
 
-Navigation is what made the original usable, not colour alone:
+ما جعل الأصل صالحًا للاستعمال هو التنقّل، لا اللون وحده:
 
-| Control | Does |
+| التحكّم | يفعل |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **السحب** | الدوران حول الأرضية — تدويرًا وإمالةً ونظرًا على امتداد ممرّ |
+| **من الأعلى** | الانتقال إلى مسقط أفقي من فوق. فالدوران للعمق والمسقط للتخطيط |
+| **النقر على منصّة** | النزول إليها — مستودع آخر، والتحكّم نفسه |
+| **التمرير** | التقريب والتبعيد |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+التحكّم نفسه عند كل عمق. ولا تفاوض في ذلك: فالعرض الذي يتغيّر تفاعله كلما نزلتَ قد نقض الوعد بأن كل مستوى مستودع.
 
-### The camera is orthographic, on purpose
+### الكاميرا متعامدة، عن قصد
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**لا انكماش منظوري.** فالخطوط المتوازية لا تلتقي أبدًا، والموضع في أقصى الممر يُعرض بالحجم نفسه تمامًا الذي يُعرض
+به موضعٌ عند قدميك.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+ويبدو ذلك خطأً للحظة — إذ تتوقع العين التقاءً وتقرأ غيابه كأنها واقفة داخل الصناديق تنظر إلى الخارج. ومع ذلك فهي
+المقايضة الصحيحة، وهي ما تستعمله شاشات التحكّم في الأرضيات المؤتمتة الحقيقية: **فالغرض كله مقارنة المواضع عبر
+الأرضية بنظرة واحدة**، والكاميرا المنظورية تجعل أقصى الممر أصغر وأبهت وأصعب تقديرًا من أدناه. ففي المنظور يبدو
+«ذلك الرفّ أكثر امتلاءً» و«ذلك الرفّ أقرب» سواءً. أما مع كاميرا متعامدة فلا.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+والحجب يبقى حقيقيًّا — فالأوجه المدبرة تُحذف، والهندسة الأقرب تطلي ما هو أبعد. إنها كاميرا مسطحة، لا مشهد مسطح.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+والمعدّات يمكن بلوغها أيضًا من **قائمة جانبية**، مجمَّعةً بحسب النوع — رافعات ومنصّات ورصيفان وسير ناقل وشاحنات.
+والاختيار من القائمة أو من الأرضية يفتح التحكّم نفسه، لأن أرضيةً لا يمكن التنقّل فيها إلا بنقر صناديق صغيرة في
+مشهد ثلاثي الأبعاد عرضٌ توضيحي لا أداة.
 
 ---
 
-## 8. What the floor may and may not do
+## ٨. ما يجوز للأرضية وما لا يجوز
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+كل قيد في [`07`](07-INTERFACE.md) §5 سارٍ. والخط يُرسم في موضع بعينه:
 
-**The floor may induct. It may never execute.**
+**للأرضية أن تُدخِل. ولا يجوز لها أن تنفّذ أبدًا.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+وهو الخط نفسه الذي يرسمه [`07`](07-INTERFACE.md) §1 لوحدة التحكم، وهو ما يتيح للمعدّات أن يكون لها تحكّم أصلًا.
+فاختيار رافعة وتوجيه عمل إليها يكتب سطر `REQ` يسمّي ذلك الوكيل، ويضع `TELL` في صندوق وارده. **ولا يُطلق شيئًا.**
+فلا عملية تُشغَّل، ولا أمر يُنفَّذ، ويلتقط الوكيل العمل في تشغيله التالي — أو لا يلتقطه.
 
-Two consequences that are easy to get wrong:
+ونتيجتان يسهل الخطأ فيهما:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **العمل الموجَّه ليس أمرًا مع ذلك.** فسطر `REQ` هو السجل المعياري؛ وسطر صندوق الوارد يشير إليه فحسب. والملف الذي
+  *يأمر* وكيلًا — أو يدّعي سلطة المشغِّل من داخل الشجرة — هو الحادث الأمني الذي يحدّده [`03`](03-BUS.md) §5،
+  وبناء ذلك في السطح أسوأ من فعله يدويًّا. فالسلطة هي المشغِّل في المحادثة. والأرضية تكتب السجل، لا التعليمة.
+- **وبعض المعدّات لا تنال تحكّمًا، عن قصد.** فالسير الناقل للقراءة فقط: ووحدة تحكّم تستطيع كتابة أسطر على الناقل
+  إنما تصنع سلطةً ينكرها عليها البروتوكول. أما الشاحنات فلا تحكّم لها البتة — §٥.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**وتحت `STOP` تُعرض الأرضية حمراء ولا تُدخِل شيئًا.** والأرضية الحمراء لا تتلقّى أوامر.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+الحدّ الصادق، يُقال مرة: **هذه صورة للشجرة في لحظة، لا تدفّق قياس حيّ.** فهي تستطلع على فترات. وبين استطلاع وآخر
+تكون بالية، وتُظهر متى قرأت آخر مرة، وتصير رمادية بدل التظاهر بغير ذلك حين يكفّ الـsidecar عن الإجابة.
