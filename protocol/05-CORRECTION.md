@@ -1,66 +1,61 @@
-# 05 — CORRECTION
+> **非官方翻译。** 本文档的规范版本是 `main` 分支中的英文版。本翻译仅为方便阅读而提供，**未经母语者校订**。
+> 如与英文原文有出入，**以英文为准**。协议标识符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 总线动词以及文件名）刻意保留英文：它们是代理程序解析的字面值。
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — 纠正
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**状态：规范性。** 当一条已记录的事实被发现是错的，会发生什么。
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. 问题
 
-Reading a governing file puts you under it. Two things follow:
+> 一条在六个文件里被断言的事实，会在其中五个里是错的。
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+只改你手边那个文件，不算纠正。那只会造出一棵真相与谬误都各有出处的目录树，而下一次会话会取它先打开的那一个。
+这是文档繁重的代理机群最具代表性的失效方式，而且它是悄然加剧的。
+
+**纠正要么传播开去，要么就等于没有发生。**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. 读取并非无偿——它带来义务
 
-One command, one turn, no proposal step.
+读了一个统辖性的文件，就把你置于它之下。由此有两点：
+
+1. 其中一切**持久的、非显而易见的、无法从目录树推导出的**内容，都要在会话结束前写入你的持久记忆。
+2. **若你的上下文与该文件相抵触，以文件为准。** 不要绕开它。去纠正记录。
+
+---
+
+## 3. 即时航向纠正（ICC）
+
+一条命令，一轮，没有提议环节。
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### 次序
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · 扫描。** 从这次纠正中提炼 2 到 5 个检索词：**旧的**措辞、它显而易见的各种变体，以及涉及的专有名词。不是
+新措辞。在读任何东西之前，每个词各跑一次索引扫描。绝不要为了找命中而逐个文件遍历目录树——索引就是为此存在的。
 
-**2 · Classify every hit.**
+**2 · 给每个命中分类。**
 
-| Hit | Action |
+| 命中 | 处理 |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **断言了旧事实** | 改写它。 |
+| **只是顺带提及**，两种情况下都成立 | 放着不动。不要搅动文字。 |
+| **间接与新事实相抵触**——下游结论、表格某行、基于旧值排定的定时任务 | **同样要改写。** 这一类最常被漏掉。 |
+| **越界**（§5） | 绝不编辑。记在 *Left alone* 之下。 |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · 一次性全部改写。** 贴合每个文件既有的语气及其置信标注惯例。被纠正的事实保留它应得的标注——**不要因为某条
+论断现在是最新的，就把它升级为 `[PROVEN]`。** 若旧文本带有日期，换成今天的。
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+当一条事实在三个以上文件里被断言时，那是**重复，而非冗余**：在拥有它的那个文件里写一次，让其余的指向那里。
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · 台账与记忆。** 两者都要，否则本次运行就没有完成。在纠正台账的最前面加上一条记录：
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +68,63 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+然后把这条事实写入持久记忆——**先查清该主题是否已有记忆条目，并更新那一条**，而不是让你刚花一条命令统一起来的
+事实又留下两个版本。
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
+**5 · 编辑之后的义务。** 重新运行这些编辑所要求的生成器或备份。若有文件被创建或删除，则重建索引。
 
 ---
 
-## 4. A standing decision is reversed in the open
+## 4. 长期决定要公开推翻
 
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
+若一次纠正使某项长期决定失效——一行“不再翻案”、一个 `[PROVEN]` 条目、一条方针规则——**不要悄悄把它翻过来。**
+把它改写为*已推翻*，写上日期与理由，好让下一次会话知道它是被撤销的，而不是被遗忘的。
 
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+一个悄无声息地改变的决定，与一个从未作出的决定无从分辨。
 
 ---
 
-## 5. What is never rewritten
+## 5. 什么永远不被改写
 
-| Never touched | Why |
+| 绝不触碰 | 为什么 |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`、`archive/` | 历史。历史不作纠正；它只被取代。 |
+| 生成的文件 | 改源头，然后重新运行生成器。 |
+| 被隔离代理的目录树 | 仅在被点名时才可访问。 |
+| 另一个根目录的权威主上下文 | 上报偏差。不要跨越归属边界去编辑。 |
+| 任何含有机密的内容 | 完全不在文本扫描的范围之内。 |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**会改写文本的扫描，会毁掉二进制文件。** 用允许清单把每次扫描限定在文本扩展名上，绝不要靠排除法。
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. ICC 不做什么
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` 纠正记录。**它不会接着去做这次纠正所隐含的那些工作。** 那是两种分开的行为、各有分开的授权，把它们混为
+一谈，正是一行纠正变成一次未经审阅的重构的途径。
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. 相互冲突的事实要裁定并剪除——而不是编目
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+当两个文件断言相互矛盾的事实时，**判定哪一个正确，保留它，并在同一趟里删掉错误的断言。**
 
-### What still gets escalated instead of settled
+一份把两个竞争者都留在磁盘上的冲突报告，其实什么也没解决。下一次会话依旧会取它先打开的那个文件，而一条有五个
+版本在流通的安全规则，比只有一个版本时*更不*可靠，而不是更可靠。
 
-Three cases. Surface these; do not decide them:
+**按实质裁定，绝不按时间戳。** 胜出者是拥有该事实的那个文件、有测量支撑的那个版本、经得起推敲的那一个。
+**最新的并非最真的**——此处的典型失败案例是四个在九十秒内先后写下的重复记忆文件，其中最新的那个恰恰含有错误
+论断，因此“最新者胜”的规则会把错误继承下来。
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**把裁定结果记下来。** 哪条事实胜出、剪除了什么、为什么——记在台账里，好让剪除是可读的而不是无声的。一个不留
+痕迹就消失的竞争者，看上去与一个从未存在过的竞争者一模一样，于是下一次会话又会把它重新造出来。
 
-Everything ordinary gets decided and cleaned up.
+### 什么仍要上报而不是自行裁定
+
+三种情形。把它们呈上；不要自行裁定：
+
+- 该矛盾取决于代理并不掌握的信息。
+- 判断错误将是**不安全或不可逆的**——梯级 0–2 上的任何事项。
+- 落败的那条断言位于**代理归属边界之外**——属于另一个根目录的权威主上下文。上报偏差；不要跨边界编辑。
+
+一切寻常之事，都就地裁定并清理干净。

@@ -1,39 +1,40 @@
-# 01 — ESTOP
+> **非官方翻译。** 本文档的规范版本是 `main` 分支中的英文版。本翻译仅为方便阅读而提供，**未经母语者校订**。
+> 如与英文原文有出入，**以英文为准**。协议标识符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 总线动词以及文件名）刻意保留英文：它们是代理程序解析的字面值。
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP（紧急停机）
+
+**状态：规范性。优先级 0。对每个项目中的每个代理均有约束力。**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. 它能做什么、不能做什么——请先读这一节
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**它无法中止正在运行的会话。** 任何文件都做不到。正处于回复中途的代理并没有在读磁盘，没有中断线，它会把手上的
+事做完。谁若告诉你一个标志文件能让机群停下，那是在描述一个愿望。
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**只有操作者能停下正在运行的代理，办法是关掉它的窗口。** 那才是真正的紧急停机，而且从来就只有这一种。
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+这个文件所做的，是在代理*确实*会读磁盘的那两个时刻约束它：
 
-| Moment | Obligation |
+| 时刻 | 义务 |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **启动** | 先读状态，先于你的教条、先于你的记忆、先于一切。 |
+| **每个检查点** | 在任何写入、任何消息、任何有副作用的工具调用、任何支出之前。 |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+一个看到 `STOP` 却继续运行的代理，是有缺陷的代理。整个执行模型就在于此：不是某种机制——而是一项义务，并且要
+经常核查。
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+诚实说明这条边界，本身就是协议的一部分。你以为是瞬时生效的停机，比你明知不是瞬时的更危险，因为你会去依赖它。
 
 ---
 
-## 1. The two signals
+## 1. 两个信号
 
-### The sentinel is the fact
+### 哨兵即事实
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+一个名字恰好为 `estop` 的**普通文件**——没有扩展名，零字节是正常的——位于某个项目的根目录，或所处理目录树的
+**任意上级目录**中。
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +44,17 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+检测一个**文件**，绝不要只检测是否存在，也绝不要用通配符：
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` 是教条。它绝不能触发该检查。允许它触发的匹配方式，会造出一个操作者无法解除的停机。
+- `_os/estop/` 是目录。同样不触发。
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+多个根目录**各自独立**触发。逐一检查。报告你执行 `stat` 的那条路径——绝不要说“那个 estop”，那会掩盖你究竟看的
+是哪一个。
 
-### The STATE file is a derived mirror
+### STATE 文件是派生的镜像
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` —— 一行，别无其他。
 
 ```
 RUN
@@ -66,117 +66,100 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| 字段 | 规则 |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| 动词 | `RUN`、`YELLOW` 或 `STOP`。其余一律不予解析。 |
+| 时间 | UTC，ISO-8601。 |
+| 何人 | 由谁发出。只有操作者可以写入 `STOP` / `YELLOW` 或将其解除。 |
+| 原因 | 一行，平实语言，不用行话。 |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**若哨兵与镜像不一致，以停机为准。** 镜像由工具写入，会过时；哨兵才是事实。
 
 ---
 
-## 2. The three states
+## 2. 三种状态
 
-| STATE | What an agent does |
+| STATE | 代理该怎么做 |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **继续。** 运行工作所需的命令，无须逐条请求许可。不要停顿，不要罗列选项，不要把例行工作排在一次确认之后。 |
+| `YELLOW` | **先问。** 每条命令在执行前先行提出。同样的工作、同样的能力——差别只在那次确认。 |
+| `STOP` | 停下。§3。 |
 
-### What `RUN` does not do
+### `RUN` 不做什么
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` 取消的是*例行工作之前的停顿*。它**不取消任何既有的闸门**，因为那些闸门关乎行为的性质，而非速度：
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- 凭据、登录、采购、资源开通——**永远在操作者手中**；
+- 对外的行为——发布、发送、部署——**永远需要明确放行**；
+- 任何将由人亲手执行的事——**仍须经过安全闸门**；
+- 破坏性或不可逆的行为——**在任何状态下仍须确认**；
+- 代理自身的长期限制——**根本不取决于 STATE**。
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` 回答的是*“我每走一步都要先问吗？”*——不必。它回答的不是*“我可以为所欲为吗？”* 一个读到 `RUN` 便去做上述
+清单中之事的代理，是误读了状态，而不是被它授了权。
 
-### Fail-safe on an unreadable verb
+### 动词不可读时的失效安全
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+一个**缺失、为空、不可读，或带有任何其他词语的 STATE 文件，一律读作 `YELLOW`**——绝不读作 `RUN`。去问。
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> 这是在各种实现中最常被写反的一行。`try { read } catch { return "RUN" }` 会把每一次磁盘错误、每一次权限变更、
+> 每一个笔误，都变成一次无声的授权。参考实现中的 sidecar 在读取出错时回落到 `YELLOW` 并拒绝服务；参见
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs)。
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+哨兵文件完全压过本节：只要 `estop` 文件存在，就意味着 `STOP`，无论 STATE 写着什么。
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
+**只有操作者写这个文件。** 任何代理都不写它——包括发现问题的那个代理。认为机群应当停下的代理，会在总线上立一个
+`GATE` 并把话说出来。它不以自身权限停下机群，也不重新启动任何一个。
 
 ---
 
-## 3. What an agent does on `STOP`
+## 3. 代理在 `STOP` 时该做什么
 
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
+1. **不要再写任何东西。** 记忆文件不写，报告不写，总线也不写。
+2. **就地保存，然后停下。** 不要完成任何尚未写出的步骤。把已有的内容标注为部分完成，并用一行说明你停在了哪里。
 
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
+   > 本协议的早期草稿写的是*丢弃*。那是错的：丢掉半份报告，恰恰毁掉了重启原则本应保护的工作。真正的危险是一份
+   > 被截断的文件日后被当作已完成来读——防止这一点的是**标注**，而不是删除。
+3. **对操作者只说一行：** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **停下。** 不要请求继续的许可。不要提出变通办法。不要去核查这个原因是否适用于你——它适用于你。
 
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**拒绝是一个答复，而不是一次重试。** 不要循环等待 `RUN`。报告，然后结束。
 
 ---
 
-## 4. What clears it
+## 4. 什么能解除它
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+由操作者把文件改回 `RUN`。此外别无他法——不是超时，不是某个认为问题已解决的代理，不是时间流逝，也不是一个从未
+见过这次停机的新会话。
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
-
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+自动解除的处理逻辑是对失效安全原则的颠倒，因其实质而被拒绝。
 
 ---
 
-## 6. Measure twice
+## 5. 适用范围
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+紧急停机**默认覆盖整个机群**。不存在针对单个代理的停机，因为需要停机的故障几乎从不局限于一个代理，而部分停机
+恰恰会诱发这样的推论——*“那说的是别人”*——而这正是本文件要禁止的。
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+**被隔离的代理也包括在内。** 不在任何总线上、不在任何共享界面上的代理，照样要读这个文件。隔离决定的是代理可以
+*说*什么。它从不决定代理是否可以被*停下*。
 
 ---
 
-## 7. The honest limit, stated once
+## 6. 量两次
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+单独一次通过的检查，永远不足以证明某个安全状态。**在本次运行中**，从磁盘读取两个信号。绝不要引用记忆中的状态
+——不从上下文、不从记忆文件、不从上一轮。一个被误读的 `stat` 输出格式，就足以造出一个假的“已清空”或假的
+“已停机”，而这两种情况在实践中都发生过。
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+现有最稳妥的形式是对 STATE 文件与每条哨兵路径设置**持续监视**，仅在变化时发出信号：清空期间保持沉默，一旦停机
+被触发便立即报警。这把“我在启动时检查过一次”变成了实时覆盖，并堵上了停机在会话中途被触发的那个缺口。
+
+---
+
+## 7. 诚实的边界，只说一次
+
+本协议使停机在**每一次启动与每一个检查点上都可靠**。它并不使停机**瞬时生效**，而且写在文件树里的任何东西都
+永远做不到这一点。
+
+如果此刻正在出岔子：**关掉窗口。** 然后再写文件，好让下一个醒来的代理不会把它重新启动。

@@ -1,181 +1,159 @@
-# 09 — THE FLOOR
+> **非官方翻译。** 本文档的规范版本是 `main` 分支中的英文版。本翻译仅为方便阅读而提供，**未经母语者校订**。
+> 如与英文原文有出入，**以英文为准**。协议标识符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 总线动词以及文件名）刻意保留英文：它们是代理程序解析的字面值。
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — 车间
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**状态：对可视化器而言是规范性的；作为模型则是说明性的。**
+由 [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html) 实现。
 
 ---
 
-## 2. The mapping
+## 1. 论点
 
-| On the floor | In the fleet | Read from |
+代理机群很难被看见。文件树是一张清单，进程表是一张清单，日志也是一张清单——于是任何人对一个运行中机群所能得到的
+唯一图景，就是几张对不上号的清单。
+
+**自动化仓库是同一台机器，而它已经被人读懂了四十年。** 在控制系统之下，天车在货架之间搬运载荷，而负责监看的人
+只凭颜色、不读一行文字，就能一眼读懂一个同时进行着数百次动作的车间。
+
+Parvis 借用了这一点。不是拿来装饰——而是作为一种*映射*：仓库里的每一个对象恰好对应目录树中的一样东西，而仓库自身
+的安全规则，恰恰就是本协议的安全规则，且早已画在了对的位置上。
+
+---
+
+## 2. 映射
+
+| 在车间里 | 在机群中 | 读自 |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **天车** | 一个代理，或一个活着的会话 | `_os/exchange/bus/session/` 中的会话标记 |
+| **托盘** | 一个目录 | 目录树本身；托盘的标签就是它的路径 |
+| **货位** | 那个目录所在之处 | 它的上级目录 |
+| **打开一个托盘** | 下钻进该目录 | **又是一整座仓库**——§4 |
+| **Induct**（入库口） | 到来的工作 | `_os/tasks/INDEX.md` 中的一行 `REQ` |
+| **Spur**（出库口） | 离场的交付物 | `_os/events/surface/` 中的一个文件，一次导出 |
+| **传送带** | 文件总线 | `_os/exchange/bus/` —— 工作如何在无需天车搬运的情况下流转 |
+| **卡车** | 一项外部服务或另一个 AI | 边界。§5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+关键不在于这幅画。关键在于：只要你曾经站在仓库控制系统跟前，**你早就会读这块屏幕了**——而即便没有，这个模型依然
+以一种目录列表所不具备的方式，是具体可感的。
 
 ---
 
-## 3. The colours
+## 3. 颜色
 
-One glance, before any navigation:
+在做任何导航之前，先看一眼：
 
-| Colour | On the floor | In the fleet |
+| 颜色 | 在车间里 | 在机群中 |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **绿** | 在动——天车正载着一件载荷 | 某个代理正在工作；某个活着的会话正在任务途中 |
+| **蓝** | 已排期——在队列里，尚未开始 | 任务板上的一则告示：已下单，等待代理接手 |
+| **琥珀** | 注意——某个货位需要一个决定 | `YELLOW`：每个动作之前先问 |
+| **红** | 已紧急停机——那个区域停住了 | `STOP`：停机已触发，此根目录被冻结 |
+| **灰** | 空，或没有实时来源 | 没有数据。绝不是猜测。 |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+这不是什么新配色方案。这就是目录树本已持有的状态，被呈现出来而已。
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**红色永远先夺走目光。** 一个红色区域会在任何绿色之前拦住眼睛，正如停机压过其他任何信号
+（[`01`](01-ESTOP.md)）。**一个在红色区域之上显示绿色的车间，是在说谎**——而这正是本条规则要禁止的那种具体失效。
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
+**凡是没有实时来源的地方，灰色是强制的。** 没有数据的货位渲染为灰色并显示 `—`。它绝不渲染成绿色，因为绿色是那个
+讨人喜欢的默认值（[`07`](07-INTERFACE.md) §2.2）。
 
 ---
 
-## 4. The nested warehouse
+## 4. 嵌套的仓库
 
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
+**打开一个托盘，你看到的不是一只箱子。你看到的是又一整座仓库**——有它自己的天车、自己的托盘、自己的库口。
 
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
+这与文件树完全一致。一个项目是一座仓库；它的部门是通道；它们的文件是托盘；而一个本身就是目录的托盘，就是又一个
+车间。因此可视化器是**一个会向下深入的视图**，每一层深度都用同一套操作，因为每一层*就是*一座仓库。一路下去没有
+任何新东西要学。
 
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+这种递归正是这个比喻站得住脚、而非只是一层皮的全部原因。只呈现最上层的仪表板，是一张机群的照片；会向下深入的那种，
+才是对它的一个视图。
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 5. 卡车在边界靠泊——它们从不开进车间
 
-This is where the model stops being a visualisation and starts enforcing something.
+正是在这里，模型不再只是可视化，而开始强制某些东西。
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+一项外部服务——另一个 AI、一个 API、一家供应商——就是一辆**卡车**。而在真实的仓库里，卡车是倒车靠上库口的。它不
+开进车间、不去动天车、不进入货架、也不打开嵌套的仓库。它在 induct 卸下一件载荷，或从 spur 取走一件，这就是它访问
+权限的全部。
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
+**那个库口就是气闸。** 一切对外交换都发生在边缘、经过筛查，没有任何外部之物会在目录树内部四处游走。
 
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
+**卡车的单据在核验之前都不可信。** 由卡车送来的载荷是进来的*数据*，不是给车间的命令。它像其他任何东西一样被引入
+并复核，绝不因为送到了就照办。那正是 [`03`](03-BUS.md) §5 所划的指令来源边界，被画成了一个装卸月台——并且画在了
+唯一一个能让看着屏幕的人亲眼看到它被遵守的位置上。
 
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+如果你的呈现把一辆卡车放进了车间，那么这个呈现是错的，它所描绘的架构同样是错的。
 
 ---
 
-## 6. Two surfaces, two jobs
+## 6. 两个界面，两件事
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+| | **车间**（本文件） | **控制台**（[`07`](07-INTERFACE.md)） |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| 它是什么 | 一个三维车间，实时观看 | 一个方块菜单，按权限分层 |
+| 它显示什么 | **系统眼下是什么样**——每个代理、每个目录、每种状态一并呈现 | **你能做什么**——挑好工具，把活干了 |
+| 动词 | 看、理解、决定 | 运行、使用、产出 |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**车间显示这台机器如何思考；控制台则用来依你的结论行事。** 一个是地图，一个是工作台。一套管理界面两者都需要，而
+常见的错误是只造那个好看的。
 
 ---
 
-## 7. Controls
+## 7. 操作
 
-Navigation is what made the original usable, not colour alone:
+让原版真正好用的是导航，而不只是颜色：
 
-| Control | Does |
+| 操作 | 作用 |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **拖动** | 环绕车间——旋转、倾斜、沿着一条通道望过去 |
+| **俯视** | 切到自上而下的平面图。环绕看深度，平面看布局 |
+| **点击一个托盘** | 下钻进去——又一座仓库，同一套操作 |
+| **滚动** | 缩放 |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+每一层深度都用同一套操作。这一点没有商量余地：一个交互方式会随着下钻而改变的视图，已经打破了“每一层都是一座仓库”
+这个承诺。
 
-### The camera is orthographic, on purpose
+### 相机是正交的，而且是刻意为之
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**不存在透视收缩。** 平行线永不相交，通道尽头的货位与你脚边的货位渲染出来一样大。
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+这在一瞬间看着别扭——眼睛期待着会聚，会把会聚的缺席读成自己正站在箱子里往外看。但这依然是对的取舍，而且正是真实
+自动化车间的控制屏所采用的做法：**整件事的要点就是一眼比较整个车间里的各个货位**，而透视相机会让通道的远端更小、
+更暗、更难判断。在透视之下，“那排货架更满”和“那排货架更近”看上去是一样的。在正交相机之下则不会。
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+遮挡依然是真实的——背向的面会被剔除，较近的几何体会盖住较远的。这是一台平的相机，而不是一个平的场景。
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+设备也可以从**侧边菜单**取用，按种类分组——天车、托盘、两个库口、传送带、卡车。从菜单选还是从车间选，打开的是同一
+套操作，因为一个只能靠在三维场景里点小箱子来浏览的车间，是一次演示，而不是一件仪器。
 
 ---
 
-## 8. What the floor may and may not do
+## 8. 车间能做与不能做什么
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+[`07`](07-INTERFACE.md) §5 中的每一条约束都适用。这条线画在一个明确的位置上：
 
-**The floor may induct. It may never execute.**
+**车间可以引入。它永远不可以执行。**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+这与 [`07`](07-INTERFACE.md) §1 已经为控制台画下的是同一条线，也正是它让设备得以拥有操作按钮。选中一台天车并把
+工作指派给它，会写下一行点名该代理的 `REQ`，并往它的收件箱里放一个 `TELL`。**它不启动任何东西。** 没有进程被拉起，
+没有命令被执行，而那个代理会在它自己的下一次运行中接手这件工作——或者不接。
 
-Two consequences that are easy to get wrong:
+有两个很容易搞错的推论：
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **被指派的工作依然不是命令。** `REQ` 行才是规范记录；收件箱里那一行只是指向它。一个会*命令*代理的文件——或者从
+  目录树内部主张操作者权限的文件——就是 [`03`](03-BUS.md) §5 所定义的那种安全事件，而把它做进界面里，比手工去做
+  还要糟。权限是对话中的操作者。车间写下记录，而不是指令。
+- **有些设备是刻意不给操作按钮的。** 传送带是只读的：一个能往总线上写行的控制台，等于在制造协议本不赋予它的权限。
+  卡车则完全没有任何操作按钮——§5。
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**在 `STOP` 之下，车间渲染为红色，且不引入任何东西。** 红色的车间不接受任何指令。
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+诚实的边界，只说一次：**这是目录树在某一刻的一张照片，不是实时的遥测流。** 它按间隔轮询。两次轮询之间它是过期的，
+它会显示自己上一次读取的时间，并且在 sidecar 不再响应时转为灰色，而不是假装别的什么。

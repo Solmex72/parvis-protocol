@@ -1,92 +1,87 @@
-# 06 — DATA ZONES
+> **非官方翻译。** 本文档的规范版本是 `main` 分支中的英文版。本翻译仅为方便阅读而提供，**未经母语者校订**。
+> 如与英文原文有出入，**以英文为准**。协议标识符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 总线动词以及文件名）刻意保留英文：它们是代理程序解析的字面值。
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — 数据分区
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**状态：规范性。** 一个文件可以住在哪里。
 
 ---
 
-## 2. The two zones
+## 1. 为什么单纯的禁令不管用
 
-| Zone | Property | Holds |
+最初的规则是*“任何时候、任何地方都不得有机密”*——**却没有给私密数据留下任何可以存放的去处。**
+
+没有去处的禁令不会被遵守。它会被绕开，私密材料会阴差阳错地落进同步目录树。这种事反复发生过，其中一次的当事者
+正是一个本身受该规则约束的代理。
+
+**这条规则是一个路由决定，而不是一道禁令。**
+
+---
+
+## 2. 两个分区
+
+| 分区 | 属性 | 容纳 |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | 会同步到云存储。**把每一个字节都当作已发布。** | 教条、指令、代理定义、架构、业务背景、调研、技术文档 |
+| **PRIVATE** | **在所有同步根目录之外**——并且在用户配置文件之外，使已知文件夹重定向同样够不到 | 机密、真实的人及其个人信息、私人项目与媒体，以及任何出现在备份里就不妥的东西 |
 
-### The test
+### 判据
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *如果这东西一年后出现在一份云端快照里，会成为问题吗？*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+会 → PRIVATE。不会 → PUBLIC。若确实拿不准 → **PRIVATE。** 归类过高的代价是不便。归类过低的代价无法挽回。
 
-### Know what actually syncs
+### 弄清楚究竟什么在同步
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+请在真实机器上核查，而不是靠假设。在一台常见的工作站上，可能同时运行着好几个同步客户端，而用户的文档、桌面或
+图片文件夹下的任何东西都会离开这台机器，并在版本历史中保留数周。**在本地删除并不能把它召回。**
 
-Two consequences that each cause real failures:
+由此产生两个各自都会造成真实故障的后果：
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
+1. **构建产物必须改道**到同步根目录之外，否则镜像会在构建中途把它弄坏。
+2. **密钥住在外面**，这是刻意为之的默认。
 
 ---
 
-## 3. The carve-out: credentials are neither zone
+## 3. 例外：凭据不属于任何一个分区
 
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
+**在用的凭据——口令、API 密钥、令牌、推流密钥——属于密码管理器，而不属于这两个文件系统中的任何一个。**
 
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
+私密分区容纳的是*私密数据*。密码管理器容纳的是*凭据*。这不是咬文嚼字：私密目录默认并未加密，而文件终究是文件。
+一旦其中之一被复制、被引用进誊本，或被附加到任何东西上，它就已经泄露了。
 
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+**把私密分区的安全属性说得窄一些，并且永远不要夸大。** 它唯一被证明的属性，通常只是*没有任何东西会把它复制到
+别处*。在缺少经核验的全盘或逐文件加密的情况下，它并未加密、没有备份，也不是保险箱。
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 4. 归类由操作者决定，并且可以调整
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+把活的分类表放在单独一个文件里——`DATA-CLASSIFICATION.md`——由操作者在分区之间移动类别，每个代理都去读它，而不
+是靠猜。
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
-
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+本协议文件陈述的是**机制**。那个文件陈述的是**方针**。两者不一致时，以方针文件为准。
 
 ---
 
-## 6. Pruning without loss
+## 5. 对代理的影响
 
-Before anything leaves the working tree:
+- **任何会被打包的目录树里都不得有机密。** 上下文包的存在意义就是被粘贴进一次新会话。写明持有了什么、放在哪里；
+  绝不写值本身。
+- **任何机密都不得抵达 `surface/`。** 它会显示在屏幕上。
+- **任何机密都不得抵达浏览器。** 参见 [`07-INTERFACE.md`](07-INTERFACE.md) §3。
+- **用引用来遮蔽，而不是用删除。** `<api key — see password manager entry "acme-prod">` 既让事实可查，又不泄露
+  其值。
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+---
 
-Never mass-delete under live concurrency.
+## 6. 剪除而不丢失
+
+在任何东西离开工作目录树之前：
+
+1. 先把它复制到**根目录之外**的密封存放处——一个归档文件，且不可被通配符触及。
+2. 在 `marked-deletion.md` / `marked-archive.md` 中列好路径。
+3. **执行由操作者亲手完成**，且目录树处于静止状态。
+
+绝不要在并发进行时批量删除。

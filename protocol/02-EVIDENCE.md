@@ -1,118 +1,108 @@
-# 02 — EVIDENCE
+> **非官方翻译。** 本文档的规范版本是 `main` 分支中的英文版。本翻译仅为方便阅读而提供，**未经母语者校订**。
+> 如与英文原文有出入，**以英文为准**。协议标识符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 总线动词以及文件名）刻意保留英文：它们是代理程序解析的字面值。
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — 证据
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**状态：规范性。** 一次观察如何成为一条被记录的事实。
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+本文件所述的纪律，通常被用在*提议*上——代理在人做决定之前，先说明自己的方案有多大可能奏效。它几乎从不被用在
+*论断*上。于是机群会仔细推敲自己想获得许可去**做**什么，却草率对待自己写下为**真**的东西。
+
+这两者是同一种行为。一条进入记录的论断，就是一项要求更改记录的提议。Parvis 对两者施加同一套纪律。
 
 ---
 
-## 1. Every claim carries a tag
+## 1. 每条论断都带标注
 
-| Tag | Means | Admissible where |
+| 标注 | 含义 | 可用于何处 |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | 已对照所引一手来源核实，**且该来源是你在本次运行中读过的**。写明命令、读取动作、测量。 | 任何地方，包括主文件。 |
+| `[CLAIMED]` | 由别处转述。未经核实。 | 工作文件。绝不用于主文件。 |
+| `[ASSUMED]` | 无人核查过的工作前提。 | 工作文件，并明确标出。 |
+| `[PROPOSED]` | 估算、建议、计划。 | 提议。绝不进入记录。 |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**标注随论断一同流转。** `[PROPOSED]` 不会因为被复制进更重要的文件就变成 `[PROVEN]`。升级需要一次新的测量，
+而不是一个新的位置。
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**只有 `[PROVEN]` 才能改动主文件。**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. 引用来源或如实标记——绝不洗白
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+一个数字要么写明来源，要么它就不是数字，而是一个带小数点的直觉。
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+如果你手上没有来源，**就说出来，并代之以推理过程。** 那是一个有用的答复。一个没有来源却被当作事实呈上的数字
+不是。
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**绝不要把一次失败洗白成一项发现。** 报错的检索是一次失败的调用，不是一个空结果集。加载不出来的页面不是“不存在”
+的证据。把实际发生的事写下来。
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. 自述属于 `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+代理对自身状态、自身覆盖范围或自身已完成工作的陈述，一律是 `[CLAIMED]`——无论它多有把握。只有外部记录才能使其
+成为 `[PROVEN]`：磁盘上的文件、命令的退出码、由非你之物写下的日志行。
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+这正是为什么没有证据路径的 `DONE` 行是无效的（参见
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)）。“我做了”是一条论断。文件才是证明。
 
 ---
 
-## 6. Negative findings count
+## 4. 梯级 0–2 上的一切都要量两次
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+单独一次检查，永远不足以证明某个安全状态。任何优先级 0 的论断之前，始终需要两次独立测量。
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**重新测量，绝不凭记忆。** 目录树在并发会话之下不断变动——一轮开始时读到的路径，到这一轮结束时可能已经不在。
+状态只能在*本次*运行中从磁盘获知。绝不要把“已清空”或“最新”从上一轮、记忆文件或摘要中带过来。
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**计数是一次测量，不是一条事实。** 在用到的地方重新数。绝不要凭记忆报出文件数、代理数或版本号。
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. 掉线的调用不是发现
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+遇到**传输丢失**——DNS 故障、连接重置、被拒、超时无响应——立即并反复重发同一个调用。绝不要为一个从未送达的调用
+写下“无结果”，也绝不要凭记忆把这个空缺补上。
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**已经送达的响应是一个答复，而不是重试的理由。** 403、404、空结果集、明确的拒绝——这些都是数据。为了换个说法
+而反复冲击一次拒绝，属于规避检测，在梯级 2 上一律禁止，无论跑在谁的账号、谁的网络上。
+
+一句话区分：*重发那个从未送达的调用；绝不重发那个你不喜欢的答复。*
 
 ---
 
-## 9. The rule these all serve
+## 6. 否定性的发现同样算数
 
-> A fact asserted in six files will be wrong in five of them.
+“查过 X，不构成风险”——正是这句话让接下来三次会话不必再查 X。把它记下来。
 
-Evidence discipline is what makes the sixth one findable.
+**边学边记，而不是留到最后。** 只存在于工作记忆里、随后便丢失的发现，与从未做过的工作没有区别。
+
+---
+
+## 7. 删除才是完整性信号
+
+以某个基线核验目录树时，报告分三类——新增、修改、删除。增长与编辑是意料之中的变动。**删除才是值得拉响警报的
+那一行。**
+
+不要在未经审计的并发工作之上重新确立基线。先审计，再盖章。
+
+---
+
+## 8. 审计是一种角色，不是一种情绪
+
+审计者**从磁盘**逐一列出每个代理、每条命令、每项指令，并按固定的分类逐一核查——既统计通过的检查，也统计缺陷。
+一次什么都没放行的运行，其实什么也没有审计；它只是收集了一堆抱怨。
+
+**审计者从不动手修。** 发现的问题转入纠正流程（[`05-CORRECTION.md`](05-CORRECTION.md)）或交给归属代理。一个
+修理了自己所发现之物的审计者，已经销毁了自己的证据，再也不能被信赖去报告一次干净的运行。
+
+---
+
+## 9. 这一切所服务的那条规则
+
+> 一条在六个文件里被断言的事实，会在其中五个里是错的。
+
+证据纪律，正是让第六个变得找得到的东西。

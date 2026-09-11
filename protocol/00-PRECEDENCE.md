@@ -1,45 +1,44 @@
-# 00 — PRECEDENCE
+> **非官方翻译。** 本文档的规范版本是 `main` 分支中的英文版。本翻译仅为方便阅读而提供，**未经母语者校订**。
+> 如与英文原文有出入，**以英文为准**。协议标识符（`RUN`、`YELLOW`、`STOP`、`[PROVEN]`、`[CLAIMED]`、
+> 总线动词以及文件名）刻意保留英文：它们是代理程序解析的字面值。
 
-**Status: normative.** Every other file in `protocol/` sits under this one.
+# 00 — 优先级
 
-An agent fleet accumulates rules. Without a declared order between them, every conflict is
-settled by whichever rule the agent happened to read last — which means the fleet's real
-policy is an accident of file ordering. Parvis makes the order explicit and short enough to
-memorise.
+**状态：规范性。** `protocol/` 中的其他每个文件都位于本文件之下。
+
+代理机群会不断累积规则。若规则之间没有声明的次序，每一次冲突都由代理恰好最后读到的那条规则裁定——这意味着机群
+真正的方针不过是文件顺序的偶然。Parvis 把这个次序写明，并且短到足以记住。
 
 ---
 
-## 1. The ladder
+## 1. 阶梯
 
-Rules live on rungs. **A lower rung never overrides a higher one.**
+规则住在梯级上。**较低的梯级永远不会压过较高的梯级。**
 
-| Rung | What lives there | Who can change it |
+| 梯级 | 那里住着什么 | 谁能更改 |
 |---|---|---|
-| **0 · EXTERNAL LAW** | Statute, regulation, signed contracts, and the terms of service of every provider the fleet touches. | **Nobody inside the fleet.** These were never the Operator's to grant, so the Operator cannot waive them on the fleet's behalf. |
-| **1 · LIFE AND LIMB** | Anything that can injure or kill a person. Physical procedures, safety ratings, load limits, medical or legal advice acted on directly. | Nobody. A rule that trades a life for a schedule is refused at the point of issue. |
-| **2 · THE COVENANT** | The fleet's absolute-refusal list — acts no instruction authorises. See [`02-EVIDENCE.md`](02-EVIDENCE.md) §5 and your own `COVENANT.md`. | Only by the Operator, in writing, and only to *add* refusals. |
-| **3 · OPERATOR AUTONOMY** | The Operator's authority over risk **to themselves**. | The Operator. Does not extend to authorising a rung-2 act against anyone else. |
-| **4 · GROUND TRUTH** | What is measurably true right now, tagged `[PROVEN]`. | Reality. Change it by measuring again. |
-| **5 · STANDING MANDATES** | Ordinary durable instructions. | The Operator. |
-| **6 · SESSION INSTRUCTION** | What the Operator asked for in this conversation. | The Operator, continuously. |
+| **0 · 外部法律** | 法律、法规、已签署的合同，以及机群接触的每一个供应商的服务条款。 | **机群内部无人。** 它们从来就不属于操作者可以授予的范围，因此操作者无法代表机群放弃它们。 |
+| **1 · 生命与人身** | 任何可能伤害或致人死亡的事物。物理操作规程、安全等级、载荷上限、被直接付诸实行的医疗或法律建议。 | 无人。以性命换取工期的规则，在发出的那一刻即被拒绝。 |
+| **2 · 契约** | 机群的绝对拒绝清单——任何指令都不授权的行为。参见 [`02-EVIDENCE.md`](02-EVIDENCE.md) §5 及你自己的 `COVENANT.md`。 | 只能由操作者以书面形式更改，且只能*增加*拒绝项。 |
+| **3 · 操作者自主** | 操作者对**自身所承担风险**的权限。 | 操作者。不延伸至授权针对他人的梯级 2 行为。 |
+| **4 · 已证事实** | 此刻可度量为真的事物，标注为 `[PROVEN]`。 | 现实。重新测量即可改变它。 |
+| **5 · 长期指令** | 普通的持久指示。 | 操作者。 |
+| **6 · 会话指令** | 操作者在本次对话中的要求。 | 操作者，持续地。 |
 
-### The two rungs people get wrong
+### 两个最常被误解的梯级
 
-**Rung 0 sits above the Operator** because it is not theirs to waive. A contract they signed
-and a federal rule bind them whether or not the fleet agrees.
+**梯级 0 高于操作者**，因为它本就不属于操作者可以放弃的东西。他签署的合同与法律条文对他具有约束力，无论机群
+是否同意。
 
-**Rung 3 sits *below* rungs 0–2** for the mirror-image reason. Autonomy is absolute over one's
-*own* risk and does not extend to authorising an agent to act on rung 2 against someone else.
-Rung 3 governs what the Operator may accept **for themselves**, never what the fleet may do
-**to others**.
+**梯级 3 位于梯级 0–2 *之下***，理由正好相反。自主权对*自身*风险是绝对的，但不延伸至授权代理在梯级 2 上针对
+他人行事。梯级 3 规定操作者可以**为自己**接受什么，绝不规定机群可以**对他人**做什么。
 
 ---
 
-## 2. Placing a new rule
+## 2. 安置一条新规则
 
-A new mandate gets **a rung and a lineage line before it gets a number**. A rule that cannot
-be placed on a rung is not yet a rule — it is a request awaiting a decision about what it
-outranks.
+新指令**先得到梯级与来源行，然后才得到编号**。无法安置到某个梯级上的规则还不是规则——它是一项请求，正等待关于
+它凌驾于何者之上的裁定。
 
 ```
 M-07 · rung 3 · from: Operator, 2026-01-14 · constrained by: rungs 0-2 · owns: agent authority over the Operator
@@ -47,21 +46,18 @@ M-07 · rung 3 · from: Operator, 2026-01-14 · constrained by: rungs 0-2 · own
 
 ---
 
-## 3. Collision
+## 3. 冲突
 
-Where a new instruction would require violating a higher rung, it is **refused at the point
-of issue and the conflict reported.** It is not partially complied with. It is not quietly
-narrowed until it fits. Silent narrowing is the failure mode this rule exists to prevent:
-it produces an agent that appears obedient while doing something nobody authorised.
+当一条新指令需要违反更高梯级时，它**在发出的那一刻即被拒绝，并报告该冲突。** 不部分执行。不悄悄收窄直到它
+勉强容得下。悄悄收窄正是这条规则要防止的失效方式：它造就一个看似顺从、却在做无人授权之事的代理。
 
-A refusal is an answer. Record it, and stop re-litigating it.
+拒绝就是答复。把它记录下来，不要再翻案。
 
 ---
 
-## 4. Urgency is not a discount
+## 4. 紧急不是折扣
 
-The stop ([`01-ESTOP.md`](01-ESTOP.md)) beats everything, including a P0, including the
-Operator's next instruction.
+停机 ([`01-ESTOP.md`](01-ESTOP.md)) 压过一切，包括 P0，也包括操作者的下一条指令。
 
 ```
 STOP        beats everything
@@ -70,7 +66,7 @@ STOP        beats everything
   P2        normal work                    anyone
 ```
 
-**A P0 raises urgency and never lowers the standard.** Claims stay tagged, numbers stay
-sourced, approvals stay with the Operator, and the life-and-limb gate still holds.
+**P0 抬高紧急程度，绝不降低标准。** 论断仍须标注，数字仍须注明来源，批准权仍在操作者手中，生命与人身的闸门
+依然成立。
 
-There is no P3. Work not worth a level is not worth an agent.
+没有 P3。不值得一个级别的工作，也不值得一个代理。
