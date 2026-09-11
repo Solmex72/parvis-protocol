@@ -1,181 +1,193 @@
-# 09 — THE FLOOR
+> **Traduzione non ufficiale.** La versione normativa di questo documento è quella inglese, nel
+> branch `main`. Questa traduzione è fornita per comodità e **non è stata verificata da un
+> madrelingua**. In caso di divergenza dall'originale inglese, **prevale l'inglese**. Gli
+> identificatori del protocollo (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`, i verbi del bus e i
+> nomi dei file) sono deliberatamente mantenuti in inglese: sono valori letterali che gli agenti
+> analizzano.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — IL REPARTO
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Stato: normativo per il visualizzatore; informativo come modello.**
+Implementato da [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## 1. L'affermazione
 
-| On the floor | In the fleet | Read from |
+Una flotta di agenti è difficile da vedere. Un albero di file è un elenco, una tabella dei processi è un
+elenco, e un log è un elenco — cosicché l'unica immagine che si ha di una flotta in funzione sono più
+elenchi che non combaciano.
+
+**Un magazzino automatizzato è la stessa macchina, ed è leggibile da quarant'anni.** I carroponte
+spostano carichi fra le scaffalature sotto un sistema di controllo, e la persona che lo sorveglia legge
+un reparto di centinaia di movimenti simultanei con un'occhiata, dal colore, senza leggere una sola riga
+di testo.
+
+Parvis prende in prestito quello. Non come decorazione — come una *mappatura*, in cui ogni oggetto del
+magazzino corrisponde esattamente a una cosa nell'albero, e in cui le regole di sicurezza proprie del
+magazzino risultano essere le regole di sicurezza del protocollo, già disegnate nel posto giusto.
+
+---
+
+## 2. La mappatura
+
+| Nel reparto | Nella flotta | Letto da |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Carroponte** | un agente, o una sessione viva | i marcatori di sessione in `_os/exchange/bus/session/` |
+| **Pallet** | una directory | l'albero stesso; l'etichetta del pallet è il suo percorso |
+| **Postazione a scaffale** | dove risiede quella directory | il suo elemento superiore |
+| **Aprire un pallet** | scendere nella directory | **un altro magazzino intero** — §4 |
+| **Induct** (banchina d'ingresso) | lavoro in arrivo | una riga `REQ` in `_os/tasks/INDEX.md` |
+| **Spur** (banchina d'uscita) | un elaborato in uscita | un file in `_os/events/surface/`, un'esportazione |
+| **Nastro** | il bus a file | `_os/exchange/bus/` — come il lavoro si sposta senza che un carroponte lo trasporti |
+| **Camion** | un servizio esterno o un'altra IA | il confine. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Il punto non è l'immagine. Il punto è che **sai già leggere questo schermo** se ti sei mai trovato davanti
+a un sistema di controllo di magazzino — e se non ti è mai capitato, il modello è comunque concreto in un
+modo in cui un elenco di directory non lo è.
 
 ---
 
-## 3. The colours
+## 3. I colori
 
-One glance, before any navigation:
+Un'occhiata, prima di qualsiasi navigazione:
 
-| Colour | On the floor | In the fleet |
+| Colore | Nel reparto | Nella flotta |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **VERDE** | in movimento — un carroponte trasporta un carico | un agente sta lavorando; una sessione viva a metà attività |
+| **BLU** | pianificato — in coda, non ancora avviato | un annuncio in bacheca: ordinato, in attesa di un agente |
+| **AMBRA** | attenzione — una postazione richiede una decisione | `YELLOW`: chiedi prima di ogni azione |
+| **ROSSO** | arresto di emergenza — quella zona è ferma | `STOP`: l'arresto è armato e questa radice è congelata |
+| **GRIGIO** | vuoto, o nessuna fonte dal vivo | nessun dato. Mai una supposizione. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Non è uno schema nuovo. È lo stato che l'albero già contiene, rappresentato.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Il rosso vince sempre l'occhiata.** Una sola zona rossa ferma l'occhio prima di qualsiasi verde,
+esattamente come l'arresto prevale su ogni altro segnale ([`01`](01-ESTOP.md)). **Un reparto che mostra
+verde sopra una zona rossa sta mentendo** — ed è questo il guasto preciso che questa regola esiste per
+vietare.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
+**Il grigio è obbligatorio dove non c'è fonte dal vivo.** Una postazione senza dati è rappresentata in
+grigio e legge `—`. Non è mai rappresentata in verde, perché il verde è il valore predefinito gradevole
 ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 4. The nested warehouse
+## 4. Il magazzino annidato
 
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
+**Apri un pallet e non stai guardando una cassa. Stai guardando un altro magazzino intero** — con i suoi
+carroponte, i suoi pallet, le sue banchine.
 
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
+Questo è esattamente l'albero dei file. Un'iniziativa è un magazzino; i suoi reparti sono corsie; i loro
+file sono pallet; e un pallet che è a sua volta una directory è un altro reparto. Quindi il
+visualizzatore è **un'unica vista che scende**, con gli stessi comandi a ogni profondità, perché ogni
+livello *è* un magazzino. Non c'è nulla di nuovo da imparare scendendo.
 
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
-
----
-
-## 5. Trucks dock at the boundary — they never drive onto the floor
-
-This is where the model stops being a visualisation and starts enforcing something.
-
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
-
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+La ricorsione è l'intera ragione per cui la metafora regge invece di essere un rivestimento. Un cruscotto
+che rappresenta solo il livello superiore è una fotografia di una flotta; uno che scende ne è una vista.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. I camion attraccano al confine — non entrano mai nel reparto
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+È qui che il modello smette di essere una visualizzazione e comincia a imporre qualcosa.
+
+Un servizio esterno — un'altra IA, un'API, un fornitore — è un **camion**. E in un magazzino reale un
+camion fa manovra fino a una banchina. Non entra nel reparto, non muove un carroponte, non entra in uno
+scaffale e non apre un magazzino annidato. Lascia un carico a un induct o ne ritira uno da uno spur, e
+questo è l'intero suo accesso.
+
+**Quella banchina è la camera stagna.** Ogni scambio esterno avviene al confine, filtrato, e nulla di
+esterno resta libero dentro l'albero.
+
+**I documenti di un camion non sono affidabili finché non vengono controllati.** Un carico che arriva su
+un camion è *dati* in ingresso, non un ordine al reparto. Viene immesso e revisionato come ogni altra
+cosa, mai obbedito all'arrivo. Quello è il confine della fonte d'istruzione di [`03`](03-BUS.md) §5,
+disegnato come una banchina di carico — e disegnato nell'unico posto in cui qualcuno che guarda lo
+schermo può vederlo rispettato.
+
+Se la tua rappresentazione mette un camion nel reparto, la rappresentazione è sbagliata e lo è anche
+l'architettura che disegna.
+
+---
+
+## 6. Due superfici, due mestieri
+
+| | **Il reparto** (questo file) | **La console** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Che cos'è | un reparto 3D, visto dal vivo | un menu a riquadri, scaglionato per accesso |
+| Che cosa mostra | **com'è il sistema** — ogni agente, directory e stato tutti insieme | **che cosa puoi fare** — scegli lo strumento, fai il lavoro |
+| Il verbo | guardare, capire, decidere | eseguire, usare, produrre |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**Il reparto mostra come pensa la macchina; la console serve ad agire su ciò che concludi.** Uno è una
+mappa, l'altra un banco di lavoro. Una superficie di gestione ha bisogno di entrambi, e l'errore è
+costruire solo quella bella.
 
 ---
 
-## 7. Controls
+## 7. Comandi
 
-Navigation is what made the original usable, not colour alone:
+La navigazione è ciò che rendeva usabile l'originale, non il colore da solo:
 
-| Control | Does |
+| Comando | Fa |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Trascinare** | orbitare attorno al reparto — ruotare, inclinare, guardare lungo una corsia |
+| **Dall'alto** | passare a una pianta dall'alto. Orbita per la profondità, pianta per la disposizione |
+| **Clic su un pallet** | scendervi — un altro magazzino, gli stessi comandi |
+| **Rotella** | zoom |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Gli stessi comandi a ogni profondità. Non negoziabile: una vista la cui interazione cambia man mano che si
+scende ha infranto la promessa che ogni livello è un magazzino.
 
-### The camera is orthographic, on purpose
+### La camera è ortografica, di proposito
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+Non c'è **divisione prospettica**. Le linee parallele non convergono mai, e una postazione in fondo a una
+corsia è rappresentata esattamente della stessa dimensione di una ai tuoi piedi.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+Sembra sbagliato per un momento — l'occhio si aspetta la convergenza e ne legge l'assenza come se fosse
+in piedi dentro le casse a guardare fuori. È comunque il compromesso giusto, ed è ciò che usano gli
+schermi di controllo dei reparti automatizzati reali: **l'intero scopo è confrontare postazioni lungo il
+reparto con un'occhiata**, e una camera prospettica rende il fondo di una corsia più piccolo, più
+smorzato e più difficile da valutare rispetto all'estremità vicina. In prospettiva, «quello scaffale è
+più pieno» e «quello scaffale è più vicino» sembrano la stessa cosa. Con una camera ortografica, no.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+L'occlusione resta reale — le facce che si allontanano vengono scartate e la geometria più vicina dipinge
+sopra quella più lontana. È una camera piatta, non una scena piatta.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Le attrezzature sono raggiungibili anche da un **menu laterale**, raggruppate per tipo — carroponte,
+pallet, le due banchine, il nastro, i camion. Selezionare dal menu o dal reparto apre gli stessi comandi,
+perché un reparto che si può percorrere solo cliccando piccole casse in una scena 3D è una dimostrazione
+e non uno strumento.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Che cosa il reparto può e non può fare
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+Ogni vincolo di [`07`](07-INTERFACE.md) §5 si applica. La linea è tracciata in un punto preciso:
 
-**The floor may induct. It may never execute.**
+**Il reparto può immettere. Non può mai eseguire.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+È la stessa linea che [`07`](07-INTERFACE.md) §1 traccia già per la console, ed è ciò che permette alle
+attrezzature di avere comandi. Selezionare un carroponte e indirizzargli lavoro scrive una riga `REQ` che
+nomina quell'agente e deposita un `TELL` nella sua casella. **Non avvia nulla.** Nessun processo viene
+lanciato, nessun comando viene eseguito, e l'agente prende in carico il lavoro alla propria esecuzione
+successiva — oppure no.
 
-Two consequences that are easy to get wrong:
+Due conseguenze facili da sbagliare:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Il lavoro indirizzato non è comunque un ordine.** La riga `REQ` è il registro canonico; la riga nella
+  casella si limita a puntarvi. Un file che *comandasse* a un agente — o che rivendicasse l'autorità
+  dell'Operatore dall'interno dell'albero — sarebbe l'evento di sicurezza che [`03`](03-BUS.md) §5
+  definisce, e costruirlo dentro la superficie sarebbe peggio che farlo a mano. L'autorità è l'Operatore
+  in conversazione. Il reparto scrive il registro, non l'istruzione.
+- **Alcune attrezzature non ricevono comandi, deliberatamente.** Il nastro è in sola lettura: una console
+  che potesse scrivere righe sul bus starebbe fabbricando un'autorità che il protocollo le nega. I camion
+  non hanno comandi affatto — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**Sotto `STOP`, il reparto è rappresentato in rosso e non immette nulla.** Un reparto rosso non accetta
+ordini.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+Il limite onesto, detto una volta: **questa è una fotografia dell'albero in un istante, non un flusso di
+telemetria dal vivo.** Interroga a intervalli. Fra un'interrogazione e l'altra è obsoleta, mostra quando
+ha letto l'ultima volta, e diventa grigia invece di fingere il contrario quando il sidecar smette di
+rispondere.
