@@ -1,38 +1,43 @@
-# 04 — THE OUTPUT CONTRACT
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — आउटपुट-अनुबंध
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**स्थिति: normative.** काम पूरा होने पर वह कहाँ जाता है।
 
 ---
 
-## 2. Where output goes
+## 1. नियम
 
-| Kind of output | Lands at |
+**चैट में रिपोर्ट न करें। फ़ाइल-वृक्ष में काम करें, आउटपुट डिस्क पर लिखें, और एक संकेतक सतह पर लाएँ।**
+
+जो एजेंट चैट-विंडो में लंबा उत्तर लिखकर काम ख़त्म करता है, उसने अपना आउटपुट वहाँ रख दिया जहाँ बेड़े की
+कोई और चीज़ उसे पढ़ नहीं सकती — न कोई दूसरा एजेंट, न कोई मॉनिटर, न कोई कंसोल, न अगला सत्र। टिकाऊ अभिलेख
+फ़ाइल है; चैट एक प्रतिलेख है जिसे आगे कोई नहीं देखता।
+
+---
+
+## 2. आउटपुट कहाँ जाता है
+
+| आउटपुट का प्रकार | कहाँ उतरता है |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| कार्य-उत्पाद, निष्कर्ष, कोई रिपोर्ट | स्वामी फ़ाइल, या `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| जो कुछ Operator को अभी देखना चाहिए | `_os/events/surface/` में एक छोटी संकेतक फ़ाइल |
+| ऐसा अनुरोध जिसके लिए Operator चाहिए | `_os/exchange/requests/REQ-<slug>.md` |
+| बही-पंक्ति | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**सतह-निर्देशिका अधिसूचना है। फ़ाइल सार है।** सार को उसके उचित घर में लिखें, फिर `surface/` में एक
+पंक्ति का संकेतक छोड़ें ताकि कंसोल Operator को दिखा सके कि वह कहाँ उतरा।
 
 ---
 
-## 3. The task index
+## 3. कार्य-सूचकांक
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+प्रति आदेश एक पंक्ति। शुरू करने से **पहले** एक `REQ` पंक्ति जोड़ें, ताकि बीच में रुका कार्य भी दिखाई देता
+रहे।
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +46,45 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**साक्ष्य-पथ रहित `DONE` पंक्ति अमान्य है।** यदि कोई फ़ाइल नहीं है, तो काम कहीं ऐसी जगह नहीं उतरा जिसे
+Operator देख सके। स्व-कथन `[CLAIMED]` है; उसे `[PROVEN]` फ़ाइल बनाती है।
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**अस्वीकृति यहाँ स्थायी रूप से रहती है।** इसी से बेड़ा तय हो चुके प्रश्नों पर दोबारा बहस करना बंद करता है।
+इसे बाद में न हटाएँ।
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
-
----
-
-## 4. Completion is the Operator seeing it
-
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
+**ईमानदार सीमा:** यह सूचकांक कुछ भी प्रेक्षित नहीं करता। यह ठीक उतना ही पूर्ण है जितने उसमें लिखने वाले
+एजेंट। इसमें अनुपस्थित कार्य इस बात का प्रमाण नहीं कि वह कार्य कभी हुआ ही नहीं — केवल इसका कि किसी ने उसे
+दर्ज नहीं किया। हर पंक्ति को सदा *साक्ष्य-पथ जुड़ा हुआ एक दावा* मानें, कभी प्रमाण नहीं। किसी भी `DONE` पर
+भरोसा करने से पहले सत्यापित करें कि साक्ष्य-फ़ाइल मौजूद है।
 
 ---
 
-## 5. The counter-rule that outranks routing
+## 4. पूर्णता तब है जब Operator उसे देख ले
 
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+किसी एजेंट के घोषित करने से नहीं। उत्तर कोई विराम-बिंदु नहीं है: मॉनिटर उसके पार भी सक्रिय रहते हैं, काम
+चलता रहता है, और उसके बाद एक सुविचारित समापन-स्वीकृति होती है।
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. वह प्रति-नियम जो मार्गनिर्धारण से ऊपर है
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**Estop और स्पष्टवादिता फिर भी मनुष्य तक जाते हैं, तुरंत और प्रमुखता से।**
+
+विफलता उतनी ही प्रमुखता से सतह पर लाई जाती है जितनी सफलता। आउटपुट को फ़ाइलों में भेजना कभी बुरे परिणाम को
+दफ़नाने की जगह नहीं बनना चाहिए। यदि बेड़े की अच्छी ख़बर चैट में आती है और बुरी ख़बर ऐसी फ़ाइल में जिसे कोई
+नहीं खोलता, तो अनुबंध उलट गया है और बेड़ा अब मार्गनिर्धारण के ज़रिए झूठ बोल रहा है।
 
 ---
 
-## 7. No secret reaches the surface
+## 6. स्वयं अनुबंध पर ईमानदार सीमा
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+चैट-ढाँचे के भीतर चलता एजेंट उस चैट में सहायक-पाठ फिर भी प्रस्तुत करता है — यह अनुबंध ढाँचे को मोड़ नहीं
+सकता। यह जिसे बाँधता है वह है **एजेंट क्या लिखना चुनता है**: सार फ़ाइलों में, और चैट-पाठ एक छोटे संकेतक
+तक सीमित — *"`<path>` में लिखा गया, कंसोल पर सतह पर लाया गया"* — कभी पूरी रिपोर्ट नहीं।
+
+---
+
+## 7. कोई रहस्य सतह तक नहीं पहुँचता
+
+`surface/` को कंसोल पढ़ता है और वह किसी स्क्रीन पर, किसी स्क्रीनशॉट में, या साझा विंडो पर दिख सकता है।
+डेटा-क्षेत्र नियम ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) यहाँ पूरी शक्ति से लागू होते हैं।

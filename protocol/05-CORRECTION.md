@@ -1,66 +1,69 @@
-# 05 — CORRECTION
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — सुधार
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**स्थिति: normative.** जब कोई दर्ज तथ्य ग़लत निकले तो क्या होता है।
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. समस्या
 
-Reading a governing file puts you under it. Two things follow:
+> छह फ़ाइलों में कहा गया तथ्य उनमें से पाँच में ग़लत होगा।
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+जिस फ़ाइल को आप संयोगवश देख रहे हैं केवल उसे ठीक करना सुधार नहीं है। इससे ऐसा वृक्ष बनता है जहाँ सत्य और
+त्रुटि दोनों के पास उद्धरण होते हैं, और अगला सत्र वही चुन लेता है जिसे वह पहले खोलता है। दस्तावेज़-बहुल
+एजेंट-बेड़े की परिभाषित विफलता यही है, और यह चुपचाप बढ़ती जाती है।
+
+**सुधार या तो फैलता है, या हुआ ही नहीं।**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. पढ़ना मुफ़्त नहीं — वह दायित्व डालता है
 
-One command, one turn, no proposal step.
+किसी शासी फ़ाइल को पढ़ना आपको उसके अधीन कर देता है। इससे दो बातें निकलती हैं:
+
+1. उसमें जो कुछ **टिकाऊ, अस्पष्ट, और वृक्ष से व्युत्पन्न न हो सकने वाला** है, वह सत्र समाप्त होने से पहले
+   आपकी स्थायी स्मृति में जाता है।
+2. **यदि आपका संदर्भ फ़ाइल का खंडन करता है, तो फ़ाइल जीतती है।** उसके इर्द-गिर्द रास्ता न निकालें। अभिलेख
+   सुधारें।
+
+---
+
+## 3. तत्काल पाठ्यक्रम-सुधार (ICC)
+
+एक आदेश, एक बारी, कोई प्रस्ताव-चरण नहीं।
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### क्रम
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · बुहारी।** सुधार से 2–5 खोज-पद निकालें: **पुरानी** शब्दावली, उसके स्पष्ट रूपांतर, और उसमें शामिल
+व्यक्तिवाचक नाम। नई शब्दावली नहीं। कुछ भी पढ़ने से पहले प्रति पद एक अनुक्रमित बुहारी चलाएँ। मिलान खोजने के
+लिए वृक्ष में फ़ाइल-दर-फ़ाइल कभी न घूमें — अनुक्रमणिका इसी के लिए है।
 
-**2 · Classify every hit.**
+**2 · हर मिलान को वर्गीकृत करें।**
 
-| Hit | Action |
+| मिलान | कार्रवाई |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **पुराना तथ्य कहता है** | दोबारा लिखें। |
+| **प्रसंगवश उल्लेख करता है**, दोनों स्थितियों में सही | छोड़ दें। गद्य को व्यर्थ न मथें। |
+| **नए तथ्य का परोक्ष खंडन करता है** — कोई आगे का निष्कर्ष, कोई तालिका-पंक्ति, पुराने मान पर बना कोई निर्धारित कार्य | **उसे भी दोबारा लिखें।** यही सबसे अधिक छूटता है। |
+| **सीमा के बाहर** (§5) | कभी संपादित न करें। *अछूता छोड़ा गया* के अंतर्गत नोट करें। |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · सब एक साथ दोबारा लिखें।** हर फ़ाइल की मौजूदा शैली और विश्वास-चिह्न परंपरा से मेल रखें। सुधरा हुआ
+तथ्य वही चिह्न रखता है जो उसने अर्जित किया — **किसी दावे को इसलिए `[PROVEN]` न बनाएँ कि वह अब वर्तमान
+है।** यदि पुराने पाठ में तिथि थी, तो आज की मुहर लगाएँ।
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+जहाँ कोई तथ्य तीन से अधिक फ़ाइलों में कहा गया हो, वह **दोहराव है, अतिरेक नहीं**: उसे उस फ़ाइल में एक बार
+कहें जो उसकी स्वामी है, और बाक़ी को वहीं इंगित करवाएँ।
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · बही और स्मृति।** दोनों, वरना रन पूरा नहीं हुआ। सुधार-बही के आरंभ में एक प्रविष्टि जोड़ें:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +76,73 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+फिर तथ्य को स्थायी स्मृति में लिखें — **पहले यह जाँचकर कि उस विषय पर कोई स्मृति पहले से है या नहीं, और
+उसी को अद्यतन करके** — बजाय इसके कि आप उसी तथ्य के दो संस्करण छोड़ दें जिसे एकीकृत करने में आपने अभी एक
+आदेश ख़र्च किया।
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · संपादन-पश्चात दायित्व।** संपादनों ने जो भी जनरेटर या बैकअप अनिवार्य किया हो, उसे दोबारा चलाएँ। यदि
+फ़ाइलें बनीं या हटीं तो अनुक्रमणिका फिर से बनाएँ।
 
 ---
 
-## 5. What is never rewritten
+## 4. स्थायी निर्णय खुले तौर पर पलटा जाता है
 
-| Never touched | Why |
+यदि कोई सुधार किसी स्थायी निर्णय को अमान्य करता है — कोई "दोबारा बहस न करें" पंक्ति, कोई `[PROVEN]` मद,
+कोई नीति-नियम — तो **उसे चुपचाप न पलटें।** उसे तिथि और कारण के साथ *पलटा गया* के रूप में दोबारा लिखें,
+ताकि अगला सत्र जान सके कि वह भुलाया नहीं, उलटा गया था।
+
+जो निर्णय बिना निशान बदलता है, वह उस निर्णय से अभेद्य है जो कभी लिया ही नहीं गया।
+
+---
+
+## 5. जो कभी दोबारा नहीं लिखा जाता
+
+| कभी नहीं छुआ जाता | क्यों |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | इतिहास। इतिहास सुधारा नहीं जाता; उसका स्थान नया ले लेता है। |
+| जनित फ़ाइलें | स्रोत संपादित करें और जनरेटर दोबारा चलाएँ। |
+| अलग-थलग एजेंट का वृक्ष | केवल नाम से पहुँच। |
+| किसी अन्य मूल का प्रामाणिक मास्टर संदर्भ | विचलन की सूचना दें। स्वामित्व-सीमा के पार संपादन न करें। |
+| कोई भी चीज़ जिसमें रहस्य हो | पाठ-बुहारी के लिए पूरी तरह परिधि से बाहर। |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**जो बुहारी पाठ दोबारा लिखती है वह बाइनरी नष्ट कर देगी।** हर बुहारी को बहिष्करण से नहीं, अनुमति-सूची से
+पाठ-एक्सटेंशनों तक सीमित करें।
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. ICC क्या नहीं करता
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` अभिलेख सुधारता है। **वह उसके बाद वह काम करने नहीं जाता जो सुधार से निहित होता है।** ये अलग
+अधिकृतियों वाले अलग कार्य हैं, और इन्हें मिला देना ही वह तरीक़ा है जिससे एक पंक्ति का सुधार एक बिना-समीक्षा
+वाले पुनर्गठन में बदल जाता है।
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. प्रतिद्वंद्वी तथ्य सुलझाए और छाँटे जाते हैं — सूचीबद्ध नहीं
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+जब दो फ़ाइलें परस्पर विरोधी तथ्य कहें, तो **तय करें कि कौन सही है, उसे रखें, और ग़लत कथनों को उसी चक्र में
+हटा दें।**
 
-### What still gets escalated instead of settled
+जो संघर्ष-रिपोर्ट दोनों प्रतिद्वंद्वियों को डिस्क पर छोड़ देती है, उसने कुछ नहीं सुलझाया। अगला सत्र फिर भी
+वही चुनेगा जिसे वह पहले खोलेगा, और जिस सुरक्षा-नियम के पाँच संस्करण घूम रहे हों वह एक संस्करण वाले से
+*कम* विश्वसनीय है, अधिक नहीं।
 
-Three cases. Surface these; do not decide them:
+**गुण-दोष पर निर्णय लें, कभी समय-मुहर पर नहीं।** विजेता वह फ़ाइल है जो तथ्य की स्वामी है; वह संस्करण जिसे
+माप का समर्थन प्राप्त है; वह जो जाँच में टिकता है। **नवीनतम सबसे सत्य नहीं होता** — यहाँ की उदाहरण-विफलता
+चार दोहराई गई स्मृति-फ़ाइलें हैं जो एक-दूसरे के नब्बे सेकंड के भीतर लिखी गईं, जहाँ नवीनतम ने झूठा दावा
+किया था; अतः "नवीनतम जीतता है" नियम त्रुटि को ही विरासत में ले लेता।
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**समाधान दर्ज करें।** कौन-सा तथ्य जीता, क्या छाँटा गया, और क्यों — बही में, ताकि छँटाई मौन नहीं, पठनीय
+हो। बिना निशान ग़ायब हुआ प्रतिद्वंद्वी ठीक वैसा दिखता है जैसा वह जो कभी था ही नहीं, और अगला सत्र उसे फिर
+बना देता है।
 
-Everything ordinary gets decided and cleaned up.
+### जो सुलझाने के बजाय फिर भी ऊपर भेजा जाता है
+
+तीन स्थितियाँ। इन्हें सतह पर लाएँ; इन पर निर्णय न लें:
+
+- विरोधाभास ऐसी सूचना पर टिका है जो एजेंट के पास नहीं है।
+- ग़लत होना **असुरक्षित या अपरिवर्तनीय** होगा — पायदान 0–2 की हर चीज़।
+- हारता हुआ कथन **एजेंट की स्वामित्व-सीमा के बाहर** है — किसी अन्य मूल का प्रामाणिक मास्टर संदर्भ। विचलन
+  की सूचना दें; सीमा के पार संपादन न करें।
+
+बाक़ी सब सामान्य चीज़ों पर निर्णय लिया जाता है और उन्हें साफ़ किया जाता है।

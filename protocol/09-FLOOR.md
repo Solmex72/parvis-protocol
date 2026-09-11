@@ -1,181 +1,178 @@
-# 09 — THE FLOOR
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — फ़्लोर
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**स्थिति: दृश्यक के लिए normative; एक मॉडल के रूप में सूचनात्मक।**
+[`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html) द्वारा कार्यान्वित।
 
 ---
 
-## 2. The mapping
+## 1. दावा
 
-| On the floor | In the fleet | Read from |
+एजेंट-बेड़ा देख पाना कठिन है। फ़ाइल-वृक्ष एक सूची है, प्रक्रिया-तालिका एक सूची है, और लॉग एक सूची है —
+इसलिए चलते बेड़े की जो एकमात्र तस्वीर किसी के पास होती है, वह कई सूचियाँ हैं जो आपस में मेल नहीं खातीं।
+
+**स्वचालित गोदाम वही मशीन है, और वह चालीस साल से पठनीय है।** क्रेन नियंत्रण-प्रणाली के अधीन रैकों के बीच
+भार ले जाती हैं, और उसकी निगरानी करने वाला व्यक्ति सैकड़ों एक साथ हो रही गतियों वाले फ़्लोर को एक नज़र में,
+रंग से, बिना एक भी पंक्ति पढ़े समझ लेता है।
+
+Parvis यही उधार लेता है। सजावट के तौर पर नहीं — एक *मानचित्रण* के तौर पर, जहाँ हर गोदाम-वस्तु वृक्ष की
+ठीक एक चीज़ से मेल खाती है, और पता चलता है कि गोदाम के अपने सुरक्षा-नियम ही प्रोटोकॉल के सुरक्षा-नियम हैं,
+पहले से सही जगह पर खिंचे हुए।
+
+---
+
+## 2. मानचित्रण
+
+| फ़्लोर पर | बेड़े में | कहाँ से पढ़ा जाता है |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **क्रेन** | एक एजेंट, या एक जीवंत सत्र | `_os/exchange/bus/session/` में सत्र-चिह्नक |
+| **पैलेट** | एक निर्देशिका | स्वयं वृक्ष; पैलेट का लेबल उसका पथ है |
+| **रैक-स्थान** | वह निर्देशिका कहाँ रहती है | उसकी मूल निर्देशिका |
+| **पैलेट खोलना** | निर्देशिका में उतरना | **एक और पूरा गोदाम** — §4 |
+| **प्रवेशन** (आवक डॉक) | आता हुआ काम | `_os/tasks/INDEX.md` में एक `REQ` पंक्ति |
+| **निर्गम-पथ** (जावक डॉक) | जाती हुई सुपुर्दगी | `_os/events/surface/` में एक फ़ाइल, एक निर्यात |
+| **कन्वेयर** | फ़ाइल-बस | `_os/exchange/bus/` — काम बिना क्रेन के कैसे चलता है |
+| **ट्रक** | कोई बाहरी सेवा या दूसरी AI | सीमा। §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+मुद्दा तस्वीर नहीं है। मुद्दा यह है कि यदि आप कभी किसी गोदाम नियंत्रण-प्रणाली के सामने खड़े हुए हैं तो
+**आप यह स्क्रीन पढ़ना पहले से जानते हैं** — और यदि नहीं हुए, तब भी यह मॉडल उस तरह मूर्त है जैसे कोई
+निर्देशिका-सूची कभी नहीं होती।
 
 ---
 
-## 3. The colours
+## 3. रंग
 
-One glance, before any navigation:
+किसी भी नेविगेशन से पहले, एक नज़र में:
 
-| Colour | On the floor | In the fleet |
+| रंग | फ़्लोर पर | बेड़े में |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **हरा** | गतिमान — कोई क्रेन भार ले जा रही है | कोई एजेंट काम कर रहा है; कार्य के बीच जीवंत सत्र |
+| **नीला** | निर्धारित — क़तार में, अभी शुरू नहीं | कार्य-पटल की सूचना: आदेशित, किसी एजेंट की प्रतीक्षा में |
+| **अंबर** | ध्यान — किसी स्थान पर निर्णय चाहिए | `YELLOW`: हर कार्य से पहले पूछें |
+| **लाल** | E-stop — वह क्षेत्र रुका हुआ है | `STOP`: estop सक्रिय है और यह मूल जमा हुआ है |
+| **धूसर** | ख़ाली, या कोई जीवंत स्रोत नहीं | कोई आँकड़ा नहीं। कभी कोई अनुमान नहीं। |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+यह कोई नई योजना नहीं है। यह वही स्थिति है जो वृक्ष पहले से रखता है, प्रस्तुत रूप में।
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**लाल हमेशा नज़र जीत लेता है।** एक अकेला लाल क्षेत्र आँख को किसी भी हरे से पहले रोक देता है, ठीक वैसे ही
+जैसे रोक हर दूसरे संकेत से ऊपर है ([`01`](01-ESTOP.md))। **जो फ़्लोर लाल क्षेत्र के ऊपर हरा दिखाता है वह
+झूठ बोल रहा है** — और यही वह विशिष्ट विफलता है जिसे मना करने के लिए यह नियम मौजूद है।
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**जहाँ जीवंत स्रोत न हो वहाँ धूसर अनिवार्य है।** जिस स्थान पर आँकड़ा नहीं, वह धूसर प्रस्तुत होता है और
+`—` पढ़ता है। वह कभी हरा प्रस्तुत नहीं होता, क्योंकि हरा सुखद डिफ़ॉल्ट है ([`07`](07-INTERFACE.md) §2.2)।
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. नेस्टेड गोदाम
 
-This is where the model stops being a visualisation and starts enforcing something.
+**पैलेट खोलिए और आप किसी डिब्बे को नहीं देख रहे। आप एक और पूरे गोदाम को देख रहे हैं** — उसकी अपनी क्रेनें,
+अपने पैलेट, अपने डॉक।
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+यह ठीक फ़ाइल-वृक्ष है। उद्यम एक गोदाम है; उसके विभाग गलियारे हैं; उनकी फ़ाइलें पैलेट हैं; और जो पैलेट स्वयं
+एक निर्देशिका है वह एक और फ़्लोर है। इसलिए दृश्यक **एक ही दृश्य है जो नीचे उतरता है**, हर गहराई पर वही
+नियंत्रण लिए, क्योंकि हर स्तर एक गोदाम *है*। नीचे जाते समय सीखने को कुछ नया नहीं है।
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+यह पुनरावर्तन ही पूरा कारण है कि रूपक टिकता है, महज़ एक खोल नहीं बन जाता। जो डैशबोर्ड केवल सबसे ऊपरी स्तर
+प्रस्तुत करता है वह बेड़े की तस्वीर है; जो नीचे उतरता है वह उसका दृश्य है।
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. ट्रक सीमा पर लगते हैं — वे कभी फ़्लोर पर नहीं चढ़ते
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+यहीं मॉडल दृश्यीकरण होना बंद करके कुछ लागू करना शुरू करता है।
+
+कोई बाहरी सेवा — दूसरी AI, कोई API, कोई विक्रेता — एक **ट्रक** है। और असली गोदाम में ट्रक डॉक तक पीछे
+आता है। वह फ़्लोर पर नहीं चढ़ता, क्रेन नहीं चलाता, रैक में नहीं घुसता, और नेस्टेड गोदाम नहीं खोलता। वह
+प्रवेशन पर भार छोड़ता है या निर्गम-पथ से उठाता है, और उसकी पहुँच बस इतनी ही है।
+
+**वह डॉक ही एयरलॉक है।** हर बाहरी आदान-प्रदान किनारे पर, छनकर होता है, और बाहर की कोई चीज़ वृक्ष के भीतर
+खुली नहीं छूटती।
+
+**ट्रक के काग़ज़ात जाँचे जाने तक अविश्वसनीय हैं।** ट्रक पर आता भार आवक *आँकड़ा* है, फ़्लोर को दिया गया आदेश
+नहीं। उसे बाक़ी सब की तरह प्रवेशित और समीक्षित किया जाता है, आते ही उसका पालन कभी नहीं होता। यह
+[`03`](03-BUS.md) §5 की निर्देश-स्रोत सीमा है, लोडिंग डॉक के रूप में खींची हुई — और ठीक उस एक जगह खींची
+हुई जहाँ स्क्रीन देखता व्यक्ति उसका पालन होते देख सके।
+
+यदि आपकी प्रस्तुति फ़्लोर पर ट्रक रखती है, तो प्रस्तुति ग़लत है और वह जिस वास्तुकला को खींच रही है वह भी।
+
+---
+
+## 6. दो सतहें, दो काम
+
+| | **फ़्लोर** (यह फ़ाइल) | **कंसोल** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| क्या है | जीवंत देखा जाता 3D फ़्लोर | पहुँच के अनुसार स्तरित टाइल-मेन्यू |
+| क्या दिखाता है | **प्रणाली कैसी है** — हर एजेंट, निर्देशिका और स्थिति एक साथ | **आप क्या कर सकते हैं** — औज़ार चुनें, काम करें |
+| क्रिया | देखें, समझें, निर्णय लें | चलाएँ, उपयोग करें, उत्पादित करें |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**फ़्लोर दिखाता है कि मशीन कैसे सोचती है; कंसोल उस निष्कर्ष पर कार्य करने के लिए है।** एक नक़्शा है, दूसरा
+कार्य-मेज़। प्रबंधन-सतह को दोनों चाहिए, और ग़लती केवल सुंदर वाली बनाना है।
 
 ---
 
-## 7. Controls
+## 7. नियंत्रण
 
-Navigation is what made the original usable, not colour alone:
+मूल प्रणाली को उपयोग-योग्य बनाने वाली चीज़ केवल रंग नहीं, नेविगेशन थी:
 
-| Control | Does |
+| नियंत्रण | क्या करता है |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **खींचें** | फ़्लोर की परिक्रमा करें — घुमाएँ, झुकाएँ, गलियारे में नीचे देखें |
+| **ऊपर से** | ऊपरी योजना पर उतरें। गहराई के लिए परिक्रमा, विन्यास के लिए योजना |
+| **पैलेट पर क्लिक** | उसमें उतरें — एक और गोदाम, वही नियंत्रण |
+| **स्क्रॉल** | ज़ूम |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+हर गहराई पर वही नियंत्रण। अपरिवर्तनीय: जिस दृश्य की अंतःक्रिया नीचे उतरते समय बदल जाती है, उसने यह वचन
+तोड़ दिया कि हर स्तर एक गोदाम है।
 
-### The camera is orthographic, on purpose
+### कैमरा जानबूझकर ऑर्थोग्राफ़िक है
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**कोई परिप्रेक्ष्य-विभाजन नहीं है।** समांतर रेखाएँ कभी नहीं मिलतीं, और गलियारे के दूर छोर का स्थान ठीक
+उतना ही बड़ा प्रस्तुत होता है जितना आपके पैरों के पास वाला।
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+यह एक क्षण के लिए ग़लत लगता है — आँख अभिसरण की अपेक्षा करती है और उसकी अनुपस्थिति को ऐसे पढ़ती है मानो वह
+डिब्बों के भीतर खड़ी होकर बाहर देख रही हो। फिर भी यह सही सौदा है, और असली स्वचालित फ़्लोरों की
+नियंत्रण-स्क्रीनें यही उपयोग करती हैं: **पूरा मुद्दा फ़्लोर भर के स्थानों की एक नज़र में तुलना करना है**,
+और परिप्रेक्ष्य-कैमरा गलियारे के दूर छोर को पास वाले छोर से छोटा, मंद और आँकने में कठिन बना देता है।
+परिप्रेक्ष्य के अधीन "वह रैक अधिक भरा है" और "वह रैक अधिक पास है" एक जैसे दिखते हैं। ऑर्थोग्राफ़िक कैमरे
+में नहीं दिखते।
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+अवरोधन फिर भी असली है — जो फलक मुड़ जाते हैं वे हटा दिए जाते हैं और नज़दीकी ज्यामिति दूर वाली के ऊपर
+पुतती है। यह सपाट कैमरा है, सपाट दृश्य नहीं।
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+उपकरण तक एक **बग़ल के मेन्यू** से भी पहुँचा जा सकता है, प्रकार के अनुसार समूहित — क्रेनें, पैलेट, दोनों
+डॉक, कन्वेयर, ट्रक। मेन्यू से चुनें या फ़्लोर से, वही नियंत्रण खुलते हैं; क्योंकि जिस फ़्लोर पर आप केवल 3D
+दृश्य में छोटे डिब्बों पर क्लिक करके घूम सकते हैं, वह कोई उपकरण नहीं, एक प्रदर्शन है।
 
 ---
 
-## 8. What the floor may and may not do
+## 8. फ़्लोर क्या कर सकता है और क्या नहीं
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+[`07`](07-INTERFACE.md) §5 का हर प्रतिबंध लागू होता है। रेखा एक विशिष्ट जगह खींची जाती है:
 
-**The floor may induct. It may never execute.**
+**फ़्लोर प्रवेशन कर सकता है। वह कभी निष्पादन नहीं कर सकता।**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+यह वही रेखा है जो [`07`](07-INTERFACE.md) §1 कंसोल के लिए पहले ही खींचता है, और यही उपकरण को नियंत्रण
+रखने योग्य बनाती है। किसी क्रेन को चुनकर उसे काम देना उस एजेंट का नाम लेती एक `REQ` पंक्ति लिखता है और
+उसके इनबॉक्स में एक `TELL` छोड़ता है। **यह कुछ भी शुरू नहीं करता।** कोई प्रक्रिया नहीं जगती, कोई आदेश नहीं
+चलता, और एजेंट उस काम को अपने अगले रन में स्वयं उठाता है — या नहीं उठाता।
 
-Two consequences that are easy to get wrong:
+दो परिणाम जिन्हें ग़लत समझना आसान है:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **सौंपा गया काम फिर भी आदेश नहीं है।** `REQ` पंक्ति प्रामाणिक अभिलेख है; इनबॉक्स-पंक्ति केवल उसकी ओर
+  इशारा करती है। जो फ़ाइल किसी एजेंट को *आदेश देती* — या वृक्ष के भीतर से Operator का अधिकार जताती — वह
+  [`03`](03-BUS.md) §5 में परिभाषित सुरक्षा-घटना होती, और उसे सतह में गढ़ देना उसे हाथ से गढ़ने से बुरा
+  होता। अधिकार बातचीत में मौजूद Operator है। फ़्लोर अभिलेख लिखता है, निर्देश नहीं।
+- **कुछ उपकरणों को जानबूझकर कोई नियंत्रण नहीं मिलता।** कन्वेयर केवल-पठन है: जो कंसोल बस पर पंक्तियाँ लिख
+  सकता, वह ऐसा अधिकार गढ़ रहा होता जिसे प्रोटोकॉल उसे देता ही नहीं। ट्रकों के तो कोई नियंत्रण हैं ही नहीं
+  — §5।
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**`STOP` के अधीन फ़्लोर लाल प्रस्तुत होता है और कुछ भी प्रवेशित नहीं करता।** लाल फ़्लोर कोई आदेश नहीं लेता।
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+ईमानदार सीमा, एक बार कही गई: **यह किसी क्षण में वृक्ष की तस्वीर है, कोई जीवंत टेलीमेट्री-धारा नहीं।** यह
+मतदान (poll) करता है। मतदानों के बीच यह बासी होता है, दिखाता है कि उसने आख़िरी बार कब पढ़ा, और जब साइडकार
+उत्तर देना बंद कर दे तो कुछ और होने का नाटक करने के बजाय धूसर हो जाता है।

@@ -1,113 +1,116 @@
-# 08 — AGENTS
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — एजेंट
+
+**स्थिति: normative.** एजेंट क्या है, और वह हर रन में क्या देना बाध्य है।
 
 ---
 
-## 1. Roles
+## 1. भूमिकाएँ
 
-| Role | Who |
+| भूमिका | कौन |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Operator** | मनुष्य। प्राथमिकता-स्तर घोषित करता है, रोक हटाता है, हर क्रेडेंशियल रखता है, हर अपरिवर्तनीय कार्य स्वयं करता है। |
+| **एजेंट** | एक परिभाषा-फ़ाइल, एक नामस्थान जिसमें वह लिख सकता है, और एक स्थायी कार्य वाला एक परिधि-बद्ध कर्मी। |
+| **बेड़ा** | एक प्रोटोकॉल-मूल के अधीन हर एजेंट। |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+एजेंट किसी चलती प्रक्रिया से नहीं, एक फ़ाइल से परिभाषित होता है। प्रक्रियाएँ मरती हैं; एजेंट को किसी दूसरी
+मशीन पर पुनर्निर्मित करने योग्य बनाने वाली चीज़ परिभाषा है।
 
 ---
 
-## 3. Scope
+## 2. हर एजेंट हर रन में पाँच चीज़ें देता है
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. पहले टूल-कॉल से पहले, और फिर हर लेखन, प्रेषण, संचालन या व्यय से पहले **estop की पूर्व-जाँच करें।** उसे
+   **इसी रन में** `stat` करें। याद की हुई स्थिति कभी उद्धृत न करें। यदि संकेत असहमत हों, तो रोक जीतती है।
+   यदि तय न कर पाएँ, तो रुका हुआ जीतता है।
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. यदि कोई जीवंत विवरण मौजूद हो तो **सबसे पहले उसे पढ़ें**, और बताएँ कि आपके पास ऐसा क्या है जिसकी उसे
+   ज़रूरत है। *"कुछ नहीं"* एक असली उत्तर है — कोई योगदान गढ़ने के बजाय यही कहें और तैयार खड़े रहें।
+
+3. **सुपुर्दगी को डिस्क पर लिखें**, एक **पूरी-फ़ाइल लेखन के रूप में, कभी जोड़ों की शृंखला के रूप में नहीं**
+   ([`03-BUS.md`](03-BUS.md) §7)। जो निष्कर्ष केवल बातचीत में बताया गया, वह सुपुर्द नहीं हुआ।
+
+4. समाप्त करने से पहले **लॉग-ऑफ़ करें।** नीचे §4।
+
+5. **हर दावा चिह्नित करें** ([`02-EVIDENCE.md`](02-EVIDENCE.md))। `[PROVEN]` के लिए ऐसा प्राथमिक स्रोत
+   चाहिए जिसे आपने वाक़ई इसी रन में पढ़ा हो। जो स्रोत लोड ही न हुआ वह एक विफल कॉल है, साक्ष्य नहीं।
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. परिधि
+
+हर एजेंट **केवल अपने नामस्थान के भीतर** काम करता है। वह व्यापक रूप से पढ़ता है और संकीर्ण रूप से लिखता है।
+
+- **वह कभी स्वयं दल नहीं जगाता।** मिला हुआ नया काम कार्य-पटल की सूचना बन जाता है। ज़रूरी नया एजेंट *एक
+  प्रारूपित परिभाषा और Operator से एक अनुरोध* बनता है — कभी कोई चलती प्रक्रिया नहीं।
+- **वह कभी estop नहीं हटाता**, वह भी नहीं जो उसने स्वयं लगाया।
+- **वह कभी किसी और एजेंट का नामस्थान**, या किसी अन्य मूल का प्रामाणिक संदर्भ संपादित नहीं करता। वह विचलन
+  की सूचना देता है।
+- **अलग-थलग एजेंट का नाम केवल तब लिया जाता है जब Operator उसका नाम ले।** वह किसी बस पर, किसी संरचना में,
+  और किसी साझा सतह पर नहीं है। फिर भी वह estop पढ़ता है।
+
+---
+
+## 4. साइन-ऑन और साइन-ऑफ़
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**साइन-ऑन:** चिह्नक लिखें, प्रसारण-लॉग में अपनी पहचान `FLASH` करें, estop की पूर्व-जाँच करें।
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**साइन-ऑफ़:** साक्ष्य-फ़ाइल लिखें, बही-पंक्ति जोड़ें, **अपना ही** चिह्नक हटाएँ, और सोच-समझकर समाप्त करें।
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+केवल अपना चिह्नक हटाएँ। जो एजेंट किसी और का समेटता है, उसने अभी-अभी एक जीवंत सत्र को समाप्त बता दिया है।
 
-### Why sign-off is a protocol obligation
+### साइन-ऑफ़ प्रोटोकॉल-दायित्व क्यों है
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+सत्र-परिधि वाला प्रहरी अपने सत्र के साथ मर जाता है, और **शांत मॉनिटर तथा मृत मॉनिटर बिल्कुल एक जैसे
+दिखते हैं।** मौन अखंडनीय है। समाधान संरचनात्मक हैं:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **हृदय-स्पंद** — स्पंद की अनुपस्थिति स्वयं साक्ष्य बन जाती है।
+- **स्पष्ट साइन-ऑफ़** — ताकि छोड़ा हुआ चिह्नक शोर नहीं, एक पकड़ में आने योग्य विसंगति हो।
+- **पुनरारंभ पर फिर से सक्रिय करें** — कभी न मानें कि मॉनिटर बच गया।
 
 ---
 
-## 5. Naming
+## 5. नामकरण
 
-Every agent carries a working name and a one-line charter:
+हर एजेंट एक कार्य-नाम और एक पंक्ति का अधिकार-पत्र रखता है:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+विशिष्ट, उच्चारणीय नाम प्रतिलेख में संख्याओं से बेहतर हैं, और जब दो भूमिकाएँ अतिव्यापी हों तो
+भूमिका-उपाधियों से भी बेहतर। यदि नामस्थान में दो नाम टकराएँ, तो **हर प्रयोग पर अंतर स्पष्ट करें** — हर
+दस्तावेज़ में पहले उल्लेख पर दोनों पूरे लिखें। दो वास्तविक चीज़ों के बीच एक अक्षर का अंतर एक ऐसा दोष है जो
+उद्धृत होने की प्रतीक्षा में है।
 
 ---
 
-## 6. The structural failures to design against
+## 6. वे संरचनात्मक विफलताएँ जिनके विरुद्ध डिज़ाइन करना है
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+ये काल्पनिक नहीं, प्रेक्षित हैं। इनमें से हर एक किसी चलते बेड़े में हो चुकी है।
 
-| Failure | The counter-discipline |
+| विफलता | प्रति-अनुशासन |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **प्रतिद्वंद्वी फ़ाइलें।** एक प्राथमिकता-0 नियम के पाँच संस्करण; दो मास्टर अधिदेश; विपरीत आधार-सत्य वाली दो कार्य-पुस्तिकाएँ। | सुलझाएँ और छाँटें ([`05-CORRECTION.md`](05-CORRECTION.md) §7)। कोई भी सिद्धांत लिखने से पहले खोजें। नई फ़ाइल में दोहराया गया नियम योगदान नहीं, विचलन है। |
+| **मृत संकेतक।** सैकड़ों फ़ाइलें ऐसे पथ का उद्धरण देती हैं जो मौजूद ही नहीं। | बुहारी से **पहले** उस जनरेटर को ठीक करें जो उसे फैलाता है, वरना संख्या फिर बढ़ जाएगी। |
+| **स्रोत ही स्रोत, सिंक लगभग नहीं।** ऐसे मनुष्य के सामने सैकड़ों सतह पर लाई गई फ़ाइलें और खुले पटल-मद जो कुछ ही पढ़ सकता है। कुछ भी किसी को सेवानिवृत्त नहीं करता; हर परत केवल जमा होती जाती है। | **हर भंडार को एक सिंक मिलता है, जो भंडार बनाते समय ही तय होता है।** पूरे डिज़ाइन के उपयोगी होने के सामने यही सबसे बड़ा एकल संरचनात्मक जोखिम है। |
+| **मौन अखंडनीय है।** | हृदय-स्पंद। §4। |
+| **हर चीज़ सत्र-परिधि वाली।** | पुनरारंभ पर आवरण फिर सक्रिय करें; बचे रहने को कभी न मानें। |
+| **साक्ष्य-रहित दावे।** | विश्वास-चिह्न, और साक्ष्य-पथ के बिना `DONE` पंक्ति अमान्य है। |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. दर्शन, एक बार कहा गया
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **मशीन सूचित करती है। मनुष्य निर्णय लेता है। अपरिवर्तनीय कार्य सदा किसी व्यक्ति का होता है।**
 
-Everything else in this protocol is an implementation detail of that sentence.
+इस प्रोटोकॉल की बाक़ी हर चीज़ उसी वाक्य का कार्यान्वयन-विवरण है।

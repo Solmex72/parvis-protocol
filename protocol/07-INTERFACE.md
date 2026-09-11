@@ -1,101 +1,105 @@
-# 07 — THE INTERFACE LAYER
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
 
-**Status: normative.** This is the file the project is named for.
+# 07 — इंटरफ़ेस-परत
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**स्थिति: normative.** यही वह फ़ाइल है जिसके नाम पर परियोजना का नाम है।
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+हर वह सतह जिसे मनुष्य छूता है, **Parvis** है। केवल-पठन फ़्लोर-दृश्य *Parvis HMI* है; जिस टाइल-मेन्यू से
+आप बेड़ा चलाते हैं वह *Parvis Console* है।
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. वह नियम जो HTML को काम करने लायक़ बनाता है
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> ब्राउज़र-पृष्ठ एक **प्रदर्शक और एक कुंजीपटल** है, डिस्क-पहुँच वाला प्रोग्राम नहीं।
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+यह अकेला तथ्य पूरी परत को शासित करता है:
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **पृष्ठ दिखाता और एकत्र करता है।** वह स्थिति प्रस्तुत करता है और इनपुट लेता है। फ़ाइल-पथ से खुलने पर,
+  अपने आप, वह **वृक्ष नहीं पढ़ सकता और कोई आदेश नहीं लिख सकता।** ब्राउज़र-सैंडबॉक्स दोनों को मना करता है,
+  और यह एक विशेषता है।
+- **साइडकार पुल बनाता है।** एक छोटी लूपबैक सेवा — केवल `127.0.0.1` से बँधी, और किसी से नहीं — ही एकमात्र
+  चीज़ है जो पृष्ठ के लिए वृक्ष पढ़ती है और जो पृष्ठ भेजता है उसे लिखती है। पृष्ठ उससे स्थिति `GET` करता
+  है; पृष्ठ उसे प्रॉम्प्ट `POST` करता है; डिस्क का काम साइडकार करता है। **साइडकार नहीं तो जीवंत Parvis
+  नहीं — केवल एक स्नैपशॉट।**
+- **कुछ भी समीक्षा को नहीं लाँघता।** Parvis से भेजा गया प्रॉम्प्ट एक **प्रवेशन है, निष्पादन नहीं**।
+  साइडकार कार्य-सूचकांक में एक `REQ` पंक्ति लिखता है और रुक जाता है। वह कभी एजेंट नहीं जगाता, कभी आदेश
+  नहीं चलाता, कभी कुछ नहीं भेजता। नया काम शुरू करना Operator की कुंजी-दाब बना रहता है।
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+इसीलिए पृष्ठ "काम करता है": पृष्ठ इस बारे में ईमानदार है कि वह एक खिड़की है, साइडकार किनारे पर छोटा असली
+काम करता है, और **समीक्षा अब भी प्रॉम्प्ट और चलती मशीन के बीच खड़ी है।**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. कठोर आवश्यकताएँ — हर Parvis सतह
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **आत्मनिर्भर।** एक HTML फ़ाइल: इनलाइन CSS और JS, कोई बाहरी स्क्रिप्ट नहीं, कोई CDN नहीं। केवल
+   वेब-फ़ॉन्ट, असली फ़ॉलबैक-स्टैक के साथ। उसे फ़ाइल-पथ से ऑफ़लाइन प्रस्तुत होना चाहिए।
 
-| Requirement | Why |
+2. **रंग ही स्थिति हैं; जीवंत पढ़े जाते हैं, कभी गढ़े नहीं जाते।** हरा = चल रहा है, अंबर = पहले पूछें,
+   लाल = रुका हुआ — STATE फ़ाइल और जीवंत बही से व्युत्पन्न। **जिस मान का कोई जीवंत स्रोत न हो वह `—`
+   दिखाता है, कभी कोई विश्वसनीय दिखने वाली संख्या नहीं।** लाल हर दूसरे रंग और पूरे UI से ऊपर है।
+
+3. **साइडकार केवल-लूपबैक है और कोई ऐसा रहस्य नहीं रखता जिसे पृष्ठ देख सके।** कोई API कुंजी, कोई
+   क्रेडेंशियल, कोई मूल्यवान टोकन ब्राउज़र तक नहीं पहुँचता। साइडकार पृष्ठ को स्थानीय सत्र-टोकन से
+   प्रमाणित करता है और विशेषाधिकार वाला काम स्वयं करता है। **पृष्ठ कभी कुछ ऐसा नहीं रखता जो चुराने लायक़
+   हो।**
+
+4. **स्नैपशॉट को स्नैपशॉट के रूप में चिह्नित किया जाता है,** उसके पठन-समय के साथ। केवल वही पृष्ठ स्वयं को
+   जीवंत बता सकता है जो जीवंत साइडकार से बात कर रहा हो। जीवंत दिखता बासी पृष्ठ, बिना पृष्ठ के होने से बुरा
+   है।
+
+5. **Estop इंटरफ़ेस से ऊपर है।** `STOP` के अधीन Parvis कुछ भी प्रवेशित नहीं करता और साइडकार लॉग-ऑफ़ पंक्ति
+   के सिवा कुछ नहीं लिखता। **लाल फ़्लोर कोई आदेश नहीं लेता।**
+
+6. **Parvis ब्रांडिंग, और कोई तृतीय-पक्ष कंपनी-नाम नहीं।** यह पैटर्न जिन भी असली प्रणालियों से सीखा गया
+   हो, पैटर्न आपका है और उसका नाम Parvis है। जो सतह किसी और का व्यापार-नाम लेकर आती है वह ग़लत है और सुधारी
+   जाती है।
+
+---
+
+## 3. साइडकार के लिए सुरक्षा-आवश्यकताएँ
+
+डेवलपर कार्य-स्टेशन पर चलती लूपबैक HTTP सेवा एक वास्तविक आक्रमण-सतह है। ये वैकल्पिक नहीं हैं।
+
+| आवश्यकता | क्यों |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **स्पष्ट रूप से `127.0.0.1` से बाँधें**, कभी `0.0.0.0` से नहीं | सभी इंटरफ़ेसों से बाँधना आपके बेड़े का कंसोल LAN पर प्रकाशित कर देता है। |
+| `127.0.0.1:<port>` / `localhost:<port>` की अनुमति-सूची के विरुद्ध **`Host` हेडर सत्यापित करें** | DNS रीबाइंडिंग को विफल करता है, जिससे आपका देखा हुआ वेब-पृष्ठ लूपबैक सेवा तक पहुँच जाता है। |
+| **ऐसा `Origin` लिए अनुरोध अस्वीकार करें जो आपने जारी न किया हो** | वही आक्रमण-वर्ग, दूसरा रास्ता। |
+| हर परिवर्तनकारी मार्ग पर **सत्र-टोकन अनिवार्य करें**, जो पृष्ठ-लोड पर जारी हो और कभी लॉग न हो | पृष्ठ सिद्ध करता है कि वह आपका पृष्ठ है। |
+| सेवा जो भी पथ पढ़ेगी या लिखेगी, **हर पथ अनुमति-सूची में रखें**, फिर पुनः हल करके अंतर्वेशन की पुष्टि करें | ट्रैवर्सल को विफल करता है। यदि सिमलिंक मौजूद हों तो अकेली अनुमति-सूची पर्याप्त नहीं। |
+| **अपठनीय estop पर सुरक्षित-पतन** — अस्वीकार करें, `RUN` न मानें | देखें [`01-ESTOP.md`](01-ESTOP.md) §2। |
+| **कोई `eval` नहीं, कोई शेल-आउट नहीं, उपयोक्ता-इनपुट का कोई टेम्पलेट-प्रक्षेप नहीं** | प्रॉम्प्ट-बार एक प्रवेशन-इनपुट है, कमांड-लाइन नहीं। |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+[`reference/sidecar/`](../reference/sidecar/) में संदर्भ कार्यान्वयन इन सबको लागू करता है और प्रत्येक के
+स्थान पर टिप्पणी रखता है।
 
 ---
 
-## 4. What the surfaces are
+## 4. सतहें क्या हैं
 
-| Surface | What | State |
+| सतह | क्या | स्थिति |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | टैब वाले पैनल — स्थिति, दस्तावेज़, बही, बस, सतह, सेटिंग्स | उपलब्ध। |
+| **Parvis Floor** | गोदाम टैब: 3D फ़्लोर, परिक्रमा और भीतर उतरना, उपकरण-नियंत्रण | उपलब्ध। देखें [`09-FLOOR.md`](09-FLOOR.md)। |
+| **प्रॉम्प्ट-बार** | प्रवेशन-इनपुट; कंसोल पर और हर फ़्लोर-उपकरण पर | उपलब्ध। |
+| **साइडकार** | लूपबैक पुल: वृक्ष पढ़ता है, `REQ` पंक्तियाँ लिखता है, कोई रहस्य नहीं रखता | उपलब्ध। |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**पहले पैनल जारी करें।** 3D फ़्लोर वही हिस्सा है जिसे हर कोई बनाना चाहता है और जो उसके नीचे बही के बिना
+बेकार है — वह उस स्थिति को प्रस्तुत करता है जो बाक़ी प्रोटोकॉल पैदा करता है, और ख़ाली वृक्ष पर वह सही ढंग
+से कुछ नहीं दिखाता।
 
 ---
 
-## 5. Standing
+## 5. स्थायी प्रावधान
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
-  ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).
+- **पृष्ठ पढ़ता है। साइडकार लिखता है। Operator प्रतिबद्ध करता है।**
+- कोई सतह न एजेंट जगाती है, न भेजती है, न परिनियोजित करती है, न estop हटाती है।
+- कोई रहस्य ब्राउज़र तक नहीं पहुँचता, कभी नहीं।
+- आउटपुट चैट-विंडो में नहीं, फ़ाइलों और कंसोल में जाता है
+  ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md))।

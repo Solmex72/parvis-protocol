@@ -1,39 +1,45 @@
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
+
 # 01 — ESTOP
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+**स्थिति: normative. प्राथमिकता 0. हर उद्यम के हर एजेंट पर बाध्यकारी।**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. यह क्या कर सकता है और क्या नहीं — पहले यह पढ़ें
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**यह चलते हुए सत्र को रोक नहीं सकता।** कोई फ़ाइल नहीं रोक सकती। उत्तर के बीच में मौजूद एजेंट डिस्क नहीं
+पढ़ रहा होता, उसके पास कोई इंटरप्ट लाइन नहीं होती, और वह जो कर रहा है उसे पूरा करेगा। जो आपसे कहे कि एक
+फ़्लैग फ़ाइल पूरे बेड़े को रोक देती है, वह एक इच्छा का वर्णन कर रहा है।
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**चलते हुए एजेंट को केवल Operator रोकता है — उसकी विंडो बंद करके।** असली estop यही है और कभी कुछ और था
+ही नहीं।
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+यह फ़ाइल जो करती है, वह हर एजेंट को उन दो क्षणों पर बाँधती है जब वह वाक़ई डिस्क पढ़ रहा होता है:
 
-| Moment | Obligation |
+| क्षण | दायित्व |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **प्रारंभ** | अपने सिद्धांत से पहले, अपनी स्मृति से पहले, हर चीज़ से पहले स्थिति पढ़ें। |
+| **हर चेकपॉइंट** | किसी भी लेखन, किसी भी संदेश, दुष्प्रभाव वाले किसी भी टूल-कॉल, किसी भी व्यय से पहले। |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+जो एजेंट `STOP` देखकर भी आगे बढ़ता है, वह दोषपूर्ण एजेंट है। पूरा प्रवर्तन-मॉडल यही है: कोई तंत्र नहीं —
+एक कर्तव्य, जिसे बार-बार जाँचा जाता है।
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+सीमा को ईमानदारी से बताना प्रोटोकॉल का हिस्सा है। जिस रोक को आप तात्क्षणिक मानते हैं, वह उस रोक से
+अधिक ख़तरनाक है जिसके बारे में आप जानते हैं कि वह तात्क्षणिक नहीं — क्योंकि आप उस पर भरोसा कर बैठेंगे।
 
 ---
 
-## 1. The two signals
+## 1. दो संकेत
 
-### The sentinel is the fact
+### प्रहरी फ़ाइल ही तथ्य है
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+ठीक `estop` नाम की एक **साधारण फ़ाइल** — कोई एक्सटेंशन नहीं, शून्य बाइट सामान्य है — किसी उद्यम-मूल में
+**या जिस वृक्ष पर काम हो रहा है उसकी किसी भी मूल निर्देशिका में**।
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+**फ़ाइल** होने की जाँच करें; केवल अस्तित्व की कभी नहीं, और कभी ग्लोब से नहीं:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` सिद्धांत है। इसे कभी जाँच को नहीं छेड़ना चाहिए। जो मिलानकर्ता इसे छूट दे, वह ऐसी रोक बना देगा
+  जिसे Operator हटा ही नहीं सकता।
+- `_os/estop/` एक निर्देशिका है। वह भी रोक नहीं छेड़ती।
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+कई मूल **स्वतंत्र रूप से** छिड़ते हैं। हर एक की जाँच करें। जिस पथ पर आपने `stat` किया, वह बताएँ — कभी
+"the estop" न कहें, जो यह छिपा देता है कि आपने किसे देखा।
 
-### The STATE file is a derived mirror
+### STATE फ़ाइल एक व्युत्पन्न दर्पण है
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — एक पंक्ति, और कुछ नहीं।
 
 ```
 RUN
@@ -66,117 +72,113 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| क्षेत्र | नियम |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| क्रिया | `RUN`, `YELLOW`, या `STOP`। और कुछ पार्स नहीं होता। |
+| समय | UTC, ISO-8601। |
+| कौन | किसने घोषित किया। `STOP` / `YELLOW` लिखने या हटाने का अधिकार केवल Operator के पास है। |
+| कारण | एक पंक्ति, सरल भाषा में, बिना शब्दजाल। |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**यदि प्रहरी फ़ाइल और दर्पण असहमत हों, तो रुका हुआ जीतता है।** दर्पण औज़ारों द्वारा लिखा जाता है और बासी
+हो जाता है; प्रहरी फ़ाइल ही तथ्य है।
 
 ---
 
-## 2. The three states
+## 2. तीन स्थितियाँ
 
-| STATE | What an agent does |
+| STATE | एजेंट क्या करता है |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **आगे बढ़ें।** काम के लिए ज़रूरी आदेश हर एक पर अनुमति रुके बिना चलाएँ। अटकें नहीं, विकल्प न गिनाएँ, नियमित काम को किसी पुष्टि के पीछे क़तार में न लगाएँ। |
+| `YELLOW` | **पहले पूछें।** हर आदेश चलने से पहले प्रस्तावित होता है। वही काम, वही दक्षता — अंतर केवल पुष्टि का है। |
+| `STOP` | रुकें। §3। |
 
-### What `RUN` does not do
+### `RUN` क्या नहीं करता
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` *नियमित काम से पहले का ठहराव* हटाता है। यह **कोई मौजूदा द्वार नहीं हटाता**, क्योंकि वे कार्य की
+गति से नहीं, उसकी प्रकृति से जुड़े हैं:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- क्रेडेंशियल, साइन-इन, ख़रीद, प्रावधान — **हमेशा Operator के हाथ**;
+- बाहरमुखी कार्य — प्रकाशन, प्रेषण, परिनियोजन — **हमेशा स्पष्ट अनुमति पर**;
+- कोई भी काम जिसे कोई मनुष्य शारीरिक रूप से करेगा — **फिर भी सुरक्षा-द्वार से होकर**;
+- विनाशकारी या अपरिवर्तनीय कार्य — **किसी भी स्थिति में फिर भी पुष्टि के साथ**;
+- एजेंट की अपनी स्थायी सीमाएँ — **STATE का फलन हैं ही नहीं**।
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` इस प्रश्न का उत्तर देता है कि *"क्या मुझे हर क़दम से पहले पूछना होगा?"* — नहीं। यह इस प्रश्न का
+उत्तर नहीं देता कि *"क्या मैं कुछ भी कर सकता हूँ?"* जो एजेंट `RUN` पढ़कर इस सूची में से कुछ करता है, उसने
+स्थिति ग़लत पढ़ी है; स्थिति ने उसे अधिकृत नहीं किया।
 
-### Fail-safe on an unreadable verb
+### अपठनीय क्रिया पर सुरक्षित-पतन
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+जो STATE फ़ाइल **अनुपस्थित, ख़ाली, अपठनीय हो, या कोई अन्य शब्द रखती हो, उसे `YELLOW` पढ़ा जाता है** —
+कभी `RUN` नहीं। पूछें।
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> किसी कार्यान्वयन में सबसे अधिक उलटी जाने वाली पंक्ति यही है। `try { read } catch { return "RUN" }`
+> हर डिस्क-त्रुटि, अनुमति-परिवर्तन और वर्तनी-दोष को एक मौन अधिकृति में बदल देता है। संदर्भ साइडकार
+> `YELLOW` पर गिरता है और पठन-त्रुटि पर सेवा देने से इनकार करता है; देखें
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs)।
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+प्रहरी फ़ाइल इस पूरे खंड से ऊपर है: `estop` फ़ाइल की उपस्थिति का अर्थ `STOP` है, चाहे STATE कुछ भी कहे।
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**यह फ़ाइल केवल Operator लिखता है।** कोई एजेंट नहीं लिखता — वह एजेंट भी नहीं जिसने समस्या पाई। जो एजेंट
+मानता है कि बेड़े को रुकना चाहिए, वह बस पर एक `GATE` उठाता है और यह कहता है। वह अपने अधिकार से बेड़ा न
+रोकता है, न पुनः आरंभ करता है।
 
 ---
 
-## 4. What clears it
+## 3. `STOP` पर एजेंट क्या करता है
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **आगे कुछ न लिखें।** न स्मृति फ़ाइल, न रिपोर्ट, न बस।
+2. **जहाँ हैं वहीं सहेजें, फिर रुकें।** ऐसा कोई चरण पूरा न करें जो पहले से लिखा न हो। जो मौजूद है उसे
+   आंशिक के रूप में चिह्नित करें, और एक पंक्ति में लिखें कि आप कहाँ रुके।
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > इस प्रोटोकॉल के पुराने प्रारूप *नष्ट करें* कहते थे। वह ग़लत था: नष्ट की गई आधी रिपोर्ट उसी काम को
+   > मिटा देती है जिसे बचाने के लिए पुनरारंभ-सिद्धांत मौजूद है। ख़तरा एक कटी-फटी फ़ाइल है जिसे बाद में
+   > पूर्ण समझ लिया जाए — और उसे रोकने वाली चीज़ **चिह्न** है, विलोपन नहीं।
+3. **Operator से एक पंक्ति कहें:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **रुक जाएँ।** आगे बढ़ने की अनुमति न माँगें। कोई वैकल्पिक उपाय न सुझाएँ। यह न जाँचें कि कारण आप पर लागू
+   होता है या नहीं — वह आप पर लागू होता है।
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**अस्वीकृति एक उत्तर है, पुनःप्रयास नहीं।** `RUN` की प्रतीक्षा में लूप न करें। सूचित करें और समाप्त करें।
 
 ---
 
-## 6. Measure twice
+## 4. इसे क्या हटाता है
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+Operator फ़ाइल को वापस `RUN` कर देता है। और कुछ नहीं हटाता — न कोई टाइमआउट, न वह एजेंट जो समझता है कि
+मामला सुलझ गया, न समय का बीतना, न कोई नया सत्र जिसने वह रोक देखी ही नहीं।
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+स्वतः-साफ़ होने वाला हैंडलर सुरक्षित-पतन का उलटाव है और गुण-दोष के आधार पर अस्वीकृत है।
 
 ---
 
-## 7. The honest limit, stated once
+## 5. परिधि
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Estop **डिफ़ॉल्ट रूप से बेड़ा-व्यापी** है। प्रति-एजेंट estop नहीं होता, क्योंकि जिस विफलता के लिए रोक
+चाहिए वह लगभग कभी एक एजेंट तक सीमित नहीं होती, और आंशिक रोक ठीक उसी तर्क को न्योता देती है —
+*"वह तो किसी और के बारे में था"* — जिसे मना करने के लिए यह फ़ाइल मौजूद है।
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**अलग-थलग एजेंट भी शामिल हैं।** जो एजेंट किसी बस पर और किसी साझा सतह पर नहीं है, वह भी यह फ़ाइल पढ़ता है।
+अलगाव यह तय करता है कि एजेंट क्या *कह* सकता है। यह कभी तय नहीं करता कि उसे *रोका* जा सकता है या नहीं।
+
+---
+
+## 6. दो बार मापें
+
+एक अकेला हरा निशान कभी किसी सुरक्षा-स्थिति को प्रमाणित नहीं करता। दोनों संकेत डिस्क से, **इसी रन में**
+पढ़ें। कभी याद की हुई स्थिति उद्धृत न करें — न संदर्भ से, न किसी स्मृति फ़ाइल से, न किसी पिछली बारी से।
+बिगड़ा हुआ `stat` प्रारूप ही झूठा "साफ़" या झूठा "रुका हुआ" पैदा करने के लिए काफ़ी है, और व्यवहार में दोनों
+हो चुके हैं।
+
+उपलब्ध सबसे मज़बूत रूप STATE फ़ाइल और हर प्रहरी-पथ पर एक **स्थायी मॉनिटर** है, जो केवल परिवर्तन पर
+संकेत देता है: साफ़ रहने पर मौन, और रोक लगते ही तुरंत सक्रिय। यह "मैंने प्रारंभ में एक बार जाँच ली थी" को
+जीवंत आवरण में बदल देता है और उस अंतराल को बंद करता है जहाँ सत्र के बीच रोक लग जाती है।
+
+---
+
+## 7. ईमानदार सीमा, एक बार कही गई
+
+यह प्रोटोकॉल रोक को **हर प्रारंभ और हर चेकपॉइंट पर विश्वसनीय** बनाता है। यह रोक को **तात्क्षणिक** नहीं
+बनाता, और फ़ाइल-वृक्ष में लिखी कोई चीज़ कभी नहीं बनाएगी।
+
+यदि अभी इसी समय कुछ सक्रिय रूप से ग़लत हो रहा है: **विंडो बंद करें।** फिर फ़ाइल लिखें, ताकि अगला जागने
+वाला एजेंट उसे दोबारा शुरू न कर दे।

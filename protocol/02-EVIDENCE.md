@@ -1,118 +1,122 @@
-# 02 — EVIDENCE
+> **अनौपचारिक अनुवाद।** इस दस्तावेज़ का normative संस्करण `main` शाखा पर मौजूद अंग्रेज़ी संस्करण है। यह
+> अनुवाद सुविधा के लिए दिया गया है और **किसी मूल वक्ता द्वारा इसकी समीक्षा नहीं की गई है**। जहाँ यह
+> अंग्रेज़ी मूल से भिन्न हो, वहाँ **अंग्रेज़ी ही मान्य है**। प्रोटोकॉल पहचानकर्ता (`RUN`, `YELLOW`, `STOP`,
+> `[PROVEN]`, `[CLAIMED]`, बस-क्रियाएँ और फ़ाइल नाम) जानबूझकर अंग्रेज़ी में रखे गए हैं: ये वे शाब्दिक मान
+> हैं जिन्हें एजेंट पार्स करते हैं।
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — साक्ष्य
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**स्थिति: normative.** कोई प्रेक्षण दर्ज तथ्य कैसे बनता है।
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+यह फ़ाइल जिस अनुशासन का वर्णन करती है, वह प्रायः *प्रस्तावों* पर लागू किया जाता है — मनुष्य के निर्णय
+लेने से पहले एजेंट बताता है कि उसकी योजना के काम करने की कितनी संभावना है। यह अनुशासन *दावों* पर लगभग
+कभी लागू नहीं होता। इस तरह बेड़ा इस बारे में सावधानी से सोचता है कि उसे क्या **करने** की अनुमति चाहिए,
+और इस बारे में लापरवाही से कि वह क्या **सत्य** मानकर लिख रहा है।
+
+ये दोनों एक ही कार्य हैं। अभिलेख में प्रवेश करता दावा यह प्रस्ताव है कि अभिलेख बदलना चाहिए। Parvis दोनों
+पर एक ही अनुशासन लागू करता है।
 
 ---
 
-## 1. Every claim carries a tag
+## 1. हर दावा एक चिह्न रखता है
 
-| Tag | Means | Admissible where |
+| चिह्न | अर्थ | कहाँ ग्राह्य |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | उद्धृत प्राथमिक स्रोत के विरुद्ध सत्यापित, जिसे **आपने इसी रन में पढ़ा**। आदेश, पठन, माप का नाम लें। | कहीं भी, मास्टर फ़ाइल सहित। |
+| `[CLAIMED]` | किसी और द्वारा बताया गया। असत्यापित। | कार्य-फ़ाइलों में। मास्टर फ़ाइल में कभी नहीं। |
+| `[ASSUMED]` | एक कार्यकारी अनुमान जिसे किसी ने जाँचा नहीं। | कार्य-फ़ाइलों में, स्पष्ट रूप से। |
+| `[PROPOSED]` | एक आकलन, एक अनुशंसा, एक योजना। | प्रस्तावों में। अभिलेख में कभी नहीं। |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**चिह्न दावे के साथ यात्रा करता है।** किसी अधिक महत्वपूर्ण फ़ाइल में नक़ल हो जाने से `[PROPOSED]`
+`[PROVEN]` नहीं बन जाता। पदोन्नति के लिए नया स्थान नहीं, नया माप चाहिए।
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**केवल `[PROVEN]` ही किसी मास्टर फ़ाइल को बदल सकता है।**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. स्रोत दें या चिह्नित करें — कभी धुलाई न करें
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+संख्या अपना स्रोत बताती है, वरना वह संख्या नहीं — वह दशमलव बिंदु पहने हुई एक अंतर्ज्ञान है।
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+यदि स्रोत आपके पास नहीं है, तो **यह कहें और उसके बदले अपना तर्क दें।** वह एक उपयोगी उत्तर है। तथ्य के
+रूप में प्रस्तुत बिना-स्रोत की संख्या उपयोगी नहीं है।
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**किसी विफलता को कभी निष्कर्ष में धोकर न बदलें।** त्रुटि देने वाली खोज एक विफल कॉल है, ख़ाली परिणाम-समुच्चय
+नहीं। जो पृष्ठ लोड ही न हुआ, वह अनुपस्थिति का प्रमाण नहीं। जो हुआ, वही लिखें।
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. स्व-विवरण `[CLAIMED]` है
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+अपनी स्थिति, अपने आवरण, या अपने पूरे किए गए काम के बारे में एजेंट का अपना विवरण `[CLAIMED]` है — चाहे
+वह कितना भी आश्वस्त हो। उसे `[PROVEN]` केवल कोई बाहरी अभिलेख बनाता है: डिस्क पर एक फ़ाइल, किसी आदेश का
+निकास-कोड, किसी ऐसी चीज़ द्वारा लिखी लॉग-पंक्ति जो आप नहीं हैं।
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+इसीलिए साक्ष्य-पथ रहित `DONE` पंक्ति अमान्य है (देखें
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md))। "मैंने कर दिया" एक दावा है। फ़ाइल प्रमाण है।
 
 ---
 
-## 6. Negative findings count
+## 4. पायदान 0–2 की हर चीज़ के लिए दो बार मापें
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+एक अकेली जाँच कभी किसी सुरक्षा-स्थिति को प्रमाणित नहीं करती। हर प्राथमिकता-0 दावे से पहले, हमेशा दो
+स्वतंत्र माप।
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**फिर से मापें, याद कभी न करें।** समवर्ती सत्रों के नीचे वृक्ष मथता रहता है — बारी के आरंभ में पढ़ा गया
+पथ उसके अंत तक ग़ायब हो सकता है। स्थिति केवल *इसी* रन में डिस्क से जानी जा सकती है। "साफ़" या "वर्तमान"
+को किसी पिछली बारी, स्मृति फ़ाइल, या सारांश से कभी आगे न ले जाएँ।
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**गणना एक माप है, तथ्य नहीं।** उपयोग के बिंदु पर दोबारा गिनें। फ़ाइल-संख्या, एजेंट-संख्या, या कोई संस्करण
+कभी स्मृति से उद्धृत न करें।
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. टूटी हुई कॉल कोई निष्कर्ष नहीं है
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+**परिवहन-हानि** पर — DNS विफलता, कनेक्शन रीसेट, अस्वीकार, बिना उत्तर टाइमआउट — वही कॉल तुरंत और बार-बार
+दोहराएँ। जो कॉल पहुँची ही नहीं, उसके लिए कभी "कोई परिणाम नहीं" न लिखें, और उस रिक्ति को कभी स्मृति से न
+भरें।
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**जो उत्तर पहुँच गया, वह उत्तर है, पुनःप्रयास नहीं।** 403, 404, ख़ाली परिणाम-समुच्चय, स्पष्ट अस्वीकार —
+ये आँकड़े हैं। भिन्न उत्तर पाने के लिए अस्वीकार पर दोबारा प्रयास करना पहचान-से-बचाव है, और यह पायदान 2 पर
+वर्जित है, चाहे वह किसी के भी खाते या नेटवर्क पर चले।
+
+अंतर एक पंक्ति में: *जो कॉल पहुँची ही नहीं उसे दोहराएँ; जो उत्तर पसंद न आया उसे कभी न दोहराएँ।*
 
 ---
 
-## 9. The rule these all serve
+## 6. नकारात्मक निष्कर्ष भी गिने जाते हैं
 
-> A fact asserted in six files will be wrong in five of them.
+"X जाँचा, ख़तरा नहीं" — यही अगले तीन सत्रों को X दोबारा जाँचने से रोकता है। इसे दर्ज करें।
 
-Evidence discipline is what makes the sixth one findable.
+**सीखते-सीखते दर्ज करें, अंत में नहीं।** जो निष्कर्ष केवल कार्य-स्मृति में रहा और फिर खो गया, वह कभी न
+किए गए काम से अभेद्य है।
+
+---
+
+## 7. विलोपन ही अखंडता-संकेत है
+
+किसी वृक्ष को आधार-रेखा के विरुद्ध सत्यापित करते समय रिपोर्ट के तीन वर्ग होते हैं — जोड़ा गया, बदला गया,
+हटाया गया। वृद्धि और संपादन अपेक्षित मंथन हैं। **चेतावनी देने योग्य पंक्ति विलोपन है।**
+
+बिना ऑडिट किए समवर्ती काम के ऊपर नई आधार-रेखा न खींचें। पहले ऑडिट करें, फिर मुहर लगाएँ।
+
+---
+
+## 8. ऑडिट एक भूमिका है, मनोदशा नहीं
+
+ऑडिटर हर एजेंट, आदेश और अधिदेश को **डिस्क से** गिनता है और प्रत्येक को निश्चित वर्गों के विरुद्ध जाँचता
+है — दोषों के साथ-साथ साफ़ जाँचों को भी गिनते हुए। जो रन कुछ भी उत्तीर्ण नहीं करता, उसने कुछ भी ऑडिट नहीं
+किया; उसने केवल शिकायतें एकत्र की हैं।
+
+**ऑडिटर कभी सुधार नहीं करता।** निष्कर्ष सुधार-प्रक्रिया ([`05-CORRECTION.md`](05-CORRECTION.md)) को या
+स्वामी एजेंट को भेजे जाते हैं। जो ऑडिटर अपनी पाई हुई चीज़ें ठीक कर देता है, उसने अपना ही साक्ष्य नष्ट कर
+दिया और अब उस पर साफ़ रन की सूचना देने का भरोसा नहीं किया जा सकता।
+
+---
+
+## 9. वह नियम जिसकी ये सब सेवा करते हैं
+
+> छह फ़ाइलों में कहा गया तथ्य उनमें से पाँच में ग़लत होगा।
+
+साक्ष्य-अनुशासन ही छठी को खोजने योग्य बनाता है।
