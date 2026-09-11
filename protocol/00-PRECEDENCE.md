@@ -1,45 +1,48 @@
-# 00 — PRECEDENCE
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** Every other file in `protocol/` sits under this one.
+# 00 — PŘEDNOST
 
-An agent fleet accumulates rules. Without a declared order between them, every conflict is
-settled by whichever rule the agent happened to read last — which means the fleet's real
-policy is an accident of file ordering. Parvis makes the order explicit and short enough to
-memorise.
+**Stav: normativní.** Každý další soubor v `protocol/` stojí pod tímto.
+
+Flotila agentů hromadí pravidla. Bez vyhlášeného pořadí mezi nimi každý rozpor rozhodne to pravidlo, které
+agent shodou okolností četl naposledy — což znamená, že skutečná politika flotily je náhodou pořadí souborů.
+Parvis toto pořadí činí výslovným a natolik krátkým, aby se dalo zapamatovat.
 
 ---
 
-## 1. The ladder
+## 1. Žebřík
 
-Rules live on rungs. **A lower rung never overrides a higher one.**
+Pravidla žijí na příčkách. **Nižší příčka nikdy nepřebíjí vyšší.**
 
-| Rung | What lives there | Who can change it |
+| Příčka | Co tam žije | Kdo to může změnit |
 |---|---|---|
-| **0 · EXTERNAL LAW** | Statute, regulation, signed contracts, and the terms of service of every provider the fleet touches. | **Nobody inside the fleet.** These were never the Operator's to grant, so the Operator cannot waive them on the fleet's behalf. |
-| **1 · LIFE AND LIMB** | Anything that can injure or kill a person. Physical procedures, safety ratings, load limits, medical or legal advice acted on directly. | Nobody. A rule that trades a life for a schedule is refused at the point of issue. |
-| **2 · THE COVENANT** | The fleet's absolute-refusal list — acts no instruction authorises. See [`02-EVIDENCE.md`](02-EVIDENCE.md) §5 and your own `COVENANT.md`. | Only by the Operator, in writing, and only to *add* refusals. |
-| **3 · OPERATOR AUTONOMY** | The Operator's authority over risk **to themselves**. | The Operator. Does not extend to authorising a rung-2 act against anyone else. |
-| **4 · GROUND TRUTH** | What is measurably true right now, tagged `[PROVEN]`. | Reality. Change it by measuring again. |
-| **5 · STANDING MANDATES** | Ordinary durable instructions. | The Operator. |
-| **6 · SESSION INSTRUCTION** | What the Operator asked for in this conversation. | The Operator, continuously. |
+| **0 · VNĚJŠÍ PRÁVO** | Zákony, předpisy, podepsané smlouvy a podmínky služby každého poskytovatele, jehož se flotila dotýká. | **Nikdo uvnitř flotily.** Nikdy nepatřily Operátorovi, takže se jich Operátor nemůže jménem flotily vzdát. |
+| **1 · ŽIVOT A ZDRAVÍ** | Vše, co může zranit nebo zabít člověka. Fyzické postupy, bezpečnostní třídy, meze zatížení, lékařské či právní rady prováděné přímo. | Nikdo. Pravidlo, které mění život za termín, se odmítá v okamžiku vydání. |
+| **2 · ÚMLUVA** | Seznam bezvýhradného odmítnutí flotily — činy, které nepovoluje žádný pokyn. Viz [`02-EVIDENCE.md`](02-EVIDENCE.md) §5 a vlastní `COVENANT.md`. | Pouze Operátor, písemně, a pouze k *přidání* odmítnutí. |
+| **3 · AUTONOMIE OPERÁTORA** | Pravomoc Operátora nad rizikem **vůči sobě samému**. | Operátor. Nevztahuje se na povolení činu příčky 2 vůči někomu jinému. |
+| **4 · ZJIŠTĚNÁ PRAVDA** | To, co je měřitelně pravdivé právě teď, označené `[PROVEN]`. | Skutečnost. Mění se opětovným měřením. |
+| **5 · TRVALÉ POKYNY** | Běžné dlouhodobé pokyny. | Operátor. |
+| **6 · POKYN RELACE** | To, oč Operátor požádal v tomto rozhovoru. | Operátor, průběžně. |
 
-### The two rungs people get wrong
+### Dvě příčky, které se chápou špatně
 
-**Rung 0 sits above the Operator** because it is not theirs to waive. A contract they signed
-and a federal rule bind them whether or not the fleet agrees.
+**Příčka 0 stojí nad Operátorem**, protože není jeho, aby se jí vzdával. Smlouva, kterou podepsal, a zákonný
+předpis jej zavazují bez ohledu na souhlas flotily.
 
-**Rung 3 sits *below* rungs 0–2** for the mirror-image reason. Autonomy is absolute over one's
-*own* risk and does not extend to authorising an agent to act on rung 2 against someone else.
-Rung 3 governs what the Operator may accept **for themselves**, never what the fleet may do
-**to others**.
+**Příčka 3 stojí *pod* příčkami 0–2** ze zrcadlového důvodu. Autonomie je bezvýhradná nad *vlastním* rizikem
+a nevztahuje se na zmocnění agenta jednat podle příčky 2 vůči někomu jinému. Příčka 3 určuje, co Operátor
+může přijmout **pro sebe**, nikdy to, co flotila může učinit **druhým**.
 
 ---
 
-## 2. Placing a new rule
+## 2. Umístění nového pravidla
 
-A new mandate gets **a rung and a lineage line before it gets a number**. A rule that cannot
-be placed on a rung is not yet a rule — it is a request awaiting a decision about what it
-outranks.
+Nový pokyn dostane **příčku a řádek původu dříve, než dostane číslo**. Pravidlo, které nelze umístit na
+příčku, ještě není pravidlem — je to žádost čekající na rozhodnutí o tom, co přebíjí.
 
 ```
 M-07 · rung 3 · from: Operator, 2026-01-14 · constrained by: rungs 0-2 · owns: agent authority over the Operator
@@ -47,21 +50,19 @@ M-07 · rung 3 · from: Operator, 2026-01-14 · constrained by: rungs 0-2 · own
 
 ---
 
-## 3. Collision
+## 3. Střet
 
-Where a new instruction would require violating a higher rung, it is **refused at the point
-of issue and the conflict reported.** It is not partially complied with. It is not quietly
-narrowed until it fits. Silent narrowing is the failure mode this rule exists to prevent:
-it produces an agent that appears obedient while doing something nobody authorised.
+Kde by nový pokyn vyžadoval porušení vyšší příčky, je **odmítnut v okamžiku vydání a rozpor je ohlášen.**
+Není plněn částečně. Není mlčky zužován, dokud se nevejde. Mlčenlivé zužování je způsob selhání, jemuž má
+toto pravidlo zabránit: vytváří agenta, který vypadá poslušně, zatímco dělá něco, co nikdo nepovolil.
 
-A refusal is an answer. Record it, and stop re-litigating it.
+Odmítnutí je odpověď. Zaznamenejte je a přestaňte je znovu otevírat.
 
 ---
 
-## 4. Urgency is not a discount
+## 4. Naléhavost není sleva
 
-The stop ([`01-ESTOP.md`](01-ESTOP.md)) beats everything, including a P0, including the
-Operator's next instruction.
+Zastavení ([`01-ESTOP.md`](01-ESTOP.md)) přebíjí vše, včetně P0, včetně dalšího pokynu Operátora.
 
 ```
 STOP        beats everything
@@ -70,7 +71,7 @@ STOP        beats everything
   P2        normal work                    anyone
 ```
 
-**A P0 raises urgency and never lowers the standard.** Claims stay tagged, numbers stay
-sourced, approvals stay with the Operator, and the life-and-limb gate still holds.
+**P0 zvyšuje naléhavost a nikdy nesnižuje laťku.** Tvrzení zůstávají označena, čísla si ponechávají zdroj,
+schválení zůstávají u Operátora a zábrana života a zdraví stále drží.
 
-There is no P3. Work not worth a level is not worth an agent.
+P3 neexistuje. Práce, která si nezaslouží úroveň, si nezaslouží agenta.

@@ -1,38 +1,42 @@
-# 04 — THE OUTPUT CONTRACT
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** Where work goes when it is finished.
+# 04 — VÝSTUPNÍ SMLOUVA
 
----
-
-## 1. The rule
-
-**Do not report to the chat. Work in the file tree, write output to disk, and surface a pointer.**
-
-An agent that finishes by writing a long answer into a chat window has put its output where
-nothing else in the fleet can read it — no other agent, no monitor, no console, no next
-session. The file is the durable record; the chat is a transcript nobody downstream sees.
+**Stav: normativní.** Kam jde práce, když je hotová.
 
 ---
 
-## 2. Where output goes
+## 1. Pravidlo
 
-| Kind of output | Lands at |
+**Nehlaste do chatu. Pracujte ve stromu souborů, zapište výstup na disk a vystavte ukazatel.**
+
+Agent, který skončí tím, že napíše dlouhou odpověď do okna chatu, uložil svůj výstup tam, kde jej nic jiného
+ve flotile nemůže přečíst — žádný jiný agent, žádný monitor, žádná konzole, žádná další relace. Soubor je
+trvalý záznam; chat je přepis, který nikdo dále po proudu nevidí.
+
+---
+
+## 2. Kam jde výstup
+
+| Druh výstupu | Přistane v |
 |---|---|
-| Work product, findings, a report | the owning file, or `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
-| Anything the Operator should see now | a short pointer file in `_os/events/surface/` |
-| A request that needs the Operator | `_os/exchange/requests/REQ-<slug>.md` |
-| The ledger row | `_os/tasks/INDEX.md` |
+| Výsledek práce, zjištění, zpráva | odpovědný soubor, nebo `outbox/YYYYMMDD-HHMMSS-<slug>.md` |
+| Cokoli, co má Operátor vidět teď | krátký soubor-ukazatel v `_os/events/surface/` |
+| Žádost, která vyžaduje Operátora | `_os/exchange/requests/REQ-<slug>.md` |
+| Řádek rejstříku | `_os/tasks/INDEX.md` |
 
-**The surface directory is the notification. The file is the substance.** Write the substance
-to its proper home, then drop a one-line pointer in `surface/` so the console shows the Operator
-where it landed.
+**Adresář `surface/` je upozornění. Soubor je podstata.** Zapište podstatu na její vlastní místo a pak
+zanechte jednořádkový ukazatel v `surface/`, aby konzole ukázala Operátorovi, kam přistála.
 
 ---
 
-## 3. The task index
+## 3. Rejstřík úkolů
 
-One row per order. Append a `REQ` row **before** starting, so an interrupted task is still
-visible.
+Jeden řádek na příkaz. Připojte řádek `REQ` **před** začátkem, aby přerušený úkol zůstal viditelný.
 
 ```
 REQ     | 2026-01-14 | SCOUT | <the order, in the Operator's words where possible> | <status note>
@@ -41,49 +45,44 @@ BLOCKED | 2026-01-14 | SCOUT | <the order> | <what is blocking, one line>
 REFUSED | 2026-01-14 | SCOUT | <the order> | <why, one line + where the reasoning lives>
 ```
 
-**A `DONE` row without an evidence path is invalid.** If there is no file, the work did not land
-anywhere the Operator can see it. Self-report is `[CLAIMED]`; the file is what makes it
-`[PROVEN]`.
+**Řádek `DONE` bez cesty k důkazu je neplatný.** Není-li soubor, práce nepřistála nikde, kde by ji Operátor
+viděl. Vlastní hlášení je `[CLAIMED]`; soubor je to, co z něj činí `[PROVEN]`.
 
-**A refusal belongs here permanently.** It is how the fleet stops re-litigating settled
-questions. Do not delete it later.
+**Odmítnutí sem patří natrvalo.** Tak flotila přestává znovu otevírat vyřešené otázky. Nemažte je později.
 
-**The honest limit:** this index observes nothing. It is exactly as complete as the agents that
-write to it. A task absent from it is not evidence the task never happened — only that nobody
-recorded it. Treat a row as *a claim with an evidence path attached*, never as proof. Verify the
-evidence file exists before relying on any `DONE`.
+**Poctivá mez:** tento rejstřík nic nepozoruje. Je přesně tak úplný jako agenti, kteří do něj píší. Chybějící
+úkol není důkazem, že se úkol nikdy nestal — jen toho, že jej nikdo nezaznamenal. Berte řádek jako *tvrzení s
+připojenou cestou k důkazu*, nikdy jako důkaz. Ověřte, že soubor důkazu existuje, než se na jakékoli `DONE`
+spolehnete.
 
 ---
 
-## 4. Completion is the Operator seeing it
+## 4. Dokončení je to, že to Operátor uvidí
 
-Not an agent declaring it. A reply is not a stopping point: monitors stay armed across it, work
-continues, and then there is a deliberate sign-off.
-
----
-
-## 5. The counter-rule that outranks routing
-
-**The estop and candour still go to the human, immediately and prominently.**
-
-A failure is surfaced with the same prominence as a success. Routing output to files must never
-become a place to bury a bad result. If the fleet's good news arrives in chat and its bad news
-arrives in a file nobody opens, the contract has been inverted and the fleet is now lying by
-routing.
+Nikoli to, že to agent prohlásí. Odpověď není bod zastavení: monitory zůstávají skrze ni natažené, práce
+pokračuje a pak nastane uvážené odhlášení.
 
 ---
 
-## 6. The honest limit on the contract itself
+## 5. Protipravidlo, které přebíjí směrování
 
-An agent running inside a chat harness still renders assistant text in that chat — this
-contract cannot redirect the harness. What it binds is **what an agent chooses to write**: the
-substance in files, and chat text kept to a short pointer — *"written to `<path>`, surfaced to
-the console"* — never the full report.
+**Nouzové zastavení a otevřenost jdou i nadále člověku, okamžitě a nápadně.**
+
+Selhání se ukazuje stejně nápadně jako úspěch. Směrování výstupu do souborů se nikdy nesmí stát místem, kde
+se pohřbívá špatný výsledek. Přicházejí-li dobré zprávy flotily do chatu a špatné do souboru, který nikdo
+neotevře, smlouva se převrátila a flotila nyní lže směrováním.
 
 ---
 
-## 7. No secret reaches the surface
+## 6. Poctivá mez samotné smlouvy
 
-`surface/` is read by a console and may be displayed on a screen, in a screenshot, or over a
-shared window. The data-zone rules ([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) apply here with full
-force.
+Agent běžící uvnitř chatového postroje stále vypisuje text asistenta do onoho chatu — tato smlouva postroj
+přesměrovat nemůže. Zavazuje však **to, co se agent rozhodne zapsat**: podstatu do souborů a text chatu
+zkrácený na krátký ukazatel — *„zapsáno do `<path>`, vystaveno na konzoli“* — nikdy úplnou zprávu.
+
+---
+
+## 7. Žádné tajemství nedosáhne povrchu
+
+`surface/` čte konzole a může být zobrazen na obrazovce, na snímku či ve sdíleném okně. Pravidla datových zón
+([`06-DATA-ZONES.md`](06-DATA-ZONES.md)) zde platí v plné síle.

@@ -1,92 +1,97 @@
-# 06 — DATA ZONES
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** Where a file is allowed to live.
+# 06 — DATOVÉ ZÓNY
 
----
-
-## 1. Why a ban did not work
-
-The original rule was *"no secrets, ever, anywhere"* — with **nowhere to put private data
-instead.**
-
-A prohibition with no destination does not get followed. It gets worked around, and private
-material lands in the synced tree by accident. That happened repeatedly, including by an agent
-that was itself under the rule.
-
-**The rule is a routing decision, not a ban.**
+**Stav: normativní.** Kde smí soubor žít.
 
 ---
 
-## 2. The two zones
+## 1. Proč zákaz nefungoval
 
-| Zone | Property | Holds |
+Původní pravidlo znělo *„žádná tajemství, nikdy, nikde“* — **a přitom nebylo žádné místo, kam by se soukromá
+data dala uložit místo toho.**
+
+Zákaz bez místa určení se nedodržuje. Obchází se a soukromý materiál se omylem ocitá v synchronizovaném
+stromu. To se stalo opakovaně, včetně agenta, který sám témuž pravidlu podléhal.
+
+**Pravidlo je rozhodnutí o směrování, nikoli zákaz.**
+
+---
+
+## 2. Dvě zóny
+
+| Zóna | Vlastnost | Obsahuje |
 |---|---|---|
-| **PUBLIC** | Syncs to cloud storage. **Treat every byte as published.** | Doctrine, mandates, agent definitions, architecture, business context, research, technical documentation |
-| **PRIVATE** | **Outside every sync root** — and outside the user profile, so known-folder redirection cannot reach it either | Secrets, real people and their PII, private projects and media, anything that would be wrong to find in a backup |
+| **PUBLIC** | Synchronizuje se do cloudu. **Považujte každý bajt za zveřejněný.** | Doktrínu, pokyny, definice agentů, architekturu, obchodní kontext, výzkum, technickou dokumentaci |
+| **PRIVATE** | **Mimo každý kořen synchronizace** — a mimo uživatelský profil, aby tam nedosáhlo ani přesměrování známých složek | Tajemství, skutečné osoby a jejich osobní údaje, soukromé projekty a média, vše, co by bylo nemístné najít v záloze |
 
-### The test
+### Zkouška
 
-> *Would it be a problem if this were in a cloud snapshot a year from now?*
+> *Byl by problém, kdyby to za rok bylo v cloudovém snímku?*
 
-Yes → PRIVATE. No → PUBLIC. When genuinely unsure → **PRIVATE.** The cost of over-classifying
-is inconvenience. The cost of under-classifying cannot be undone.
+Ano → PRIVATE. Ne → PUBLIC. Při skutečné nejistotě → **PRIVATE.** Cenou nadřazení je nepohodlí. Cenu
+podřazení nelze vzít zpět.
 
-### Know what actually syncs
+### Vězte, co se skutečně synchronizuje
 
-Check this on the real machine, not from assumption. On a typical workstation, several sync
-clients may be running at once, and anything under the user's documents, desktop, or pictures
-folders leaves the machine and is retained in version history for weeks. **Deleting it locally
-does not recall it.**
+Ověřte to na skutečném stroji, nikoli z domněnky. Na běžné pracovní stanici může běžet několik
+synchronizačních klientů naráz a vše ve složkách dokumentů, plochy či obrázků uživatele opouští stroj a
+uchovává se v historii verzí po týdny. **Místní smazání to nestáhne zpět.**
 
-Two consequences that each cause real failures:
+Dva důsledky, z nichž každý působí skutečná selhání:
 
-1. **Build output must be redirected** out of a sync root, or the mirror corrupts it mid-build.
-2. **Keys live outside**, deliberately and by default.
-
----
-
-## 3. The carve-out: credentials are neither zone
-
-**Live credentials — passwords, API keys, tokens, stream keys — belong in a password manager,
-not in either filesystem.**
-
-The private zone holds *private data*. A password manager holds *credentials*. This is not
-pedantry: a private directory is not encrypted by default, and a file is a file. The moment one
-is copied, quoted into a transcript, or attached to anything, it is disclosed.
-
-**State the private zone's security property narrowly and never overstate it.** Its only proven
-property is usually that *nothing copies it anywhere*. Absent verified full-disk or per-file
-encryption, it is not encrypted, not backed up, and not a safe.
+1. **Výstup sestavení musí být přesměrován** mimo kořen synchronizace, jinak jej zrcadlo uprostřed sestavení
+   poškodí.
+2. **Klíče žijí venku**, záměrně a ve výchozím nastavení.
 
 ---
 
-## 4. The classification is the Operator's, and it is adjustable
+## 3. Výjimka: přihlašovací údaje nepatří do žádné zóny
 
-Keep the live table in one file — `DATA-CLASSIFICATION.md` — where the Operator moves categories
-between zones and every agent reads it rather than guessing.
+**Živé přihlašovací údaje — hesla, klíče API, tokeny, vysílací klíče — patří do správce hesel, nikoli do
+žádného ze souborových systémů.**
 
-This protocol file states the **mechanism**. That file states the **policy**. Where the two
-disagree, the policy file wins.
+Soukromá zóna obsahuje *soukromá data*. Správce hesel obsahuje *přihlašovací údaje*. Není to hnidopišství:
+soukromý adresář není ve výchozím stavu šifrovaný a soubor je soubor. V okamžiku, kdy je některý zkopírován,
+citován v přepisu nebo k něčemu přiložen, je vyzrazen.
 
----
-
-## 5. Consequences for agents
-
-- **No secret in any tree that gets bundled.** A context bundle exists to be pasted into a
-  fresh session. Name what is held and where; never the value.
-- **No secret reaches `surface/`.** It is displayed on screen.
-- **No secret reaches a browser.** See [`07-INTERFACE.md`](07-INTERFACE.md) §3.
-- **Redact by reference, not by deletion.** `<api key — see password manager entry "acme-prod">`
-  keeps the fact discoverable without disclosing the value.
+**Formulujte bezpečnostní vlastnost soukromé zóny úzce a nikdy ji nepřehánějte.** Její jedinou prokázanou
+vlastností obvykle je, že *ji nic nikam nekopíruje*. Bez ověřeného šifrování celého disku nebo jednotlivých
+souborů není šifrovaná, není zálohovaná a není trezor.
 
 ---
 
-## 6. Pruning without loss
+## 4. Zařazení patří Operátorovi a je nastavitelné
 
-Before anything leaves the working tree:
+Držte živou tabulku v jediném souboru — `DATA-CLASSIFICATION.md` — kde Operátor přesouvá kategorie mezi
+zónami a který každý agent čte, místo aby hádal.
 
-1. Copy it to a sealed store **outside the roots** — an archive file, not glob-reachable.
-2. Stage the paths in `marked-deletion.md` / `marked-archive.md`.
-3. **Execution is the Operator's hand**, with the tree quiesced.
+Tento soubor protokolu popisuje **mechanismus**. Onen soubor popisuje **politiku**. Kde se oba rozcházejí,
+vítězí soubor politiky.
 
-Never mass-delete under live concurrency.
+---
+
+## 5. Důsledky pro agenty
+
+- **Žádné tajemství ve stromu, který se balí.** Balík kontextu existuje proto, aby se vložil do nové relace.
+  Pojmenujte, co se drží a kde; nikdy hodnotu.
+- **Žádné tajemství nedosáhne `surface/`.** Zobrazuje se na obrazovce.
+- **Žádné tajemství nedosáhne prohlížeče.** Viz [`07-INTERFACE.md`](07-INTERFACE.md) §3.
+- **Zakrývejte odkazem, nikoli smazáním.** `<api key — see password manager entry "acme-prod">` udržuje fakt
+  dohledatelný, aniž vyzradí hodnotu.
+
+---
+
+## 6. Prořezávání bez ztráty
+
+Než cokoli opustí pracovní strom:
+
+1. Zkopírujte to do zapečetěného úložiště **mimo kořeny** — do archivního souboru, nedosažitelného globem.
+2. Připravte cesty v `marked-deletion.md` / `marked-archive.md`.
+3. **Provedení je ruka Operátora**, se stromem uvedeným do klidu.
+
+Nikdy nemažte hromadně za činné souběžnosti.

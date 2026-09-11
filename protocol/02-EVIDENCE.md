@@ -1,118 +1,121 @@
-# 02 — EVIDENCE
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** How an observation becomes a recorded fact.
+# 02 — DŮKAZ
 
-The discipline this file describes is usually applied to *proposals* — an agent says how likely
-its plan is to work before the human decides. It is almost never applied to *claims*. So a fleet
-reasons carefully about what it wants permission to **do**, and carelessly about what it writes
-down as **true**.
+**Stav: normativní.** Jak se pozorování stává zaznamenaným faktem.
 
-Those are the same act. A claim entering the record is a proposal that the record should change.
-Parvis applies one discipline to both.
+Kázeň, kterou tento soubor popisuje, se obvykle uplatňuje na *návrhy* — agent říká, jak pravděpodobné je, že
+jeho plán vyjde, než člověk rozhodne. Na *tvrzení* se uplatňuje téměř nikdy. Flotila tak uvažuje pečlivě o
+tom, k čemu chce svolení **jednat**, a nedbale o tom, co zapisuje jako **pravdivé**.
+
+Je to týž čin. Tvrzení vstupující do záznamu je návrhem záznam změnit. Parvis na oboje uplatňuje jednu
+kázeň.
 
 ---
 
-## 1. Every claim carries a tag
+## 1. Každé tvrzení nese označení
 
-| Tag | Means | Admissible where |
+| Označení | Znamená | Přípustné kde |
 |---|---|---|
-| `[PROVEN]` | Verified against a cited primary source **you read this run**. Name the command, the read, the measurement. | Anywhere, including a master file. |
-| `[CLAIMED]` | Reported by something else. Not verified. | Working files. Never a master file. |
-| `[ASSUMED]` | A working premise nobody has checked. | Working files, explicitly. |
-| `[PROPOSED]` | An estimate, a recommendation, a plan. | Proposals. Never the record. |
+| `[PROVEN]` | Ověřeno proti citovanému primárnímu zdroji, **který jste v tomto běhu četli**. Uveďte příkaz, čtení, měření. | Kdekoli, včetně hlavního souboru. |
+| `[CLAIMED]` | Sděleno něčím jiným. Neověřeno. | Pracovní soubory. Nikdy hlavní soubor. |
+| `[ASSUMED]` | Pracovní předpoklad, který nikdo neověřil. | Pracovní soubory, výslovně. |
+| `[PROPOSED]` | Odhad, doporučení, plán. | Návrhy. Nikdy záznam. |
 
-**The tag travels with the claim.** A `[PROPOSED]` does not become `[PROVEN]` by being copied
-into a more important file. Promotion requires a new measurement, not a new location.
+**Označení putuje s tvrzením.** `[PROPOSED]` se nestává `[PROVEN]` tím, že se zkopíruje do důležitějšího
+souboru. Povýšení vyžaduje nové měření, nikoli nové umístění.
 
-**Only `[PROVEN]` may change a master file.**
-
----
-
-## 2. Cite or flag — never launder
-
-A number states its source or it is not a number, it is an intuition wearing a decimal point.
-
-If you do not have the source, **say so and give the reasoning instead.** That is a useful
-answer. A sourceless number presented as fact is not.
-
-**Never launder a failure into a finding.** A search that errored is a failed call, not an
-empty result set. A page that would not load is not evidence of absence. Write what happened.
+**Hlavní soubor smí měnit pouze `[PROVEN]`.**
 
 ---
 
-## 3. Self-description is `[CLAIMED]`
+## 2. Citujte nebo označte — nikdy nepropírejte
 
-An agent's account of its own state, its own coverage, or its own completed work is
-`[CLAIMED]` — no matter how confident. Only an outside record makes it `[PROVEN]`: a file on
-disk, a command's exit code, a log line written by something that is not you.
+Číslo uvádí svůj zdroj, jinak to není číslo, ale tušení s desetinnou čárkou.
 
-This is why a `DONE` row without an evidence path is invalid (see
-[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). "I did it" is a claim. The file is the proof.
+Pokud zdroj nemáte, **řekněte to a uveďte místo něj úvahu.** To je užitečná odpověď. Číslo bez zdroje
+předložené jako fakt nikoli.
 
----
-
-## 4. Measure twice for anything on rung 0–2
-
-A single check never certifies a safety state. Two independent measurements before any
-Priority-0 claim, always.
-
-**Re-measure, never remember.** A tree churns under concurrent sessions — a path read at the
-start of a turn may be gone by its end. State is knowable only from disk *this* run. Never
-carry "cleared" or "current" forward from a prior turn, a memory file, or a summary.
-
-**A count is a measurement, not a fact.** Recount at the point of use. Never quote a file
-count, an agent count, or a version from memory.
+**Nikdy nepropírejte selhání na zjištění.** Hledání, které skončilo chybou, je neúspěšné volání, nikoli
+prázdná množina výsledků. Stránka, která se nenačetla, není důkazem nepřítomnosti. Zapište, co se stalo.
 
 ---
 
-## 5. A dropped call is not a finding
+## 3. Sebepopis je `[CLAIMED]`
 
-On **lost transport** — DNS failure, connection reset, refused, timeout with no response —
-retry the same call immediately and repeatedly. Never write "no results" for a call that never
-arrived, and never fill the gap from memory.
+Vyprávění agenta o vlastním stavu, vlastním pokrytí nebo vlastní dokončené práci je `[CLAIMED]` — ať je
+sebejistý sebevíc. Teprve vnější záznam z něj činí `[PROVEN]`: soubor na disku, návratový kód příkazu, řádek
+protokolu zapsaný něčím, co nejste vy.
 
-**A response that arrived is an answer, not a retry.** A 403, a 404, an empty result set, an
-explicit refusal — these are data. Retrying into a refusal to get a different answer is
-detection evasion, and it is barred at rung 2 regardless of whose account or whose network it
-runs on.
-
-The distinction in one line: *retry the call that never landed; never retry the answer you did
-not like.*
+Proto je řádek `DONE` bez cesty k důkazu neplatný (viz
+[`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)). „Udělal jsem to“ je tvrzení. Soubor je důkaz.
 
 ---
 
-## 6. Negative findings count
+## 4. Měřte dvakrát u všeho z příček 0–2
 
-"Checked X, not a hazard" is what stops the next three sessions re-checking X. Record it.
+Jediná kontrola nikdy neosvědčuje bezpečnostní stav. Dvě nezávislá měření před každým tvrzením Priority 0,
+vždy.
 
-**Record as you learn, not at the end.** A finding held only in working memory and then lost is
-indistinguishable from work never done.
+**Měřte znovu, nikdy si nevzpomínejte.** Strom se hýbe pod souběžnými relacemi — cesta přečtená na začátku
+tahu může být na jeho konci pryč. Stav je poznatelný pouze z disku v *tomto* běhu. Nikdy nepřenášejte
+„volno“ ani „aktuální“ z minulého tahu, souboru paměti nebo shrnutí.
 
----
-
-## 7. Removals are the integrity signal
-
-When verifying a tree against a baseline, the report has three classes — added, modified,
-removed. Growth and edits are expected churn. **A removal is the line worth alarming on.**
-
-Do not re-baseline over unaudited concurrent work. Audit first, then stamp.
+**Počet je měření, nikoli fakt.** Přepočítejte v místě použití. Nikdy neuvádějte zpaměti počet souborů,
+počet agentů ani verzi.
 
 ---
 
-## 8. Audit is a role, not a mood
+## 5. Přerušené volání není zjištění
 
-An auditor enumerates every agent, command, and mandate **from disk** and checks each against
-fixed classes — counting clean checks as well as defects. A run that clears nothing has audited
-nothing; it has only collected complaints.
+Při **ztrátě přenosu** — selhání DNS, resetované spojení, odmítnutí, vypršení bez odpovědi — opakujte totéž
+volání okamžitě a opakovaně. Nikdy nepište „žádné výsledky“ pro volání, které nikdy nedorazilo, a nikdy
+nevyplňujte mezeru zpaměti.
 
-**The auditor never fixes.** Findings route to the correction process
-([`05-CORRECTION.md`](05-CORRECTION.md)) or to the owning agent. An auditor that repairs what it
-finds has destroyed its own evidence and can no longer be trusted to report a clean run.
+**Odpověď, která dorazila, je odpověď, nikoli důvod k opakování.** 403, 404, prázdná množina výsledků,
+výslovné odmítnutí — to jsou data. Opakovat pokusy proti odmítnutí, aby vyšla jiná odpověď, je obcházení
+detekce a na příčce 2 je to zapovězeno bez ohledu na to, na čím účtu a v čí síti to běží.
+
+Rozdíl v jedné větě: *opakujte volání, které nedorazilo; nikdy neopakujte odpověď, která se vám nelíbila.*
 
 ---
 
-## 9. The rule these all serve
+## 6. Záporná zjištění se počítají
 
-> A fact asserted in six files will be wrong in five of them.
+„Zkontrolováno X, není to nebezpečí“ je to, co zabrání dalším třem relacím kontrolovat X znovu. Zaznamenejte
+to.
 
-Evidence discipline is what makes the sixth one findable.
+**Zaznamenávejte, jak se učíte, nikoli na konci.** Zjištění držené jen v pracovní paměti a poté ztracené je
+nerozeznatelné od práce, která se nikdy neudělala.
+
+---
+
+## 7. Odstranění jsou signálem celistvosti
+
+Při prověřování stromu proti výchozímu stavu má zpráva tři třídy — přidáno, změněno, odstraněno. Růst a
+úpravy jsou očekávaný pohyb. **Odstranění je řádek, kvůli němuž stojí za to bít na poplach.**
+
+Nestanovujte nový výchozí stav přes neprověřenou souběžnou práci. Nejprve audit, potom razítko.
+
+---
+
+## 8. Audit je role, nikoli nálada
+
+Auditor vyjmenuje každého agenta, příkaz a pokyn **z disku** a každý porovná s pevnými třídami — počítaje
+jak čisté kontroly, tak vady. Běh, který nic nepropustí, nic neauditoval; pouze nasbíral stížnosti.
+
+**Auditor nikdy neopravuje.** Zjištění putují do procesu opravy ([`05-CORRECTION.md`](05-CORRECTION.md))
+nebo k odpovědnému agentovi. Auditor, který opravuje, co najde, zničil vlastní důkaz a už mu nelze věřit, že
+ohlásí čistý běh.
+
+---
+
+## 9. Pravidlo, jemuž to vše slouží
+
+> Fakt tvrzený v šesti souborech bude v pěti z nich chybný.
+
+Důkazní kázeň je to, co činí šestý dohledatelným.

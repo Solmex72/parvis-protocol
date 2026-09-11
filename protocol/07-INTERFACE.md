@@ -1,101 +1,101 @@
-# 07 — THE INTERFACE LAYER
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** This is the file the project is named for.
+# 07 — VRSTVA ROZHRANÍ
 
-Every surface a human touches is **Parvis**. The read-only floor view is the *Parvis HMI*; the
-tile menu you drive the fleet from is the *Parvis Console*.
+**Stav: normativní.** Toto je soubor, po němž je projekt pojmenován.
 
----
-
-## 1. The rule that makes the HTML work
-
-> A browser page is a **display and a keyboard**, not a program with disk access.
-
-That single fact governs the whole layer:
-
-- **The page shows and collects.** It renders state and takes input. Opened from a file path, on
-  its own, it **cannot read the tree and cannot write an order.** The browser sandbox forbids
-  both, and that is a feature.
-- **The sidecar bridges it.** A small loopback service — bound to `127.0.0.1`, nothing else — is
-  the only thing that reads the tree for the page and writes what the page submits. The page
-  `GET`s state from it; the page `POST`s a prompt to it; the sidecar does the disk work.
-  **No sidecar, no live Parvis — only a snapshot.**
-- **Nothing bypasses the review.** A prompt posted from Parvis is an **induction, not an
-  execution**. The sidecar writes a `REQ` row to the task index and stops. It never spawns an
-  agent, never runs a command, never sends. Committing new work stays the Operator's keystroke.
-
-That is why the page "works": the page is honest about being a window, the sidecar does the
-small real work at the edge, and **the review still stands between a prompt and a moving
-machine.**
+Každý povrch, jehož se člověk dotkne, je **Parvis**. Pohled na halu jen pro čtení je *Parvis HMI*; dlaždicová
+nabídka, z níž řídíte flotilu, je *Parvis Console*.
 
 ---
 
-## 2. Hard requirements — every Parvis surface
+## 1. Pravidlo, díky němuž HTML funguje
 
-1. **Self-contained.** One HTML file: inline CSS and JS, no external scripts, no CDN. Web fonts
-   only, with a real fallback stack. It must render offline from a file path.
+> Stránka prohlížeče je **obrazovka a klávesnice**, nikoli program s přístupem na disk.
 
-2. **The colours are the state, read live, never faked.** Green = running, amber = ask first,
-   red = stopped — derived from the STATE file and the live ledger. **A value with no live
-   source shows `—`, never a plausible-looking number.** Red outranks every other colour and the
-   whole UI.
+Tento jediný fakt ovládá celou vrstvu:
 
-3. **The sidecar is loopback-only and holds no secret the page can see.** No API key, no
-   credential, no token of value reaches the browser. The sidecar authenticates the page with a
-   local session token and does the privileged work itself. **The page never holds anything
-   worth stealing.**
+- **Stránka ukazuje a sbírá.** Vykresluje stav a přijímá vstup. Otevřena z cesty k souboru sama o sobě
+  **nemůže číst strom ani zapsat příkaz.** Pískoviště prohlížeče obojí zakazuje, a to je přednost.
+- **Sidecar staví most.** Malá služba na místní smyčce — vázaná na `127.0.0.1` a na nic jiného — je jediné,
+  co čte strom pro stránku a zapisuje to, co stránka odešle. Stránka si vyžádá stav pomocí `GET`; stránka
+  odešle prompt pomocí `POST`; sidecar vykoná práci s diskem. **Bez sidecaru není živý Parvis — je jen
+  snímek.**
+- **Nic neobchází přezkum.** Prompt odeslaný z Parvisu je **vložení, nikoli provedení.** Sidecar zapíše
+  řádek `REQ` do rejstříku úkolů a zastaví se. Nikdy nespouští agenta, nikdy neprovádí příkaz, nikdy
+  neodesílá. Potvrzení nové práce zůstává stiskem klávesy Operátora.
 
-4. **A snapshot is labelled as a snapshot,** with its read time. Only a page talking to a live
-   sidecar may present itself as live. A stale page that looks live is worse than no page.
-
-5. **The estop outranks the interface.** Under `STOP`, Parvis inducts nothing and the sidecar
-   writes nothing but the log-off line. **A red floor takes no orders.**
-
-6. **Parvis branding, and no third-party company names.** Whatever real systems the pattern was
-   learned from, the pattern is yours and it is called Parvis. A surface that ships someone
-   else's trade name is wrong and gets corrected.
+Proto stránka „funguje“: stránka je poctivá v tom, že je oknem, sidecar odvádí malou skutečnou práci na
+okraji a **přezkum stále stojí mezi promptem a pohybujícím se strojem.**
 
 ---
 
-## 3. Security requirements for the sidecar
+## 2. Tvrdé požadavky — na každý povrch Parvis
 
-A loopback HTTP service on a developer workstation is a real attack surface. These are not
-optional.
+1. **Soběstačný.** Jeden soubor HTML: CSS a JS uvnitř, žádné vnější skripty, žádná CDN. Pouze webová písma
+   se skutečným záložním řetězcem. Musí se vykreslit offline z cesty k souboru.
 
-| Requirement | Why |
+2. **Barvy jsou stav, čtený živě, nikdy předstíraný.** Zelená = běží, jantarová = nejdřív se zeptej, červená
+   = zastaveno — odvozeno ze souboru STATE a z živého rejstříku. **Hodnota bez živého zdroje ukazuje `—`,
+   nikdy věrohodně vypadající číslo.** Červená přebíjí každou jinou barvu i celé rozhraní.
+
+3. **Sidecar běží pouze na místní smyčce a nedrží žádné tajemství, jež by stránka mohla vidět.** Žádný klíč
+   API, žádné přihlašovací údaje, žádný cenný token nedosáhne prohlížeče. Sidecar ověřuje stránku místním
+   tokenem relace a privilegovanou práci vykoná sám. **Stránka nikdy nedrží nic, co by stálo za krádež.**
+
+4. **Snímek se označuje jako snímek,** s časem čtení. Pouze stránka hovořící s živým sidecarem se smí
+   vydávat za živou. Zastaralá stránka, která vypadá živě, je horší než žádná stránka.
+
+5. **Nouzové zastavení přebíjí rozhraní.** Při `STOP` Parvis nic nevkládá a sidecar nezapisuje nic než řádek
+   odhlášení. **Červená hala nepřijímá příkazy.**
+
+6. **Značka Parvis a žádná jména cizích společností.** Z jakýchkoli skutečných systémů byl vzor odpozorován,
+   vzor je váš a jmenuje se Parvis. Povrch, který šíří cizí obchodní jméno, je chybný a opravuje se.
+
+---
+
+## 3. Bezpečnostní požadavky na sidecar
+
+Služba HTTP na místní smyčce na vývojářské stanici je skutečná plocha útoku. Tyto body nejsou volitelné.
+
+| Požadavek | Proč |
 |---|---|
-| **Bind `127.0.0.1` explicitly**, never `0.0.0.0` | Binding all interfaces publishes your fleet console to the LAN. |
-| **Validate the `Host` header** against an allowlist of `127.0.0.1:<port>` / `localhost:<port>` | Defeats DNS rebinding, which is how a web page you visit reaches a loopback service. |
-| **Reject requests carrying an `Origin` you did not issue** | Same class of attack, different vector. |
-| **Require a session token** on every mutating route, issued at page load, never logged | The page proves it is your page. |
-| **Allowlist every path** the service will read or write, then re-resolve and confirm containment | Defeats traversal. An allowlist alone is not enough if symlinks exist. |
-| **Fail safe on an unreadable estop** — refuse, do not default to `RUN` | See [`01-ESTOP.md`](01-ESTOP.md) §2. |
-| **No `eval`, no shell-out, no template interpolation of user input** | The prompt bar is an induction input, not a command line. |
+| **Vázejte `127.0.0.1` výslovně**, nikdy `0.0.0.0` | Vázání na všechna rozhraní zveřejní konzoli vaší flotily v místní síti. |
+| **Ověřujte hlavičku `Host`** proti seznamu povolených `127.0.0.1:<port>` / `localhost:<port>` | Poráží DNS rebinding, jímž navštívená webová stránka dosáhne na službu místní smyčky. |
+| **Odmítejte požadavky s `Origin`, který jste nevydali** | Táž třída útoku, jiný vektor. |
+| **Vyžadujte token relace** na každé měnící cestě, vydaný při načtení stránky, nikdy nezaznamenaný | Stránka dokáže, že je vaše stránka. |
+| **Vložte na seznam povolených každou cestu**, kterou služba přečte či zapíše, pak ji znovu rozřešte a potvrďte vnoření | Poráží průchod cestami. Samotný seznam povolených nestačí, existují-li symbolické odkazy. |
+| **Při nečitelném estop selhávejte bezpečně** — odmítněte, nevracejte se k `RUN` | Viz [`01-ESTOP.md`](01-ESTOP.md) §2. |
+| **Žádný `eval`, žádné volání shellu, žádné vkládání uživatelského vstupu do šablon** | Lišta promptu je vstupní pole, nikoli příkazový řádek. |
 
-The reference implementation in [`reference/sidecar/`](../reference/sidecar/) implements all of
-these and is commented at the point of each one.
+Referenční implementace v [`reference/sidecar/`](../reference/sidecar/) uskutečňuje všechny tyto body a je
+opatřena komentářem v místě každého z nich.
 
 ---
 
-## 4. What the surfaces are
+## 4. Jaké jsou povrchy
 
-| Surface | What | State |
+| Povrch | Co | Stav |
 |---|---|---|
-| **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
-| **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
-| **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
-| **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
+| **Parvis Console** | Panely se záložkami — stav, dokumenty, rejstřík, sběrnice, povrch, nastavení | Dodáváno. |
+| **Parvis Floor** | Záložka Sklad: trojrozměrná hala, oblet a sestup, ovládání zařízení | Dodáváno. Viz [`09-FLOOR.md`](09-FLOOR.md). |
+| **Lišta promptu** | Vstupní pole, na konzoli i u každého halového zařízení | Dodáváno. |
+| **Sidecar** | Most na místní smyčce: čte strom, zapisuje řádky `REQ`, nedrží tajemství | Dodáváno. |
 
-**Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
-worthless without the ledger underneath it — it renders state the rest of the protocol produces,
-and on an empty tree it correctly shows nothing.
+**Dodejte nejprve panely.** Trojrozměrná hala je ta část, kterou chce postavit každý, a ta část, jež bez
+rejstříku pod sebou nemá cenu — vykresluje stav, který vytváří zbytek protokolu, a na prázdném stromu
+správně neukazuje nic.
 
 ---
 
-## 5. Standing
+## 5. Postoj
 
-- **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
-- No secret reaches the browser, ever.
-- Output goes to files and the console, not to a chat window
+- **Stránka čte. Sidecar zapisuje. Operátor potvrzuje.**
+- Žádný povrch nespouští, neodesílá, nenasazuje ani neruší nouzové zastavení.
+- Žádné tajemství nedosáhne prohlížeče, nikdy.
+- Výstup jde do souborů a na konzoli, nikoli do okna chatu
   ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).

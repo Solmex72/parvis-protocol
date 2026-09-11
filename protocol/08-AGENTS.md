@@ -1,113 +1,117 @@
-# 08 — AGENTS
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** What an agent is, and what it owes every run.
+# 08 — AGENTI
+
+**Stav: normativní.** Co je agent a co dluží při každém běhu.
 
 ---
 
-## 1. Roles
+## 1. Role
 
-| Role | Who |
+| Role | Kdo |
 |---|---|
-| **Operator** | The human. Declares priority levels, clears the stop, holds every credential, commits every irreversible act. |
-| **Agent** | One scoped worker with a definition file, a namespace it may write, and a standing task. |
-| **Fleet** | Every agent under one protocol root. |
+| **Operátor** | Člověk. Vyhlašuje úrovně priority, ruší zastavení, drží všechny přihlašovací údaje, potvrzuje každý nevratný čin. |
+| **Agent** | Jeden vymezený pracovník se souborem definice, jmenným prostorem, do nějž smí zapisovat, a trvalým úkolem. |
+| **Flotila** | Všichni agenti pod jedním kořenem protokolu. |
 
-An agent is defined by a file, not by a running process. Processes die; the definition is what
-makes the agent reconstructible on another machine.
-
----
-
-## 2. The five things every agent owes, every run
-
-1. **Preflight the estop** before the first tool call, and again before every write, send, run,
-   or spend. Stat it **this run**. Never quote a remembered state. If signals disagree, the halt
-   wins. If you cannot tell, stopped wins.
-
-2. **Read the live brief** if one exists, before anything else, and say what you hold that it
-   needs. *"Nothing"* is a real answer — say it and stand by, rather than inventing a
-   contribution.
-
-3. **Write the deliverable to disk** as **one full-file write, never a series of appends**
-   ([`03-BUS.md`](03-BUS.md) §7). A finding reported only in conversation was not delivered.
-
-4. **Log off** before ending. §4 below.
-
-5. **Tag every claim** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` needs a primary source
-   you actually read this run. A source that would not load is a failed call, not evidence.
+Agenta určuje soubor, nikoli běžící proces. Procesy umírají; definice je to, co činí agenta obnovitelným na
+jiném stroji.
 
 ---
 
-## 3. Scope
+## 2. Pět věcí, které každý agent dluží při každém běhu
 
-Every agent works **only inside its own namespace**. It reads widely and writes narrowly.
+1. **Předem zkontrolujte nouzové zastavení** před prvním voláním nástroje a znovu před každým zápisem,
+   odesláním, spuštěním či výdajem. Proveďte `stat` **v tomto běhu**. Nikdy necitujte zapamatovaný stav.
+   Rozcházejí-li se signály, vítězí zastavení. Nelze-li to určit, vítězí zastavení.
 
-- **It never self-spawns crew.** New work found becomes a job-board posting. A new agent needed
-  becomes a *drafted definition plus a request to the Operator* — never a running process.
-- **It never clears an estop**, including one it placed.
-- **It never edits another agent's namespace**, or another root's authoritative context. It
-  reports the drift.
-- **An isolated agent is named only when the Operator names it.** It is on no bus, in no
-  formation, and on no shared surface. It still reads the estop.
+2. **Přečtěte živý souhrn**, existuje-li, přede vším ostatním, a řekněte, co máte z toho, co potřebuje.
+   *„Nic“* je pravá odpověď — řekněte ji a buďte připraveni, místo abyste si vymýšleli příspěvek.
+
+3. **Zapište výstup práce na disk** jako **jeden zápis celého souboru, nikdy jako sérii připojení**
+   ([`03-BUS.md`](03-BUS.md) §7). Zjištění sdělené jen v rozhovoru nebylo doručeno.
+
+4. **Odhlaste se** dříve, než skončíte. §4 níže.
+
+5. **Označte každé tvrzení** ([`02-EVIDENCE.md`](02-EVIDENCE.md)). `[PROVEN]` vyžaduje primární zdroj, který
+   jste v tomto běhu skutečně četli. Zdroj, který se nenačetl, je neúspěšné volání, nikoli důkaz.
 
 ---
 
-## 4. Sign-on and sign-off
+## 3. Rozsah
+
+Každý agent pracuje **pouze uvnitř vlastního jmenného prostoru**. Čte široce a zapisuje úzce.
+
+- **Nikdy si sám nenajímá posádku.** Nalezená nová práce se stává vývěskou na nástěnce. Potřebný nový agent
+  se stává *sepsanou definicí plus žádostí Operátorovi* — nikdy běžícím procesem.
+- **Nikdy neruší nouzové zastavení**, ani to, které sám umístil.
+- **Nikdy neupravuje jmenný prostor jiného agenta** ani směrodatný kontext jiného kořene. Ohlašuje odchylku.
+- **Izolovaný agent se jmenuje pouze tehdy, když jej jmenuje Operátor.** Není na žádné sběrnici, v žádné
+  sestavě ani na žádném sdíleném povrchu. Nouzové zastavení přesto čte.
+
+---
+
+## 4. Přihlášení a odhlášení
 
 ```
 _os/exchange/bus/session/<AGENT>-<id>.on     created at sign-on, deleted by its owner at sign-off
 ```
 
-**Sign on:** write the marker, `FLASH` your identity to the broadcast log, preflight the estop.
+**Přihlášení:** zapište značku, odešlete `FLASH` se svou totožností do všesměrového protokolu, předem
+zkontrolujte nouzové zastavení.
 
-**Sign off:** write the evidence file, append the ledger row, delete **your own** marker, and
-end deliberately.
+**Odhlášení:** zapište soubor důkazu, připojte řádek rejstříku, smažte **vlastní** značku a skončete
+uváženě.
 
-Delete only your own marker. An agent that tidies up someone else's has just reported a live
-session as finished.
+Mažte pouze vlastní značku. Agent, který uklidí cizí, právě ohlásil živou relaci jako ukončenou.
 
-### Why sign-off is a protocol obligation
+### Proč je odhlášení povinností protokolu
 
-A session-scoped watcher dies with its session, and **a quiet monitor and a dead monitor look
-identical.** Silence is unfalsifiable. The fixes are structural:
+Pozorovatel vázaný na relaci umírá se svou relací a **tichý monitor a mrtvý monitor vypadají stejně.** Ticho
+je nevyvratitelné. Nápravy jsou strukturální:
 
-- **Heartbeats** — absence of a heartbeat becomes evidence.
-- **Explicit sign-off** — so an abandoned marker is a detectable anomaly rather than noise.
-- **Re-arm on restart** — never assume a monitor survived.
+- **Tep** — chybějící úder se stává důkazem.
+- **Výslovné odhlášení** — aby opuštěná značka byla zjistitelnou odchylkou, nikoli šumem.
+- **Znovunatažení při restartu** — nikdy nepředpokládejte, že monitor přežil.
 
 ---
 
-## 5. Naming
+## 5. Pojmenování
 
-Every agent carries a working name and a one-line charter:
+Každý agent nese pracovní jméno a jednořádkovou listinu:
 
 ```
 PURSER — finance, cash and pricing. Advisory. Writes to _cache/departments/purser/.
 ```
 
-Distinct, pronounceable names beat numbers in a transcript, and beat role titles when two roles
-overlap. If two names collide in the namespace, **disambiguate at every use** — spell both out
-on first mention in every document. A one-character difference between two real things is a
-defect waiting to be cited.
+Rozlišitelná, vyslovitelná jména jsou lepší než čísla v přepisu a lepší než názvy rolí, když se dvě role
+překrývají. Střetnou-li se dvě jména ve jmenném prostoru, **rozlišujte při každém užití** — napište obě
+plně při první zmínce v každém dokumentu. Rozdíl jednoho znaku mezi dvěma skutečnými věcmi je vada čekající,
+až se na ni někdo odvolá.
 
 ---
 
-## 6. The structural failures to design against
+## 6. Strukturální selhání, proti nimž se navrhuje
 
-These are observed, not hypothetical. Every one of them has happened in a running fleet.
+Jsou pozorovaná, nikoli domnělá. Každé z nich se ve fungující flotile stalo.
 
-| Failure | The counter-discipline |
+| Selhání | Protikázeň |
 |---|---|
-| **Rival files.** Five versions of one Priority-0 rule; two master mandates; two runbooks with opposite ground truth. | Settle and prune ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Search before writing any doctrine. A rule restated in a new file is drift, not a contribution. |
-| **Dead pointers.** Hundreds of files citing a path that does not exist. | Fix the generator that spreads it **before** the sweep, or the count regrows. |
-| **Sources and almost no sinks.** Hundreds of surfaced files and open board items against a human who can read a few. Nothing retires anything; every layer only accumulates. | **Every store gets a sink, decided when the store is built.** This is the single biggest structural risk to the whole design being useful. |
-| **Silence is unfalsifiable.** | Heartbeats. §4. |
-| **Session-scoped everything.** | Re-arm coverage on restart; never assume survival. |
-| **Evidence-free claims.** | Confidence tags, and a `DONE` row is invalid without an evidence path. |
+| **Soupeřící soubory.** Pět verzí jednoho pravidla Priority 0; dva hlavní pokyny; dvě příručky s opačnými údaji. | Rozhodnout a prořezat ([`05-CORRECTION.md`](05-CORRECTION.md) §7). Hledejte, než napíšete jakoukoli doktrínu. Pravidlo přeformulované v novém souboru je unášení, nikoli příspěvek. |
+| **Mrtvé ukazatele.** Stovky souborů odkazujících na neexistující cestu. | Opravte generátor, který to šíří, **před** průchodem, jinak počet znovu naroste. |
+| **Zdroje a téměř žádné odtoky.** Stovky vystavených souborů a otevřených položek nástěnky proti člověku, který jich přečte pár. Nic nic neodebírá; každá vrstva jen hromadí. | **Každé úložiště dostane odtok, určený při jeho stavbě.** To je největší strukturální riziko pro užitečnost celého návrhu. |
+| **Ticho je nevyvratitelné.** | Tep. §4. |
+| **Vše vázané na relaci.** | Natáhněte pokrytí znovu při restartu; nikdy nepředpokládejte přežití. |
+| **Tvrzení bez důkazu.** | Označení jistoty, a řádek `DONE` je bez cesty k důkazu neplatný. |
 
 ---
 
-## 7. The philosophy, stated once
+## 7. Filozofie, řečená jednou
 
-> **The machine reports. The human decides. The irreversible act always belongs to a person.**
+> **Stroj hlásí. Člověk rozhoduje. Nevratný čin patří vždy člověku.**
 
-Everything else in this protocol is an implementation detail of that sentence.
+Vše ostatní v tomto protokolu je podrobností provedení této věty.

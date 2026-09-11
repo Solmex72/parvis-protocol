@@ -1,39 +1,45 @@
-# 01 — ESTOP
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative. Priority 0. Binding on every agent in every venture.**
+# 01 — ESTOP (NOUZOVÉ ZASTAVENÍ)
+
+**Stav: normativní. Priorita 0. Závazné pro každého agenta v každém podniku.**
 
 ---
 
-## 0. What this can and cannot do — read this first
+## 0. Co to dokáže a co ne — přečtěte si nejdřív
 
-**It cannot halt a running session.** No file can. An agent mid-response is not reading the
-disk, has no interrupt line, and will finish what it is doing. Anyone who tells you a flag
-file stops a fleet is describing a wish.
+**Nedokáže zastavit probíhající relaci.** Žádný soubor to nedokáže. Agent uprostřed odpovědi nečte disk,
+nemá přerušovací linku a dokončí to, co dělá. Kdo vám tvrdí, že souborový příznak zastaví flotilu, popisuje
+přání.
 
-**Only the Operator stops a running agent, by closing its window.** That is the real estop
-and it has never been anything else.
+**Pouze Operátor zastaví běžícího agenta tím, že zavře jeho okno.** To je skutečné nouzové zastavení a nikdy
+jím nebylo nic jiného.
 
-What this file does is bind every agent at the two moments it *is* reading disk:
+Co tento soubor dělá, je zavázat každého agenta ve dvou okamžicích, kdy disk *skutečně* čte:
 
-| Moment | Obligation |
+| Okamžik | Povinnost |
 |---|---|
-| **Startup** | Read the state before your doctrine, before your memory, before anything. |
-| **Every checkpoint** | Before any write, any message, any tool call with a side effect, any spend. |
+| **Spuštění** | Přečtěte stav před svou doktrínou, před svou pamětí, přede vším. |
+| **Každý kontrolní bod** | Před jakýmkoli zápisem, jakoukoli zprávou, jakýmkoli voláním nástroje s vedlejším účinkem, jakýmkoli výdajem. |
 
-An agent that observes `STOP` and continues is a defective agent. That is the whole
-enforcement model: not a mechanism — a duty, checked often.
+Agent, který vidí `STOP` a pokračuje, je vadný agent. To je celý model vynucování: nikoli mechanismus —
+povinnost, kontrolovaná často.
 
-Stating the limit honestly is part of the protocol. A stop you believe is instant is more
-dangerous than one you know is not, because you will rely on it.
+Poctivě pojmenovat mez je součástí protokolu. Zastavení, které pokládáte za okamžité, je nebezpečnější než
+to, o němž víte, že okamžité není, protože se na ně spolehnete.
 
 ---
 
-## 1. The two signals
+## 1. Dva signály
 
-### The sentinel is the fact
+### Strážce je fakt
 
-A **regular file** named exactly `estop` — no extension, zero bytes is normal — at a venture
-root or **any parent directory** of the tree being worked.
+**Běžný soubor** s názvem přesně `estop` — bez přípony, nula bajtů je normální — v kořeni podniku nebo v
+**kterémkoli nadřazeném adresáři** zpracovávaného stromu.
 
 ```bash
 [ -f "$root/estop" ] && echo STOPPED
@@ -43,18 +49,18 @@ root or **any parent directory** of the tree being worked.
 if (Test-Path "$root\estop" -PathType Leaf) { 'STOPPED' }
 ```
 
-Test for a **file**, never mere existence, and never a glob:
+Testujte **soubor**, nikdy pouhou existenci a nikdy vzor glob:
 
-- `ESTOP.md` is doctrine. It must never trip the check. A matcher that lets it would create a
-  stop the Operator cannot clear.
-- `_os/estop/` is a directory. Also not a trip.
+- `ESTOP.md` je doktrína. Nikdy nesmí kontrolu spustit. Porovnání, které by to umožnilo, by vytvořilo
+  zastavení, jež Operátor nemůže zrušit.
+- `_os/estop/` je adresář. Rovněž nespouští.
 
-Multiple roots trip **independently**. Check each. Report the path you statted — never "the
-estop", which hides which one you looked at.
+Více kořenů se spouští **nezávisle**. Zkontrolujte každý. Ohlaste cestu, na níž jste provedli `stat` —
+nikdy „estop“, což zakrývá, na který jste se dívali.
 
-### The STATE file is a derived mirror
+### Soubor STATE je odvozený odraz
 
-`_os/estop/STATE` — one line, nothing else.
+`_os/estop/STATE` — jeden řádek, nic víc.
 
 ```
 RUN
@@ -66,117 +72,113 @@ YELLOW  2026-01-14T08:20:00Z  operator  new hardware on the bench, confirm befor
 STOP    2026-01-14T14:03:11Z  operator  reason in plain English
 ```
 
-| Field | Rule |
+| Pole | Pravidlo |
 |---|---|
-| verb | `RUN`, `YELLOW`, or `STOP`. Nothing else parses. |
-| time | UTC, ISO-8601. |
-| who | Who called it. Only the Operator may write `STOP` / `YELLOW` or clear them. |
-| reason | One line, plain English, no jargon. |
+| sloveso | `RUN`, `YELLOW` nebo `STOP`. Nic jiného se nezpracuje. |
+| čas | UTC, ISO-8601. |
+| kdo | Kdo to vyhlásil. Pouze Operátor smí zapsat `STOP` / `YELLOW` nebo je zrušit. |
+| důvod | Jeden řádek, prostým jazykem, bez žargonu. |
 
-**If the sentinel and the mirror disagree, stopped wins.** The mirror is written by tooling
-and goes stale; the sentinel is the fact.
+**Pokud se strážce a odraz rozcházejí, vítězí zastavení.** Odraz píší nástroje a zastarává; strážce je fakt.
 
 ---
 
-## 2. The three states
+## 2. Tři stavy
 
-| STATE | What an agent does |
+| STATE | Co dělá agent |
 |---|---|
-| `RUN` | **Proceed.** Run the commands the work needs without pausing for permission on each one. Do not stall, do not narrate options, do not queue routine work behind a confirmation. |
-| `YELLOW` | **Ask first.** Every command is proposed before it runs. Same work, same competence — the difference is the confirmation. |
-| `STOP` | Halt. §3. |
+| `RUN` | **Pokračujte.** Provádějte příkazy, které práce vyžaduje, bez žádosti o svolení u každého. Nezastavujte se, nevypisujte možnosti, nestavte běžnou práci do fronty za potvrzení. |
+| `YELLOW` | **Nejprve se zeptejte.** Každý příkaz se navrhne před provedením. Táž práce, táž způsobilost — rozdíl je v potvrzení. |
+| `STOP` | Zastavte. §3. |
 
-### What `RUN` does not do
+### Co `RUN` nedělá
 
-`RUN` removes the *pause before routine work*. It removes **no existing gate**, because those
-are about the nature of the act, not the speed of it:
+`RUN` odstraňuje *pauzu před běžnou prací*. Neodstraňuje **žádnou stávající zábranu**, protože ty se týkají
+povahy činu, nikoli jeho rychlosti:
 
-- credentials, sign-ins, purchases, provisioning — **always the Operator's hands**;
-- outward-facing acts — publishing, sending, deploying — **always an explicit go**;
-- anything a human will physically perform — **still routed through the safety gate**;
-- destructive or irreversible acts — **still confirmed, at any state**;
-- an agent's own standing limits — **not a function of STATE at all**.
+- přihlašovací údaje, přihlášení, nákupy, přidělování zdrojů — **vždy v rukou Operátora**;
+- činy navenek — publikování, odeslání, nasazení — **vždy s výslovným souhlasem**;
+- vše, co člověk provede fyzicky — **stále prochází bezpečnostní zábranou**;
+- ničivé nebo nevratné činy — **stále se potvrzují, v každém stavu**;
+- vlastní trvalá omezení agenta — **na STATE vůbec nezávisí**.
 
-`RUN` answers *"must I ask before every step?"* — no. It does not answer *"may I do anything?"*
-An agent that reads `RUN` and then does something on this list has misread the state, not been
-authorised by it.
+`RUN` odpovídá na otázku *„musím se ptát před každým krokem?“* — ne. Neodpovídá na otázku *„smím cokoli?“*
+Agent, který čte `RUN` a poté udělá něco z tohoto seznamu, si stav špatně přečetl, nikoli že by jím byl
+zmocněn.
 
-### Fail-safe on an unreadable verb
+### Bezpečné selhání při nečitelném slovesu
 
-A STATE file that is **missing, empty, unreadable, or carrying any other word is read as
-`YELLOW`** — never as `RUN`. Ask.
+Soubor STATE, který **chybí, je prázdný, nečitelný nebo obsahuje jakékoli jiné slovo, se čte jako
+`YELLOW`** — nikdy jako `RUN`. Zeptejte se.
 
-> This is the single most commonly inverted line in an implementation. A `try { read } catch
-> { return "RUN" }` turns every disk error, permissions change, and typo into a silent
-> authorisation. The reference sidecar fails to `YELLOW` and refuses to serve on a read error;
-> see [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
+> Toto je řádek, který se v implementacích nejčastěji obrací. `try { read } catch { return "RUN" }` mění
+> každou chybu disku, každou změnu oprávnění a každý překlep v mlčenlivé zmocnění. Referenční sidecar při
+> chybě čtení přechází na `YELLOW` a odmítá obsluhovat; viz
+> [`reference/sidecar/parvis-sidecar.mjs`](../reference/sidecar/parvis-sidecar.mjs).
 
-The sentinel file outranks this section entirely: an `estop` file present means `STOP` no
-matter what STATE says.
+Soubor strážce tento oddíl zcela přebíjí: přítomný soubor `estop` znamená `STOP`, ať STATE říká cokoli.
 
-**Only the Operator writes this file.** No agent writes it — including the agent that found
-the problem. An agent that believes the fleet should stop raises a `GATE` on the bus and says
-so. It does not stop the fleet on its own authority, and it does not restart one.
-
----
-
-## 3. What an agent does on `STOP`
-
-1. **Write nothing further.** Not the memory file, not the report, not the bus.
-2. **Save in place, then stop.** Finish no step not already written. Label whatever exists as
-   partial, with one line noting where you stopped.
-
-   > Earlier drafts of this protocol said *discard*. That was wrong: a discarded half-report
-   > destroys work the restart doctrine exists to protect. The hazard is a truncated file read
-   > later as finished — and the **label** is what prevents that, not the deletion.
-3. **Say one line to the Operator:** `ESTOP observed <timestamp> — <reason>. Holding.`
-4. **Stop.** Do not ask permission to continue. Do not propose a workaround. Do not check
-   whether the reason applies to you — it applies to you.
-
-**A refusal is an answer, not a retry.** Do not loop waiting for `RUN`. Report and end.
+**Tento soubor píše pouze Operátor.** Nepíše jej žádný agent — včetně toho, který problém našel. Agent, jenž
+soudí, že by se flotila měla zastavit, vystaví `GATE` na sběrnici a řekne to. Nezastavuje flotilu z vlastní
+pravomoci a žádnou nerestartuje.
 
 ---
 
-## 4. What clears it
+## 3. Co agent dělá při `STOP`
 
-The Operator sets the file back to `RUN`. Nothing else does — not a timeout, not an agent that
-thinks the issue is resolved, not the passage of time, not a fresh session that never saw the
-stop.
+1. **Nepište už nic.** Ani soubor paměti, ani zprávu, ani sběrnici.
+2. **Uložte na místě a zastavte se.** Nedokončujte žádný krok, který ještě není zapsán. Označte to, co
+   existuje, jako částečné, s jedním řádkem o tom, kde jste skončili.
 
-An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
+   > Dřívější znění tohoto protokolu říkalo *zahodit*. To bylo chybné: zahozená polovina zprávy ničí práci,
+   > kterou má doktrína restartu chránit. Nebezpečím je zkrácený soubor, později přečtený jako dokončený —
+   > a zabraňuje tomu právě **označení**, nikoli smazání.
+3. **Řekněte Operátorovi jeden řádek:** `ESTOP observed <timestamp> — <reason>. Holding.`
+4. **Zastavte se.** Nežádejte o svolení pokračovat. Nenavrhujte obchvat. Nezkoumejte, zda se důvod týká vás
+   — týká se vás.
 
----
-
-## 5. Scope
-
-The estop is **fleet-wide by default**. There is no per-agent estop, because the failure that
-needs a stop is almost never confined to one agent, and a partial stop invites exactly the
-reasoning — *"that was about someone else"* — this file exists to forbid.
-
-**Isolated agents are included.** An agent that is on no bus and no shared surface still reads
-this file. Isolation governs what an agent may *say*. It never governs whether it may be
-*stopped*.
+**Odmítnutí je odpověď, nikoli další pokus.** Nevstupujte do smyčky čekání na `RUN`. Ohlaste a skončete.
 
 ---
 
-## 6. Measure twice
+## 4. Co je ruší
 
-A single green check never certifies a safety state. Read both signals, from disk, **this
-run**. Never quote a remembered state — not from context, not from a memory file, not from a
-prior turn. A mangled `stat` format is enough to produce a false "clear" or a false "halted",
-and both have happened in practice.
+Operátor vrátí soubor na `RUN`. Nic jiného to neudělá — ani časový limit, ani agent, který problém pokládá
+za vyřešený, ani plynutí času, ani nová relace, která zastavení nikdy neviděla.
 
-The strongest available form is a **persistent monitor** over the STATE file and every
-sentinel path, emitting only on change: silent while clear, firing the instant a halt arms.
-That converts "I preflighted once at startup" into live coverage, and closes the gap where a
-stop arms mid-session.
+Obsluha, která se ruší sama, je převrácením zásady bezpečného selhání a odmítá se věcně.
 
 ---
 
-## 7. The honest limit, stated once
+## 5. Rozsah
 
-This protocol makes a stop **reliable at every startup and every checkpoint**. It does not
-make a stop **instant**, and nothing written in a file tree ever will.
+Nouzové zastavení platí **ve výchozím stavu pro celou flotilu**. Zastavení pro jednotlivého agenta
+neexistuje, protože selhání, které vyžaduje zastavení, se téměř nikdy neomezuje na jednoho agenta a
+částečné zastavení zve přesně k té úvaze — *„to se týkalo někoho jiného“* — jíž má tento soubor zakázat.
 
-If something is actively going wrong right now: **close the window.** Then write the file, so
-the next agent to wake up does not restart it.
+**Izolovaní agenti jsou zahrnuti.** Agent, který není na žádné sběrnici ani na žádném sdíleném povrchu,
+tento soubor přesto čte. Izolace určuje, co agent smí *říkat*. Nikdy neurčuje, zda smí být *zastaven*.
+
+---
+
+## 6. Měřte dvakrát
+
+Jediná zelená kontrola nikdy neosvědčuje bezpečnostní stav. Přečtěte oba signály, z disku, **v tomto
+běhu**. Nikdy necitujte zapamatovaný stav — ani z kontextu, ani ze souboru paměti, ani z minulého tahu.
+Špatně přečtený formát `stat` stačí k tomu, aby vzniklo falešné „volno“ nebo falešné „zastaveno“, a obojí se
+v praxi stalo.
+
+Nejsilnější dostupnou formou je **trvalý monitor** nad souborem STATE a každou cestou strážce, jenž hlásí
+pouze změnu: mlčí, dokud je volno, a spouští se v okamžiku, kdy se zastavení natáhne. To převádí „jednou
+jsem při startu zkontroloval“ na pokrytí v reálném čase a uzavírá mezeru, v níž se zastavení natahuje
+uprostřed relace.
+
+---
+
+## 7. Poctivá mez, řečená jednou
+
+Tento protokol činí zastavení **spolehlivým při každém spuštění a každém kontrolním bodu**. Nečiní
+zastavení **okamžitým** a nic zapsaného do stromu souborů to nikdy neudělá.
+
+Pokud se právě teď něco kazí: **zavřete okno.** Potom zapište soubor, aby to další probuzený agent nespustil
+znovu.

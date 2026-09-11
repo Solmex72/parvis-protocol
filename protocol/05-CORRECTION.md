@@ -1,66 +1,68 @@
-# 05 — CORRECTION
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative.** What happens when a recorded fact turns out to be wrong.
+# 05 — OPRAVA
 
----
-
-## 1. The problem
-
-> A fact asserted in six files will be wrong in five of them.
-
-Correcting the file you happen to be looking at is not a correction. It creates a tree where
-the truth and the error both have citations, and the next session picks whichever it opens
-first. This is the defining failure mode of a documentation-heavy agent fleet, and it compounds
-silently.
-
-**A correction propagates, or it did not happen.**
+**Stav: normativní.** Co se stane, když se zaznamenaný fakt ukáže jako chybný.
 
 ---
 
-## 2. Reading is not free — it obligates
+## 1. Problém
 
-Reading a governing file puts you under it. Two things follow:
+> Fakt tvrzený v šesti souborech bude v pěti z nich chybný.
 
-1. Anything in it that is **durable, non-obvious, and not derivable from the tree** goes to
-   your persistent memory before the session ends.
-2. **If your context contradicts the file, the file wins.** Do not work around it. Correct the
-   record.
+Opravit soubor, který máte náhodou před sebou, není oprava. Vytváří strom, kde pravda i omyl mají oba své
+odkazy, a další relace vezme ten, který otevře jako první. Toto je určující způsob selhání flotily agentů
+zatížené dokumentací a zhoršuje se mlčky.
+
+**Oprava se šíří, nebo se nekonala.**
 
 ---
 
-## 3. Immediate Course Correction (ICC)
+## 2. Čtení není zadarmo — zavazuje
 
-One command, one turn, no proposal step.
+Přečíst řídící soubor znamená postavit se pod něj. Vyplývá z toho dvojí:
+
+1. Vše v něm, co je **trvalé, nezřejmé a neodvoditelné ze stromu**, přejde do vaší trvalé paměti před koncem
+   relace.
+2. **Pokud váš kontext souboru odporuje, vítězí soubor.** Neobcházejte jej. Opravte záznam.
+
+---
+
+## 3. Okamžitá oprava kurzu (ICC)
+
+Jeden příkaz, jeden tah, bez kroku návrhu.
 
 ```
 /icc the planner meal times are placeholders, not the Operator's actual times
 ```
 
-### The sequence
+### Posloupnost
 
-**1 · Sweep.** Derive 2–5 search terms from the correction: the **old** wording, its obvious
-variants, and the proper nouns involved. Not the new wording. Run one indexed sweep per term
-before reading anything. Never walk the tree file-by-file to find hits — that is what the index
-is for.
+**1 · Průchod.** Odvoďte z opravy 2 až 5 vyhledávacích výrazů: **staré** znění, jeho zjevné obměny a
+dotčená vlastní jména. Nikoli nové znění. Proveďte jeden indexovaný průchod na výraz, než cokoli přečtete.
+Nikdy neprocházejte strom soubor po souboru a nehledejte shody — od toho je rejstřík.
 
-**2 · Classify every hit.**
+**2 · Zařaďte každou shodu.**
 
-| Hit | Action |
+| Shoda | Úkon |
 |---|---|
-| **Asserts the old fact** | Rewrite it. |
-| **Mentions it in passing**, true either way | Leave it. Do not churn prose. |
-| **Contradicts the new fact indirectly** — a downstream conclusion, a table row, a scheduled job built on the old value | **Rewrite it too.** This is the one most often missed. |
-| **Off-limits** (§5) | Never edit. Note it under *Left alone*. |
+| **Tvrdí starý fakt** | Přepište ji. |
+| **Zmiňuje jej mimochodem**, pravdivé tak či tak | Nechte. Nečeřte text. |
+| **Odporuje novému faktu nepřímo** — odvozený závěr, řádek tabulky, naplánovaný úkol postavený na staré hodnotě | **Přepište i tu.** Právě tu se přehlédne nejčastěji. |
+| **Mimo meze** (§5) | Nikdy neupravujte. Poznamenejte do *Left alone*. |
 
-**3 · Rewrite, all at once.** Match each file's existing voice and confidence-label convention.
-A corrected fact keeps whatever tag it earns — **do not promote a claim to `[PROVEN]` because
-it is now current.** If the old text carried a date, stamp today's.
+**3 · Přepište vše najednou.** Přizpůsobte se stávajícímu hlasu každého souboru a jeho úmluvě o označeních
+jistoty. Opravený fakt si ponechává označení, jaké si zaslouží — **nepovyšujte tvrzení na `[PROVEN]` proto,
+že je nyní aktuální.** Nesl-li starý text datum, uveďte dnešní.
 
-Where a fact is asserted in more than three files, that is **duplication, not redundancy**:
-state it once in the file that owns it, and make the others point there.
+Tam, kde je fakt tvrzen ve více než třech souborech, jde o **zdvojení, nikoli nadbytečnost**: uveďte jej
+jednou v souboru, jemuž patří, a ostatní ať ukazují tam.
 
-**4 · Ledger and memory.** Both, or the run is not finished. Prepend an entry to the correction
-ledger:
+**4 · Rejstřík a paměť.** Obojí, jinak běh není hotov. Předřaďte záznam do rejstříku oprav:
 
 ```
 ## 2026-01-14 — meal times are placeholders
@@ -73,75 +75,72 @@ Memory   planner-meal-times.md (updated)
 Left     backups/ (history), CONTEXT-BUNDLE.md (generated)
 ```
 
-Then write the fact to persistent memory — **checking for an existing memory on the subject
-first and updating that one**, rather than leaving two versions of a fact you just spent a
-command unifying.
+Poté zapište fakt do trvalé paměti — **nejprve ověřte, zda k tématu už záznam paměti není, a aktualizujte
+právě ten**, místo abyste nechali dvě verze faktu, na jehož sjednocení jste právě vynaložili příkaz.
 
-**5 · Post-edit obligations.** Re-run whatever generator or backup the edits obliged. Rebuild
-the index if files were created or deleted.
-
----
-
-## 4. A standing decision is reversed in the open
-
-If a correction invalidates a standing decision — a "do not re-litigate" line, a `[PROVEN]`
-item, a policy rule — **do not quietly flip it.** Rewrite it as *reversed*, with the date and
-the reason, so the next session knows it was overturned rather than forgotten.
-
-A decision that changes without a trace is indistinguishable from a decision that was never
-made.
+**5 · Povinnosti po úpravě.** Znovu spusťte generátor nebo zálohu, k nimž úpravy zavázaly. Přestavte
+rejstřík, byly-li soubory vytvořeny či smazány.
 
 ---
 
-## 5. What is never rewritten
+## 4. Trvalé rozhodnutí se ruší veřejně
 
-| Never touched | Why |
+Zneplatní-li oprava trvalé rozhodnutí — řádek „znovu neotevírat“, položku `[PROVEN]`, pravidlo politiky —
+**neobracejte je mlčky.** Přepište je jako *zrušené*, s datem a důvodem, aby další relace věděla, že bylo
+zrušeno, nikoli zapomenuto.
+
+Rozhodnutí, které se mění beze stopy, je nerozeznatelné od rozhodnutí, jež nikdy nepadlo.
+
+---
+
+## 5. Co se nikdy nepřepisuje
+
+| Nikdy se nedotýká | Proč |
 |---|---|
-| `backups/`, `archive/` | History. History is not corrected; it is superseded. |
-| Generated files | Edit the source and re-run the generator. |
-| An isolated agent's tree | Named-only access. |
-| Another root's authoritative master context | Report the drift. Do not edit across an ownership boundary. |
-| Anything holding a secret | Out of scope for a text sweep entirely. |
+| `backups/`, `archive/` | Historie. Historie se neopravuje; překonává se. |
+| Vygenerované soubory | Upravte zdroj a znovu spusťte generátor. |
+| Strom izolovaného agenta | Přístup pouze po výslovném určení. |
+| Směrodatný hlavní kontext jiného kořene | Ohlaste odchylku. Neupravujte přes hranici vlastnictví. |
+| Cokoli, co obsahuje tajemství | Zcela mimo dosah textového průchodu. |
 
-**A sweep that rewrites text will destroy binaries.** Scope every sweep to text extensions by
-allowlist, never by exclusion.
-
----
-
-## 6. What ICC does not do
-
-`/icc` corrects the record. **It does not then go do the work the correction implies.** Those
-are separate acts with separate authorisations, and conflating them is how a one-line
-correction turns into an unreviewed refactor.
+**Průchod, který přepisuje text, zničí binární soubory.** Omezte každý průchod na textové přípony seznamem
+povolených, nikdy vyloučením.
 
 ---
 
-## 7. Rival facts are settled and pruned — not catalogued
+## 6. Co ICC nedělá
 
-When two files assert contradictory facts, **decide which one is right, keep it, and remove the
-wrong assertions in the same pass.**
+`/icc` opravuje záznam. **Nejde poté vykonat práci, kterou oprava naznačuje.** To jsou oddělené činy s
+oddělenými zmocněními a jejich směšování je způsob, jímž se jednořádková oprava promění v nepřezkoumanou
+přestavbu.
 
-A conflict report that leaves both rivals on disk has resolved nothing. The next session still
-picks whichever file it opens first, and a safety rule with five circulating versions is *less*
-reliable than one with a single version, not more.
+---
 
-**Decide on the merits, never by timestamp.** The winner is the file that owns the fact, the
-version backed by a measurement, the one that survives scrutiny. **Newest is not truest** — the
-canonical failure here is four duplicate memory files written within ninety seconds of each
-other, where the newest asserted the false claim, so a "newest wins" rule would have inherited
-the error.
+## 7. Soupeřící fakty se rozhodují a prořezávají — nikoli katalogizují
 
-**Record the resolution.** Which fact won, what was pruned, and why — in the ledger, so the
-pruning is legible rather than silent. A rival that vanishes without a trace looks identical to
-a rival that was never there, and the next session re-creates it.
+Tvrdí-li dva soubory protichůdné fakty, **rozhodněte, který je správný, ponechte jej a odstraňte chybná
+tvrzení týmž průchodem.**
 
-### What still gets escalated instead of settled
+Zpráva o rozporu, která nechá oba soupeře na disku, nic nevyřešila. Další relace stále bere ten soubor, který
+otevře jako první, a bezpečnostní pravidlo s pěti kolujícími verzemi je *méně* spolehlivé než s jednou,
+nikoli více.
 
-Three cases. Surface these; do not decide them:
+**Rozhodujte věcně, nikdy podle časového razítka.** Vítězem je soubor, jemuž fakt patří, verze podepřená
+měřením, ta, která obstojí při zkoumání. **Nejnovější není nejpravdivější** — kanonickým selháním jsou zde
+čtyři zdvojené soubory paměti zapsané v rozestupu devadesáti sekund, v nichž nejnovější obsahoval nepravdivé
+tvrzení, takže pravidlo „vítězí nejnovější“ by chybu zdědilo.
 
-- The contradiction turns on information the agent does not have.
-- Being wrong would be **unsafe or irreversible** — anything on rungs 0–2.
-- The losing assertion sits **outside the agent's ownership boundary** — another root's
-  authoritative master context. Report the drift; do not edit across the boundary.
+**Zaznamenejte rozhodnutí.** Který fakt zvítězil, co bylo prořezáno a proč — do rejstříku, aby prořezávání
+bylo čitelné, nikoli tiché. Soupeř, který zmizí beze stopy, vypadá stejně jako soupeř, který nikdy nebyl, a
+další relace jej vytvoří znovu.
 
-Everything ordinary gets decided and cleaned up.
+### Co se přesto eskaluje místo rozhodnutí
+
+Tři případy. Ukažte je; nerozhodujte je:
+
+- Rozpor se opírá o údaje, které agent nemá.
+- Mýlit se by bylo **nebezpečné nebo nevratné** — cokoli z příček 0–2.
+- Prohrávající tvrzení leží **mimo hranici vlastnictví agenta** — směrodatný hlavní kontext jiného kořene.
+  Ohlaste odchylku; neupravujte přes hranici.
+
+Vše běžné se rozhodne a uklidí.

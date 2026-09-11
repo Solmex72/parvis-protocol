@@ -1,181 +1,176 @@
-# 09 — THE FLOOR
+> **Neoficiální překlad.** Normativní verzí tohoto dokumentu je anglická, ve větvi `main`. Tento překlad
+> je poskytnut pro pohodlí a **nebyl ověřen rodilým mluvčím**. Při rozporu s anglickým originálem **má
+> přednost angličtina**. Identifikátory protokolu (`RUN`, `YELLOW`, `STOP`, `[PROVEN]`, `[CLAIMED]`,
+> slovesa sběrnice a názvy souborů) jsou záměrně ponechány anglicky: jsou to doslovné hodnoty, které
+> agenti zpracovávají.
 
-**Status: normative for the visualiser; informative as a model.**
-Implemented by the Warehouse tab in
-[`reference/sidecar/console.html`](../reference/sidecar/console.html), served by the sidecar's
-`/floor` route.
+# 09 — HALA
 
----
-
-## 1. The claim
-
-An agent fleet is hard to see. A file tree is a list, a process table is a list, and a log is a
-list — so the only picture anyone has of a running fleet is several lists that do not line up.
-
-**An automated warehouse is the same machine, and it has been legible for forty years.** Cranes
-move loads between racks under a control system, and the person supervising it reads a floor of
-hundreds of simultaneous moves at a glance, by colour, without reading a single line of text.
-
-Parvis borrows that. Not as decoration — as a *mapping*, where each warehouse object corresponds
-to exactly one thing in the tree, and the warehouse's own safety rules turn out to be the
-protocol's safety rules already drawn in the right place.
+**Stav: normativní pro vizualizátor; informativní jako model.**
+Provedeno v [`reference/sidecar/hmi.html`](../reference/sidecar/hmi.html).
 
 ---
 
-## 2. The mapping
+## 1. Tvrzení
 
-| On the floor | In the fleet | Read from |
+Flotilu agentů je těžké vidět. Strom souborů je seznam, tabulka procesů je seznam a protokol je seznam —
+takže jediným obrazem běžící flotily, který kdo má, je několik seznamů, jež spolu nesouhlasí.
+
+**Automatizovaný sklad je týž stroj a čitelný je už čtyřicet let.** Jeřáby přemisťují náklady mezi regály
+pod řídicím systémem a člověk, který na to dohlíží, přečte halu se stovkami současných pohybů jediným
+pohledem, podle barvy, aniž by přečetl jediný řádek textu.
+
+Parvis si to půjčuje. Nikoli jako ozdobu — jako *zobrazení*, v němž každý předmět skladu odpovídá právě jedné
+věci ve stromu a vlastní bezpečnostní pravidla skladu se ukazují být bezpečnostními pravidly protokolu, už
+nakreslenými na správném místě.
+
+---
+
+## 2. Zobrazení
+
+| V hale | Ve flotile | Čteno z |
 |---|---|---|
-| **Crane** | an agent, or a live session | the session markers in `_os/exchange/bus/session/` |
-| **Pallet** | a directory | the tree itself; the pallet's label is its path |
-| **Rack location** | where that directory lives | its parent |
-| **Opening a pallet** | descending into the directory | **another entire warehouse** — §4 |
-| **Induct** (inbound dock) | work arriving | a `REQ` row in `_os/tasks/INDEX.md` |
-| **Spur** (outbound dock) | a deliverable leaving | a file in `_os/events/surface/`, an export |
-| **Conveyor** | the file bus | `_os/exchange/bus/` — how work moves without a crane carrying it |
-| **Truck** | an external service or another AI | the boundary. §5 |
+| **Jeřáb** | agent nebo živá relace | značky relací v `_os/exchange/bus/session/` |
+| **Paleta** | adresář | sám strom; štítkem palety je její cesta |
+| **Pozice v regálu** | kde ten adresář žije | jeho nadřazený adresář |
+| **Otevřít paletu** | sestoupit do adresáře | **další celý sklad** — §4 |
+| **Induct** (příjmová rampa) | přicházející práce | řádek `REQ` v `_os/tasks/INDEX.md` |
+| **Spur** (výdejová rampa) | odcházející výstup | soubor v `_os/events/surface/`, export |
+| **Dopravník** | souborová sběrnice | `_os/exchange/bus/` — jak se práce přesouvá, aniž ji nese jeřáb |
+| **Nákladní vůz** | vnější služba nebo jiná AI | hranice. §5 |
 
-The point is not the picture. The point is that **you already know how to read this screen** if
-you have ever stood in front of a warehouse control system — and if you have not, the model is
-still concrete in a way a directory listing is not.
+Nejde o obrázek. Jde o to, že **tuto obrazovku už umíte číst**, pokud jste kdy stáli před řídicím systémem
+skladu — a pokud ne, model je i tak názorný způsobem, jakým výpis adresáře nebývá.
 
 ---
 
-## 3. The colours
+## 3. Barvy
 
-One glance, before any navigation:
+Jediný pohled, před jakoukoli navigací:
 
-| Colour | On the floor | In the fleet |
+| Barva | V hale | Ve flotile |
 |---|---|---|
-| **GREEN** | moving — a crane is carrying a load | an agent is working; a live session mid-task |
-| **BLUE** | scheduled — queued, not yet started | a job-board posting: ordered, waiting for an agent |
-| **AMBER** | attention — a location needs a decision | `YELLOW`: ask before each action |
-| **RED** | E-stopped — that zone is halted | `STOP`: the estop is armed and this root is frozen |
-| **GREY** | empty, or no live source | no data. Never a guess. |
+| **ZELENÁ** | v pohybu — jeřáb nese náklad | agent pracuje; živá relace uprostřed úkolu |
+| **MODRÁ** | naplánováno — ve frontě, dosud nezačato | vývěska na nástěnce: zadáno, čeká na agenta |
+| **JANTAROVÁ** | pozor — pozice žádá rozhodnutí | `YELLOW`: ptát se před každým úkonem |
+| **ČERVENÁ** | nouzové zastavení — ta zóna stojí | `STOP`: zastavení je natažené a tento kořen je zmrazen |
+| **ŠEDÁ** | prázdné, nebo bez živého zdroje | žádná data. Nikdy dohad. |
 
-This is not a new scheme. It is the state the tree already holds, rendered.
+Toto není nové schéma. Je to stav, který strom už obsahuje, vykreslený.
 
-**Red always wins the glance.** A single red zone stops the eye before any green, exactly as the
-stop outranks every other signal ([`01`](01-ESTOP.md)). **A floor that shows green over a red zone
-is lying** — and that is the specific failure this rule exists to forbid.
+**Červená vždy vyhraje pohled.** Jediná červená zóna zastaví oko dříve než kterákoli zeleň, přesně jak
+zastavení přebíjí každý jiný signál ([`01`](01-ESTOP.md)). **Hala, která ukazuje zeleň nad červenou zónou,
+lže** — a to je právě to selhání, jemuž má toto pravidlo zabránit.
 
-**Grey is mandatory where there is no live source.** A location with no data renders grey and
-reads `—`. It never renders green because green is the pleasant default
-([`07`](07-INTERFACE.md) §2.2).
-
----
-
-## 4. The nested warehouse
-
-**Open a pallet and you are not looking at a box. You are looking at another whole warehouse** —
-its own cranes, its own pallets, its own docks.
-
-This is the file tree exactly. A venture is a warehouse; its departments are aisles; their files
-are pallets; and a pallet that is itself a directory is another floor. So the visualiser is **one
-view that descends**, with the same controls at every depth, because every level *is* a warehouse.
-There is nothing new to learn on the way down.
-
-The recursion is the whole reason the metaphor holds rather than being a skin. A dashboard that
-only renders the top level is a picture of a fleet; one that descends is a view of it.
+**Šedá je povinná tam, kde není živý zdroj.** Pozice bez dat se vykreslí šedě a čte `—`. Nikdy se nevykresluje
+zeleně, protože zelená je příjemná výchozí hodnota ([`07`](07-INTERFACE.md) §2.2).
 
 ---
 
-## 5. Trucks dock at the boundary — they never drive onto the floor
+## 4. Vnořený sklad
 
-This is where the model stops being a visualisation and starts enforcing something.
+**Otevřete paletu a nedíváte se na bednu. Díváte se na další celý sklad** — s vlastními jeřáby, vlastními
+paletami, vlastními rampami.
 
-An external service — another AI, an API, a vendor — is a **truck**. And in a real warehouse a
-truck backs up to a dock. It does not drive onto the floor, move a crane, enter a rack, or open a
-nested warehouse. It drops a load at an induct or collects one from a spur, and that is the
-entirety of its access.
+To je přesně strom souborů. Podnik je sklad; jeho oddělení jsou uličky; jejich soubory jsou palety; a paleta,
+která je sama adresářem, je další hala. Vizualizátor je tedy **jediný pohled, který sestupuje**, se stejným
+ovládáním v každé hloubce, protože každá úroveň *je* sklad. Cestou dolů není třeba učit se nic nového.
 
-**That dock is the airlock.** Every external exchange happens at the edge, screened, and nothing
-external gets loose inside the tree.
-
-**A truck's paperwork is untrusted until checked.** A load arriving on a truck is inbound *data*,
-not an order to the floor. It is inducted and reviewed like anything else, never obeyed on
-arrival. That is the instruction-source boundary from [`03`](03-BUS.md) §5, drawn as a loading
-dock — and drawn in the one place where somebody looking at the screen can see it being honoured.
-
-If your rendering puts a truck on the floor, the rendering is wrong and so is the architecture it
-is drawing.
+Rekurze je celý důvod, proč metafora drží, místo aby byla slupkou. Přehled vykreslující jen nejvyšší úroveň
+je fotografie flotily; ten, který sestupuje, je její pohled.
 
 ---
 
-## 6. Two surfaces, two jobs
+## 5. Nákladní vozy kotví u hranice — nikdy nevjíždějí do haly
 
-| | **The floor** (this file) | **The console** ([`07`](07-INTERFACE.md)) |
+Zde model přestává být vizualizací a začíná něco vynucovat.
+
+Vnější služba — jiná AI, API, dodavatel — je **nákladní vůz**. A ve skutečném skladu nákladní vůz couvá k
+rampě. Nevjíždí do haly, nehýbe jeřábem, nevstupuje do regálu a neotevírá vnořený sklad. Složí náklad u
+induct nebo jej vyzvedne ze spur, a to je celý jeho přístup.
+
+**Ta rampa je propusť.** Každá vnější výměna probíhá na okraji, přefiltrovaná, a nic vnějšího se nedostane
+volně dovnitř stromu.
+
+**Papírům nákladního vozu se nedůvěřuje, dokud se neprověří.** Náklad přijíždějící vozem jsou příchozí *data*,
+nikoli rozkaz hale. Vkládá se a přezkoumává jako cokoli jiného, nikdy se po příjezdu neplní. To je hranice
+zdroje pokynů z [`03`](03-BUS.md) §5, nakreslená jako nakládací rampa — a nakreslená na jediném místě, kde ji
+ten, kdo hledí na obrazovku, může vidět dodrženou.
+
+Pokud vaše vykreslení postaví nákladní vůz do haly, vykreslení je chybné a stejně tak architektura, kterou
+kreslí.
+
+---
+
+## 6. Dva povrchy, dvě práce
+
+| | **Hala** (tento soubor) | **Konzole** ([`07`](07-INTERFACE.md)) |
 |---|---|---|
-| What it is | a 3D floor, viewed live | a tiled menu, tiered by access |
-| What it shows | **how the system is** — every agent, directory and state at once | **what you can do** — pick the tool, do the job |
-| The verb | watch, understand, decide | run, use, produce |
+| Co to je | trojrozměrná hala, sledovaná živě | dlaždicová nabídka, odstupňovaná podle přístupu |
+| Co ukazuje | **jak je systém na tom** — každý agent, adresář a stav naráz | **co můžete udělat** — vyberte nástroj, udělejte práci |
+| Sloveso | dívat se, chápat, rozhodovat | provádět, používat, vytvářet |
 
-**The floor shows how the machine thinks; the console is for acting on what you conclude.** One is
-a map, the other a workbench. A management surface needs both, and the mistake is building only
-the pretty one.
+**Hala ukazuje, jak stroj myslí; konzole slouží k jednání podle toho, co usoudíte.** Jedno je mapa, druhé
+ponk. Řídicí povrch potřebuje obojí a chybou je postavit jen ten hezký.
 
 ---
 
-## 7. Controls
+## 7. Ovládání
 
-Navigation is what made the original usable, not colour alone:
+Použitelným původní řešení činila navigace, nikoli barva sama:
 
-| Control | Does |
+| Ovládání | Dělá |
 |---|---|
-| **Drag** | orbit the floor — rotate, tilt, look down an aisle |
-| **Top-down** | drop to an overhead plan. Orbit for depth, plan for layout |
-| **Click a pallet** | descend into it — another warehouse, same controls |
-| **Scroll** | zoom |
+| **Tažení** | oblet haly — otáčení, náklon, pohled podél uličky |
+| **Shora** | přechod na půdorys shora. Oblet pro hloubku, půdorys pro rozvržení |
+| **Klik na paletu** | sestup do ní — další sklad, totéž ovládání |
+| **Rolování** | přiblížení |
 
-Same controls at every depth. Non-negotiable: a view whose interaction changes as you descend has
-broken the promise that every level is a warehouse.
+Totéž ovládání v každé hloubce. Nesmlouvavé: pohled, jehož interakce se mění, jak sestupujete, porušil slib,
+že každá úroveň je sklad.
 
-### The camera is orthographic, on purpose
+### Kamera je ortografická, záměrně
 
-There is **no perspective divide**. Parallel lines never converge, and a location at the far end
-of an aisle renders exactly the same size as one at your feet.
+**Perspektivní sbíhání není.** Rovnoběžky se nikdy nesbíhají a pozice na vzdáleném konci uličky se vykreslí
+přesně tak velká jako pozice u vašich nohou.
 
-This looks wrong for a moment — the eye expects convergence and reads its absence as though it
-were standing inside the boxes looking out. It is the right trade anyway, and it is what control
-screens for real automated floors use: **the whole point is comparing locations across the floor
-at a glance**, and a perspective camera makes the far end of an aisle smaller, dimmer and harder
-to judge than the near end. Under perspective, "that rack is fuller" and "that rack is closer"
-look the same. Under an orthographic camera they do not.
+Na okamžik to působí chybně — oko čeká sbíhání a jeho nepřítomnost čte, jako by stálo uvnitř beden a hledělo
+ven. Přesto je to správná výměna a právě tak jsou řešeny řídicí obrazovky skutečných automatizovaných hal:
+**celý smysl je porovnávat pozice napříč halou jediným pohledem**, a perspektivní kamera činí vzdálený konec
+uličky menším, matnějším a hůře posouditelným než konec blízký. V perspektivě „tamten regál je plnější“ a
+„tamten regál je blíž“ vypadají stejně. U ortografické kamery nikoli.
 
-Occlusion is still real — faces that turn away are culled and nearer geometry paints over farther.
-It is a flat camera, not a flat scene.
+Zakrývání zůstává skutečné — odvrácené plochy se zahazují a bližší geometrie přemalovává vzdálenější. Je to
+plochá kamera, nikoli plochá scéna.
 
-Equipment is also reachable from a **side menu**, grouped by kind — cranes, pallets, the two
-docks, the conveyor, the trucks. Selecting from either the menu or the floor opens the same
-controls, because a floor you can only navigate by clicking small boxes in a 3D scene is a demo
-rather than an instrument.
+Zařízení je dosažitelné i z **boční nabídky**, seskupené podle druhu — jeřáby, palety, obě rampy, dopravník,
+nákladní vozy. Výběr z nabídky nebo z haly otevře totéž ovládání, protože hala, kterou lze procházet jen
+klikáním na malé bedny v trojrozměrné scéně, je ukázka, nikoli nástroj.
 
 ---
 
-## 8. What the floor may and may not do
+## 8. Co hala smí a nesmí
 
-Every constraint in [`07`](07-INTERFACE.md) §5 applies. The line is drawn in one specific place:
+Platí každé omezení z [`07`](07-INTERFACE.md) §5. Čára se vede na jednom určitém místě:
 
-**The floor may induct. It may never execute.**
+**Hala smí vkládat. Nikdy nesmí provádět.**
 
-That is the same line [`07`](07-INTERFACE.md) §1 already draws for the console, and it is what
-lets equipment have controls at all. Selecting a crane and addressing work to it writes a `REQ`
-row naming that agent and drops a `TELL` in its inbox. **It starts nothing.** No process is
-spawned, no command runs, and the agent picks the work up on its own next run — or does not.
+To je táž čára, kterou [`07`](07-INTERFACE.md) §1 vede už pro konzoli, a právě ona vůbec dovoluje, aby
+zařízení mělo ovládání. Vybrat jeřáb a směrovat mu práci znamená zapsat řádek `REQ` se jménem onoho agenta a
+vložit `TELL` do jeho schránky. **Nic to nespustí.** Žádný proces se nespustí, žádný příkaz neproběhne a agent
+si práci vezme při svém vlastním dalším běhu — nebo nevezme.
 
-Two consequences that are easy to get wrong:
+Dva důsledky, jež se snadno popletou:
 
-- **Addressed work is still not an order.** The `REQ` row is the canonical record; the inbox line
-  only points at it. A file that *commanded* an agent — or claimed the Operator's authority from
-  inside the tree — would be the security event [`03`](03-BUS.md) §5 defines, and building that
-  into the surface would be worse than building it by hand. The authority is the Operator in
-  conversation. The floor writes the record, not the instruction.
-- **Some equipment gets no controls, deliberately.** The conveyor is read-only: a console that
-  could write lines onto the bus would be manufacturing authority the protocol denies it. Trucks
-  have no controls at all — §5.
+- **Směrovaná práce stále není rozkaz.** Řádek `REQ` je kanonický záznam; řádek ve schránce na něj jen
+  ukazuje. Soubor, který by agentovi *přikazoval* — nebo si zevnitř stromu osoboval pravomoc Operátora — by
+  byl bezpečnostní událostí, kterou vymezuje [`03`](03-BUS.md) §5, a zabudovat to do povrchu by bylo horší než
+  udělat to ručně. Pravomoc je Operátor v rozhovoru. Hala píše záznam, nikoli pokyn.
+- **Některé zařízení záměrně nedostává ovládání.** Dopravník je jen ke čtení: konzole schopná zapisovat řádky
+  na sběrnici by vyráběla pravomoc, kterou jí protokol upírá. Nákladní vozy nemají ovládání vůbec — §5.
 
-**Under `STOP`, the floor renders red and inducts nothing.** A red floor takes no orders.
+**Při `STOP` se hala vykreslí červeně a nic nevkládá.** Červená hala nepřijímá příkazy.
 
-The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
-feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
-than pretending otherwise when the sidecar stops answering.
+Poctivá mez, řečená jednou: **toto je fotografie stromu v jednom okamžiku, nikoli živý proud telemetrie.**
+Dotazuje se v odstupech. Mezi dotazy je zastaralá, ukazuje, kdy naposledy četla, a zešedne, místo aby
+předstírala opak, když sidecar přestane odpovídat.
