@@ -69,7 +69,10 @@
 
   /* --- tabs --- */
   nav{display:flex;gap:2px;padding:0 16px;background:var(--panel2);border-bottom:1px solid var(--line);
-      overflow-x:auto;scrollbar-width:thin}
+  overflow-x:auto;scrollbar-width:thin;
+  /* The tabs are the way OUT of whichever panel you are in. If they scroll
+     away you are stuck in the Warehouse with no route back. */
+  position:sticky;top:var(--barh,46px);z-index:19}
   nav button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--ink3);
              font:inherit;font-size:12.5px;padding:9px 14px;cursor:pointer;white-space:nowrap}
   nav button:hover{color:var(--ink2)}
@@ -153,7 +156,7 @@
      drag the warehouse, and it holds the only way back up a level — losing
      it means no way out. Sticks BELOW .bar, whose height is measured at
      runtime because it wraps on narrow viewports. */
-  position:sticky;top:var(--barh,46px);z-index:15;background:var(--bg);
+  position:sticky;top:calc(var(--barh,46px) + var(--navh,38px));z-index:15;background:var(--bg);
   padding:8px 0 10px;margin-bottom:0}
   .crumb{font-family:var(--mono);font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
   .crumb b{color:var(--ink)}
@@ -1425,8 +1428,11 @@
   // Keep the sticky warehouse bar parked directly under the tab strip.
   // .bar wraps on narrow viewports, so its height is measured, not assumed.
   function syncBarOffset(){
+    var r = document.documentElement;
     var b = document.querySelector('.bar');
-    if (b) document.documentElement.style.setProperty('--barh', b.offsetHeight + 'px');
+    var n = document.querySelector('nav[role="tablist"]') || document.querySelector('nav');
+    if (b) r.style.setProperty('--barh', b.offsetHeight + 'px');
+    if (n) r.style.setProperty('--navh', n.offsetHeight + 'px');
   }
   syncBarOffset();
   window.addEventListener('resize', syncBarOffset);
