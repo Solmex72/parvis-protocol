@@ -25,7 +25,7 @@ import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as config from "./config.mjs";
 import * as airlock from "../airlock/airlock.mjs";
-import { parseIndex, withLedgerLock } from "./ledger.mjs";
+import { parseIndex, withLedgerLock, rowKey } from "./ledger.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CONSOLE_HTML = path.join(HERE, "console.html");
@@ -264,6 +264,88 @@ export function createServer(cfg) {
     return out.slice(-limit).reverse();
   }
 
+  // -------------------------------------------------------------------------
+  // THE OPERATOR'S QUESTIONS — ASK / ANS on the bus, tied to a ledger row.
+  //
+  // 03 §3 already has the verbs. An agent that needs a decision appends
+  //     <time>  <agent> > OPERATOR  ASK  re:<key> <the question, one line>
+  // where <key> is the REQ row's content key (what `closes <key>` uses). The
+  // console answers with
+  //     <time>  CONSOLE > <agent>  ANS  re:<key> ask:<id> APPROVED|DENIED|NOTED [:: note]
+  // <id> is the hash of the ASK line itself, so an answer names the exact
+  // question it answers. Anything else carrying `re:<key>` (a TELL, an ACK) is a
+  // comment on that row.
+  //
+  // WHAT AN ANSWER IS. A record that the Operator answered through the console,
+  // nothing more. The bus is append-only plain text that any process can write
+  // to, so a forged "CONSOLE > x ANS ... APPROVED" is possible; the UI labels
+  // whatever did not come from CONSOLE as claimed, and an agent about to do
+  // something irreversible still confirms in conversation (03 §5, 01). An
+  // approval never lifts a standing refusal or a gate.
+  // -------------------------------------------------------------------------
+  const RE_TAG = /\bre:([0-9a-f]{12})\b/;
+  const ASK_TAG = /\bask:([0-9a-f]{12})\b/;
+  const VERDICT_RE = /\b(APPROVED|DENIED|NOTED)\b/;
+  const askId = (raw) => crypto.createHash("sha1").update(String(raw).trim()).digest("hex").slice(0, 12);
+  const busTime = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+
+  // Append one line to the broadcast log, keeping it one-line-per-message even if
+  // the last writer left no trailing newline.
+  function appendBus(line) {
+    fs.mkdirSync(BUS_DIR, { recursive: true });
+    let lead = "";
+    try {
+      const fd = fs.openSync(BUS_LOG, "r");
+      try {
+        const st = fs.fstatSync(fd);
+        if (st.size > 0) { const b = Buffer.alloc(1); fs.readSync(fd, b, 0, 1, st.size - 1); if (b[0] !== 10) lead = "\n"; }
+      } finally { fs.closeSync(fd); }
+    } catch { /* no log yet: the append creates it */ }
+    fs.appendFileSync(BUS_LOG, lead + line + "\n", "utf8");
+  }
+
+  // key -> { asks: [...], notes: [...] }, read from the bus tail. No writes.
+  function threads() {
+    const lines = tailLines(BUS_LOG, 6000);
+    const by = new Map();
+    if (lines === null) return { by, present: false };
+    const get = (key) => { let t = by.get(key); if (!t) { t = { asks: new Map(), notes: [] }; by.set(key, t); } return t; };
+    for (const l of lines) {
+      const m = BUS_RE.exec(l);
+      if (!m) continue;
+      const rk = RE_TAG.exec(m[5]);
+      if (!rk) continue;
+      const t = get(rk[1]);
+      const body = m[5].replace(RE_TAG, "").trim();
+      if (m[4] === "ASK") {
+        const id = askId(l);
+        t.asks.set(id, { id, time: m[1], from: m[2], to: m[3], text: body, answers: [] });
+      } else if (m[4] === "ANS") {
+        const ak = ASK_TAG.exec(body);
+        const v = VERDICT_RE.exec(body);
+        const note = body.replace(ASK_TAG, "").replace(VERDICT_RE, "").replace(/^\s*(::)?\s*/, "").trim();
+        const ent = { time: m[1], from: m[2], verdict: v ? v[1] : "NOTED", note, console: m[2] === "CONSOLE" };
+        if (ak && t.asks.has(ak[1])) t.asks.get(ak[1]).answers.push(ent);
+        else t.notes.push({ time: m[1], from: m[2], to: m[3], verb: "ANS", text: body });
+      } else {
+        t.notes.push({ time: m[1], from: m[2], to: m[3], verb: m[4], text: body });
+      }
+    }
+    return { by, present: true };
+  }
+
+  // A decision is the latest APPROVED/DENIED that came from the console. A NOTED
+  // reply, or an answer claimed by anyone else, leaves the question pending.
+  function compactThread(t) {
+    const asks = [...t.asks.values()].map((a) => {
+      const decided = a.answers.filter((x) => x.console && (x.verdict === "APPROVED" || x.verdict === "DENIED"));
+      const last = decided.length ? decided[decided.length - 1] : null;
+      return { id: a.id, time: a.time, from: a.from, to: a.to, text: a.text,
+               status: last ? last.verdict : "PENDING", answers: a.answers };
+    });
+    return { asks, notes: t.notes.slice(-12) };
+  }
+
   function surfaceFeed(limit = 60) {
     let entries;
     try { entries = fs.readdirSync(SURFACE_DIR, { withFileTypes: true }); } catch { return null; }
@@ -291,6 +373,7 @@ export function createServer(cfg) {
   const SESSION_DIR = path.join(ROOT, "_os", "exchange", "bus", "session");
   const HOT_MS = 10 * 60 * 1000;   // "recently touched" window
   const LIVE_MS = 90 * 1000;       // a crane counts as moving within this
+  const SESSION_TTL_MS = 24 * 60 * 60 * 1000;   // a marker silent this long is a dead session, not a crane
 
   // A path from the UI is a relative directory inside the root. Same
   // containment discipline as the document editor: resolve, then confirm.
@@ -307,6 +390,77 @@ export function createServer(cfg) {
     return { abs: real, rel: clean };
   }
 
+  // ---- ACTIVITY: what is being written under a pallet, not just in it ----------
+  // A directory's own mtime only moves when an entry is added or removed directly
+  // in it. An agent editing a file three levels down never touches the top-level
+  // pallet's mtime, so the floor showed "nothing is happening" while the fleet was
+  // working. This walks below the pallet for the newest write, bounded in depth,
+  // entries and wall time; if it runs out of budget it says so (partial) instead
+  // of reporting a quiet floor it did not finish checking (07 S2.2).
+  const ACT_CACHE = new Map();          // abs path -> { at, val }
+  const ACT_TTL_MS = 4000;
+  function newestWrite(abs, deadline) {
+    const hit = ACT_CACHE.get(abs);
+    if (hit && Date.now() - hit.at < ACT_TTL_MS) return hit.val;
+    let newest = 0, partial = false, seen = 0;
+    (function walk(d, depth) {
+      if (partial) return;
+      if (depth > 8 || seen > 8000 || Date.now() > deadline) { partial = true; return; }
+      let ents;
+      try { ents = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of ents) {
+        if (e.name === "node_modules" || e.name === ".git") continue;
+        seen++;
+        const fp = path.join(d, e.name);
+        let st; try { st = fs.statSync(fp); } catch { continue; }
+        if (st.mtimeMs > newest) newest = st.mtimeMs;
+        if (e.isDirectory()) walk(fp, depth + 1);
+        if (partial) return;
+      }
+    })(abs, 0);
+    const val = { newest: newest || null, partial };
+    if (!partial) ACT_CACHE.set(abs, { at: Date.now(), val });
+    return val;
+  }
+
+  // ---- CLAIMS: the watcher's pickup/drop record (04 S3) --------------------------
+  // <key>.claim = an agent picked a load up at the inductor and has not finished.
+  // <key>.done  = it dropped the finished load at a spur.
+  // A claim with no .done that is older than CLAIM_TTL_MS is a dead agent's claim,
+  // not a working crane: it is reported as stale, never as moving.
+  const CLAIM_DIR = path.join(ROOT, "_os", "tasks", "claims");
+  const CLAIM_TTL_MS = 30 * 60 * 1000;
+  const DELIVER_MS = 2 * 60 * 1000;
+  function claimState() {
+    const live = new Map(), delivered = new Map();
+    let files = [];
+    try { files = fs.readdirSync(CLAIM_DIR); } catch { return { live, delivered }; }
+    const closed = new Set(files.filter((f) => /\.(done|blocked)$/.test(f)).map((f) => f.replace(/\.(done|blocked)$/, "")));
+    const now = Date.now();
+    for (const f of files) {
+      const m = /^([0-9a-f]+)\.(claim|done)$/.exec(f);
+      if (!m) continue;
+      let j, st;
+      try { j = JSON.parse(fs.readFileSync(path.join(CLAIM_DIR, f), "utf8")); st = fs.statSync(path.join(CLAIM_DIR, f)); } catch { continue; }
+      const agent = j && j.agent;
+      if (!agent || !AGENT_RE_CLAIM.test(agent)) continue;
+      const what = String(j.what || "").slice(0, 120);
+      if (m[2] === "claim" && !closed.has(m[1])) {
+        const since = Date.parse(j.claimedAt) || st.mtimeMs;
+        if (now - since < CLAIM_TTL_MS) live.set(agent, { key: m[1], what, since: new Date(since).toISOString(), session: j.session || null });
+      } else if (m[2] === "done" && now - st.mtimeMs < DELIVER_MS) {
+        delivered.set(agent, { key: m[1], what, at: new Date(st.mtimeMs).toISOString() });
+      }
+    }
+    return { live, delivered };
+  }
+  const AGENT_RE_CLAIM = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
+
+  // A REQ whose row names a file in the surface drop-dir is REWORK: the agent
+  // picks that deliverable up at the spur, modifies it, and drops the result back
+  // at the inductor. Only a row that says so counts; nothing is inferred.
+  const REWORK_RE = /events[\\/]+surface/i;
+
   function floor(relPath) {
     const dir = resolveDir(relPath);
     if (!dir) return null;
@@ -319,6 +473,7 @@ export function createServer(cfg) {
     let entries = [];
     try { entries = fs.readdirSync(dir.abs, { withFileTypes: true }); } catch { /* unreadable */ }
 
+    const actDeadline = Date.now() + 600;
     for (const e of entries) {
       if (e.name === "node_modules" || e.name === ".git") continue;
       if (!e.isDirectory()) { loose++; continue; }
@@ -330,12 +485,16 @@ export function createServer(cfg) {
         files = kids.length - dirs;
         mtime = fs.statSync(abs).mtime.toISOString();
       } catch { /* leave null -> renders grey */ }
+      const act = newestWrite(abs, actDeadline);
+      const lastMs = Math.max(act.newest || 0, mtime ? Date.parse(mtime) : 0) || null;
       pallets.push({
         name: e.name,
         rel: dir.rel ? dir.rel + "/" + e.name : e.name,
         dirs, files,
         mtime,
-        hot: mtime ? (now - Date.parse(mtime)) < HOT_MS : false,
+        lastWrite: lastMs ? new Date(lastMs).toISOString() : null,
+        activityPartial: act.partial,
+        hot: lastMs ? (now - lastMs) < HOT_MS : false,
       });
     }
     pallets.sort((a, b) => a.name.localeCompare(b.name));
@@ -345,6 +504,7 @@ export function createServer(cfg) {
     // (08 §4), so the set of markers is the set of agents that believe they
     // are on the floor.
     const cranes = [];
+    let staleSessions = 0;
     let markers = [];
     try { markers = fs.readdirSync(SESSION_DIR).filter((f) => f.endsWith(".on")); } catch { /* none */ }
 
@@ -359,10 +519,15 @@ export function createServer(cfg) {
 
     // Open REQ rows per agent — scheduled work, blue.
     const openByAgent = new Map();
+    const reworkByAgent = new Map();
+    const openRows = [];
     for (const r of taskRows(400) || []) {
       if (r.status !== "REQ" || r.closed || r.taken) continue;
       openByAgent.set(r.who, (openByAgent.get(r.who) || 0) + 1);
+      openRows.push({ who: r.who, what: String(r.what || "").slice(0, 80) });
+      if (REWORK_RE.test(String(r.raw || ""))) reworkByAgent.set(r.who, (reworkByAgent.get(r.who) || 0) + 1);
     }
+    const claims = claimState();
 
     const palletNames = new Set(pallets.map((p) => p.name));
 
@@ -374,8 +539,20 @@ export function createServer(cfg) {
       try { signedOn = fs.statSync(path.join(SESSION_DIR, f)).mtime.toISOString(); } catch {}
 
       const last = lastByAgent.get(agent) || null;
-      const lastMs = last ? Date.parse(last.time) : (signedOn ? Date.parse(signedOn) : NaN);
-      const recent = Number.isFinite(lastMs) && (now - lastMs) < LIVE_MS;
+
+      // EXPIRED SESSIONS (Operator approved, 2026-09-30). A marker is deleted by its
+      // owner at sign-off and refreshed by its owner's heartbeat (08 s4, s6). One whose
+      // marker AND last bus line are both older than SESSION_TTL_MS, and which holds no
+      // live claim, belongs to a session that is gone: drawing it as an idle crane is
+      // drawing a lie. It is counted (staleSessions) and left on disk - this never
+      // deletes a marker, that is the owner's act.
+      const seenMs = Math.max(signedOn ? Date.parse(signedOn) : 0, last ? Date.parse(last.time) : 0);
+      if (seenMs && (now - seenMs) > SESSION_TTL_MS && !claims.live.has(agent)) { staleSessions++; continue; }
+
+      // Alive = its last bus line OR its marker's last touch (the heartbeat, 08 s6) is
+      // recent. Before, once an agent had written any bus line the marker's touch was
+      // ignored, so a session that heartbeats but rarely speaks never read as moving.
+      const recent = seenMs > 0 && (now - seenMs) < LIVE_MS;
 
       // Where is it working? Only if the agent's own last message names a
       // directory on THIS floor. Otherwise null — the crane parks at the dock
@@ -388,6 +565,7 @@ export function createServer(cfg) {
       }
 
       const gated = last && last.verb === "GATE";
+      const claim = claims.live.get(agent) || null;
       cranes.push({
         agent,
         session: id,
@@ -395,11 +573,14 @@ export function createServer(cfg) {
         at,
         state: g.verb === "STOP" ? "stopped"
              : gated ? "gated"
-             : recent ? "moving"
+             : (recent || claim) ? "moving"
              : "idle",
         last: last ? last.time : null,
         note: last ? (last.verb + " " + last.text).slice(0, 120) : null,
         scheduled: openByAgent.get(agent) || 0,
+        carrying: claim ? { key: claim.key, what: claim.what, since: claim.since } : null,
+        delivered: claims.delivered.get(agent) || null,
+        rework: reworkByAgent.get(agent) || 0,
       });
     }
     cranes.sort((a, b) => a.agent.localeCompare(b.agent));
@@ -412,15 +593,36 @@ export function createServer(cfg) {
     // "a floor that shows green over a red zone is lying."
     for (const [who, n] of openByAgent) {
       if (cranes.some((cr) => cr.agent === who)) continue;
+      const claim = claims.live.get(who) || null;
       cranes.push({
         agent: who, session: null, signedOn: null, at: null,
-        state: g.verb === "STOP" ? "stopped" : "scheduled",
+        state: g.verb === "STOP" ? "stopped" : claim ? "moving" : "scheduled",
         last: null, note: null, scheduled: n,
+        carrying: claim ? { key: claim.key, what: claim.what, since: claim.since } : null,
+        delivered: claims.delivered.get(who) || null,
+        rework: reworkByAgent.get(who) || 0,
+      });
+    }
+    // A live claim with no sign-on marker and no open REQ is still a crane that
+    // holds a load: the claim file is the pickup record.
+    for (const [who, claim] of claims.live) {
+      if (cranes.some((cr) => cr.agent === who)) continue;
+      cranes.push({
+        agent: who, session: claim.session, signedOn: null, at: null,
+        state: g.verb === "STOP" ? "stopped" : "moving",
+        last: null, note: null, scheduled: 0,
+        carrying: { key: claim.key, what: claim.what, since: claim.since },
+        delivered: claims.delivered.get(who) || null, rework: 0,
       });
     }
 
-    const spurs = (surfaceFeed(500) || []).length;
+    const spurFiles = surfaceFeed(500) || [];
+    const spurs = spurFiles.length;
     const inducts = [...openByAgent.values()].reduce((a, b) => a + b, 0);
+    const loads = {
+      induct: openRows.slice(-6).reverse(),
+      spur: spurFiles.slice(0, 6).map((f) => ({ name: f.name, mtime: f.mtime })),
+    };
 
     const parts = dir.rel ? dir.rel.split("/") : [];
     return {
@@ -430,8 +632,10 @@ export function createServer(cfg) {
       pallets,
       looseFiles: loose,
       cranes,
+      staleSessions,
       inducts,
       spurs,
+      loads,
       estop: g.verb,
       reason: g.reason || "",
       readAt: new Date().toISOString(),
@@ -483,6 +687,14 @@ export function createServer(cfg) {
       fs.appendFileSync(inbox,
         `${stamp}  CONSOLE > ${target}  TELL  REQ row inducted for you by ${by}: ${oneLine}\n`, "utf8");
     }
+
+    // The broadcast log gets a one-line notice too, so anything watching the bus
+    // sees the induction (and the Bus tab shows the console is alive). It informs,
+    // never commands (03 §5); the REQ row stays the record. Best-effort: the row
+    // is already written, so a bus hiccup must not fail the induction.
+    try {
+      appendBus(`${busTime()}  CONSOLE > ${target || "ALL"}  TELL  re:${rowKey(row.trim())} REQ inducted by ${by}: ${oneLine.slice(0, 200)}`);
+    } catch { /* notice lost, record intact */ }
 
     // 04 §2 — the substance goes to its home, a pointer goes to the surface.
     const slug = oneLine.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "induction";
@@ -550,8 +762,31 @@ export function createServer(cfg) {
       }
 
       if (url.pathname === "/tasks" && req.method === "GET") {
-        const rows = taskRows();
-        return json(res, { rows, present: rows !== null, path: path.relative(ROOT, TASK_INDEX) });
+        // The window is the newest 80 rows, but a question an agent asked about an
+        // older row must not vanish with it: pending asks are resolved against the
+        // whole ledger and listed separately.
+        const all = taskRows(5000);
+        const rows = all === null ? null : all.slice(0, 80);
+        const th = threads();
+        const out = {}, pending = [];
+        let n = 0;
+        if (all !== null) {
+          const byKey = new Map(all.map((r) => [r.key, r]));
+          for (const [key, raw] of th.by) {
+            const c = compactThread(raw);
+            if (!c.asks.length && !c.notes.length) continue;
+            const row = byKey.get(key) || null;
+            if (n++ < 300) out[key] = c;
+            for (const a of c.asks) {
+              if (a.status === "PENDING") pending.push({ key, ask: a.id, from: a.from, time: a.time, text: a.text,
+                                                        what: row ? row.what : null, rowStatus: row ? row.status : null,
+                                                        rowClosed: !!(row && (row.closed || row.taken)) });
+            }
+          }
+          pending.sort((a, b) => String(b.time).localeCompare(String(a.time)));
+        }
+        return json(res, { rows, present: rows !== null, path: path.relative(ROOT, TASK_INDEX),
+                           threads: out, pending, busPresent: th.present });
       }
       if (url.pathname === "/bus" && req.method === "GET") {
         const lines = busLines();
@@ -560,6 +795,36 @@ export function createServer(cfg) {
       if (url.pathname === "/surface" && req.method === "GET") {
         const files = surfaceFeed();
         return json(res, { files, present: files !== null, path: path.relative(ROOT, SURFACE_DIR) });
+      }
+      // Read one pointer file from the surface feed. Read-only and confined to that
+      // one directory: the name must be a bare file name the feed itself lists (.md,
+      // no separators, no dot-files), it is re-resolved and must still sit directly
+      // inside the surface directory, and it is capped. _os is NOT in editableDirs
+      // and must not become so - this is the narrow door that lets the Operator READ
+      // what agents dropped without opening the rest of _os to editing.
+      if (url.pathname === "/surface/file" && req.method === "GET") {
+        const name = String(url.searchParams.get("name") || "");
+        if (!name || name !== path.basename(name) || name.startsWith(".") || !name.endsWith(".md")) {
+          return json(res, { error: "not a surface file name" }, 400);
+        }
+        let real, st;
+        try {
+          real = fs.realpathSync(path.join(SURFACE_DIR, name));
+          const realDir = fs.realpathSync(SURFACE_DIR);
+          if (path.dirname(real) !== realDir) return json(res, { error: "not found" }, 404);
+          st = fs.statSync(real);
+          if (!st.isFile()) return json(res, { error: "not found" }, 404);
+        } catch { return json(res, { error: "not found" }, 404); }
+        const CAP = 1_000_000;
+        try {
+          const fd = fs.openSync(real, "r");
+          try {
+            const buf = Buffer.alloc(Math.min(st.size, CAP));
+            fs.readSync(fd, buf, 0, buf.length, 0);
+            return json(res, { name, content: buf.toString("utf8"), size: st.size,
+                               mtime: st.mtime.toISOString(), truncated: st.size > CAP });
+          } finally { fs.closeSync(fd); }
+        } catch { return json(res, { error: "unreadable" }, 500); }
       }
       if (url.pathname === "/floor" && req.method === "GET") {
         const f = floor(url.searchParams.get("path") || "");
@@ -709,6 +974,50 @@ export function createServer(cfg) {
           throw e;
         }
         return held;
+      }
+
+      // Answer a question an agent put to the Operator (THE OPERATOR'S QUESTIONS,
+      // above). Writes ONE ANS line to the broadcast log and a TELL to the asker's
+      // inbox. It records a decision; it starts nothing, and it is refused unless
+      // the gate reads RUN - a red floor takes no orders, and no answers either.
+      if (url.pathname === "/tasks/answer" && POST) {
+        const g = gate();
+        if (g.verb !== "RUN") return json(res, { error: `estop ${g.verb} — no writes`, reason: g.reason }, 423);
+        const b = await readJson(req);
+        const key = String(b.key || "");
+        const ask = b.ask ? String(b.ask) : null;
+        const VERB = { approve: "APPROVED", deny: "DENIED", note: "NOTED" }[String(b.verdict || "")];
+        if (!/^[0-9a-f]{12}$/.test(key)) return json(res, { error: "bad row key" }, 400);
+        if (ask !== null && !/^[0-9a-f]{12}$/.test(ask)) return json(res, { error: "bad question id" }, 400);
+        if (!VERB) return json(res, { error: "verdict must be approve, deny or note" }, 400);
+        const note = String(b.note || "").replace(/\s+/g, " ").trim().slice(0, 400);
+        if (VERB === "NOTED" && !note) return json(res, { error: "a reply needs text" }, 400);
+        if (VERB !== "NOTED" && !ask) return json(res, { error: "a decision must answer a question" }, 400);
+        const all = taskRows(5000);
+        if (all === null || !all.some((r) => r.key === key)) return json(res, { error: "no such row" }, 404);
+        let asker = "ALL";
+        if (ask) {
+          const t = threads().by.get(key);
+          const a = t && t.asks.get(ask);
+          if (!a) return json(res, { error: "no such question on that row" }, 404);
+          asker = a.from;
+        }
+        const line = `${busTime()}  CONSOLE > ${asker}  ANS  re:${key}${ask ? " ask:" + ask : ""} ${VERB}${note ? " :: " + note : ""}`;
+        try { appendBus(line); }
+        catch (e) { return json(res, { error: "write failed: " + e.message }, 500); }
+        // The asker hears it in its inbox - as a TELL that points at the record,
+        // never as an order (03 §5).
+        let inbox = null;
+        if (asker !== "ALL" && AGENT_RE.test(asker)) {
+          try {
+            const dir = path.join(BUS_DIR, "in");
+            fs.mkdirSync(dir, { recursive: true });
+            inbox = path.join(dir, `${asker}.log`);
+            fs.appendFileSync(inbox, `${new Date().toISOString()}  CONSOLE > ${asker}  TELL  ` +
+              `Operator answered your ASK re:${key}: ${VERB}${note ? " - " + note : ""}\n`, "utf8");
+          } catch { inbox = null; }
+        }
+        return json(res, { ok: true, line, verdict: VERB, inbox: inbox ? path.relative(ROOT, inbox) : null, executed: false });
       }
 
       if (url.pathname === "/induct" && POST) {

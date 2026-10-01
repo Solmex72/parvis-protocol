@@ -179,3 +179,57 @@ Two consequences that are easy to get wrong:
 The honest limit, stated once: **this is a picture of the tree at a moment, not a live telemetry
 feed.** It polls. Between polls it is stale, it shows when it last read, and it goes grey rather
 than pretending otherwise when the sidecar stops answering.
+
+---
+
+## Amendment A — rails and the load cycle (the Flag's order, 2026-09-30)
+
+**A crane is always on a rail.** One rail runs down the centreline of each aisle, out to both
+docks. Parking is a siding: one rail per column, joined to the inbound lane. The two docks each
+have a lane across the floor, and a crane changes rail only on a lane. A crane never takes a
+diagonal across the floor and never appears from the air; a new crane enters from the lane onto
+its own rail. On `STOP` every crane halts where it stands.
+
+**Work moves between the docks.**
+
+| Role | Picks up | Carries to | Drops at |
+|---|---|---|---|
+| **Worker** | the **inductor** — a claimed `REQ` | its location (the pallet its last bus line names) | a **spur** — the finished deliverable |
+| **Rework** | a **spur** — a deliverable that already left | its location, where it modifies the load | the **inductor** — as a new `REQ` for a worker |
+
+**Every leg is driven by a measured fact, never inferred.** A worker's pickup is a live
+`_os/tasks/claims/<key>.claim` (older than 30 minutes it is a dead agent's claim and draws
+nothing); its drop is that claim's `.done` file (shown for two minutes). A rework is an open
+`REQ` row whose text names a file under `_os/events/surface/` — that row is the statement "I am
+picking this up from the spur". Where no such fact exists the crane parks; it does not act out a
+cycle it is not in (§3: grey, never a guess). The loads stacked at the docks are the open `REQ`
+rows (inductor) and the newest surface files (spur), counted from disk.
+
+**A pallet is green when anything beneath it was written in the last ten minutes**, not only when
+its own entry list changed — a directory's mtime does not move when a file three levels down is
+edited, so the floor previously read "quiet" while the fleet was working. The walk is bounded; if
+it runs out of budget the pallet is marked partial rather than reported quiet.
+
+---
+
+## Amendment B — yellow pallets, and sessions that have ended (the Operator's rulings, 2026-09-30)
+
+Both were put to the Operator as questions on the Tasks tab ([`03-BUS.md`](03-BUS.md) 5a) and approved.
+
+**A stored location is yellow.** A pallet is drawn amber, as a pallet is. State rides on the
+other colours: **green** if anything beneath it was written in the last ten minutes, **red** on
+`STOP`, **grey** where it could not be read. How full a location is shows in its **height and
+brightness**, not in a colour of its own. This supersedes the §3 reading of amber as "a location
+needs a decision" for pallets (a crane in `GATE` still draws amber), and replaces the earlier
+"amber means 30 or more entries". A pallet is never near-black, however empty.
+
+**A session that has ended is not a crane.** A session marker is deleted by its owner at sign-off
+and refreshed by its owner's heartbeat ([`08`](08-AGENTS.md) §4, §6). A marker whose file **and**
+last bus line are both older than 24 hours, and which holds no live claim, is a dead session: the
+floor does not draw it, counts it (`staleSessions` in `/floor`, shown in the HUD), and **never
+deletes it** — removing a marker is its owner's act. An agent with open `REQ` rows still appears,
+as scheduled at the inductor, not as signed on.
+
+**Alive means the last bus line or the marker's last touch** (the heartbeat) is within 90 seconds. Before,
+a marker's touch was ignored once the agent had written any bus line, so a session that beats but rarely
+speaks could never read as moving; the heartbeat is the marker touch (08 §6), so it counts.

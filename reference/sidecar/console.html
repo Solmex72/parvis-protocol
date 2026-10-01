@@ -81,6 +81,8 @@
   nav button:hover{color:var(--ink2)}
   nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--amber);font-weight:600}
   nav .count{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-left:6px}
+  nav .count.ask{background:var(--amber);color:#14100a;border-radius:9px;padding:0 6px;font-weight:700}
+  nav .count.ask:empty{display:none}
 
   /* --- layout --- */
   main{flex:1;width:100%;max-width:1140px;margin:0 auto;padding:20px 16px 40px}
@@ -123,6 +125,35 @@
   .t-FLASH{color:var(--ink3)} .t-ASK{color:var(--blue)} .t-ANS{color:var(--green)}
   .t-TELL{color:var(--ink2)} .t-GATE{color:var(--red)} .t-ACK{color:var(--ink3)}
   .t-bad{color:var(--red)}
+  .t-APPROVED{color:var(--green)} .t-DENIED{color:var(--red)} .t-NOTED,.t-PENDING{color:var(--amber)}
+
+  /* --- the Operator's questions: an agent asks, the console answers (03 §3) --- */
+  .asks{border-bottom:1px solid var(--line2);background:color-mix(in srgb,var(--amber) 7%,transparent);padding-bottom:6px}
+  .asks > h3{margin:0;padding:11px 14px 6px;font-family:var(--mono);font-size:11px;letter-spacing:.11em;
+             text-transform:uppercase;color:var(--amber)}
+  .asks .ask{margin:0 14px 9px}
+  .asks .re{font-family:var(--mono);font-size:11px;color:var(--ink3);margin:0 14px 3px;overflow-wrap:anywhere}
+  .thr{flex:0 0 100%;margin:2px 0 2px 4px;padding-left:10px;border-left:2px solid var(--line2);
+       display:flex;flex-direction:column;gap:7px}
+  .ask{background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:9px 11px;font-size:12.5px}
+  .ask.pend{border-color:var(--amber)}
+  .ask .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .ask .hd b{color:var(--ink2)}
+  .ask .q{margin:5px 0 7px;overflow-wrap:anywhere;line-height:1.5}
+  .ask .act{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .ask .act[hidden]{display:none}
+  .ask .act input{flex:1;min-width:190px;background:var(--panel);border:1px solid var(--line2);color:var(--ink);
+                  font:inherit;font-size:12px;padding:5px 8px;border-radius:6px}
+  .ask .act input:focus{outline:2px solid var(--amber);outline-offset:-1px}
+  .ask .msg{font-family:var(--mono);font-size:11px;color:var(--red)}
+  .mini.ok{border-color:var(--green);color:var(--green)}
+  .mini.no{border-color:var(--red);color:var(--red)}
+  .mini.ok:hover{background:var(--green);color:#fff;border-color:var(--green)}
+  .mini.no:hover{background:var(--red);color:#fff;border-color:var(--red)}
+  .mini:disabled{opacity:.4;cursor:not-allowed}
+  .ans,.cmt{font-family:var(--mono);font-size:11.5px;overflow-wrap:anywhere}
+  .ans{color:var(--ink2);margin-top:3px}
+  .cmt{color:var(--ink3)}
 
   /* --- prompt --- */
   .prompt{display:flex;gap:9px;flex-wrap:wrap}
@@ -266,7 +297,7 @@
   <button role="tab" data-p="overview" aria-selected="true">Overview</button>
   <button role="tab" data-p="warehouse">Warehouse<span class="count" id="c-wh"></span></button>
   <button role="tab" data-p="docs">Documents<span class="count" id="c-docs"></span></button>
-  <button role="tab" data-p="tasks">Tasks<span class="count" id="c-tasks"></span></button>
+  <button role="tab" data-p="tasks">Tasks<span class="count" id="c-tasks"></span><span class="count ask" id="c-asks" title="questions waiting for your decision"></span></button>
   <button role="tab" data-p="bus">Bus<span class="count" id="c-bus"></span></button>
   <button role="tab" data-p="surface">Surface<span class="count" id="c-surface"></span></button>
   <button role="tab" data-p="board">Board</button>
@@ -305,9 +336,9 @@
       <span class="crumb" id="wh-crumb">/</span>
       <span class="spacer"></span>
       <span class="legend">
-        <i style="background:var(--green)"></i>moving
+        <i style="background:var(--green)"></i>moving / just written
         <i style="background:var(--blue)"></i>scheduled
-        <i style="background:var(--amber)"></i>full / gated
+        <i style="background:var(--amber)"></i>stored / gated
         <i style="background:var(--red)"></i>stopped
         <i style="background:var(--ink3)"></i>no source
       </span>
@@ -389,7 +420,9 @@
     <p class="sub">Newest first. A row is <b>a claim with an evidence path attached</b>, never proof —
        verify the evidence file exists before trusting any <code>DONE</code>. A <code>DONE</code> with
        no evidence path is invalid. A <code>REFUSED</code> row stays here permanently; that is how the
-       fleet stops re-litigating settled questions.</p>
+       fleet stops re-litigating settled questions. When an agent needs a decision it asks here,
+       attached to its row: <b>Approve</b> or <b>Deny</b> records your answer on the bus and tells the
+       agent. An answer is a record, not a command — it starts nothing and lifts no standing refusal.</p>
     <div class="list" id="tasks"><div class="empty">loading…</div></div>
   </section>
 
@@ -406,8 +439,8 @@
   <!-- SURFACE -->
   <section class="panel" id="p-surface">
     <h2>Surface feed</h2>
-    <p class="sub">Pointer files agents dropped for you, newest first. The substance lives where the
-       pointer says; this directory is the notification, not the work.</p>
+    <p class="sub">Pointer files agents dropped for you, newest first. Click one to read it. The substance
+       lives where the pointer says; this directory is the notification, not the work.</p>
     <div class="list" id="surface"><div class="empty">loading…</div></div>
   </section>
 
@@ -480,11 +513,33 @@
   });
 
   // --- transport -----------------------------------------------------------
+  // The session token is minted when the sidecar starts. A page that outlives a
+  // sidecar restart (a pinned web clip, an app window left open overnight) keeps
+  // presenting the OLD token, every poll comes back 401, and the floor freezes
+  // with nothing on screen to say why. A refused token means this page is stale:
+  // fetch a fresh one. The guard stops a reload loop if a FRESH page is refused
+  // too — that is a real fault, and looping would hide it.
+  var staleFired = false;
+  function staleToken(){
+    if (staleFired) return;
+    staleFired = true;
+    var last = 0;
+    try { last = Number(sessionStorage.getItem("parvis-stale-reload") || 0); } catch (e) {}
+    if (Date.now() - last < 15000) return;
+    try { sessionStorage.setItem("parvis-stale-reload", String(Date.now())); } catch (e) {}
+    var ft = document.getElementById("foot");
+    if (ft) ft.textContent = "console session expired (the sidecar restarted) \u2014 reloading";
+    setTimeout(function(){ location.reload(); }, 400);
+  }
+
   function api(pathname, opts){
     opts = opts || {};
     opts.headers = Object.assign({"x-parvis-token": TOKEN}, opts.headers || {});
     return fetch(pathname, opts).then(function(r){
-      return r.json().then(function(j){ return {ok: r.ok, status: r.status, body: j}; },
+      return r.json().then(function(j){
+                             if (r.status === 401 && j && j.error === "bad token") staleToken();
+                             return {ok: r.ok, status: r.status, body: j};
+                           },
                            function(){ return {ok: false, status: r.status, body: {}}; });
     });
   }
@@ -551,9 +606,11 @@
   }
 
   function lock(stopped){
+    STOPPED = !!stopped;
     $("p").disabled = stopped;
     $("go").disabled = stopped;
     $("d-save").disabled = stopped;
+    Array.prototype.forEach.call(document.querySelectorAll(".ask .act button"), function(b){ b.disabled = stopped; });
   }
 
   function refresh(){
@@ -580,7 +637,26 @@
   }
 
   // --- panels --------------------------------------------------------------
-  function emptyRow(box, msg){ box.innerHTML = '<div class="empty">' + esc(msg) + '</div>'; }
+  // The last thing each live panel drew. A poll that finds nothing new redraws
+  // nothing, and a panel is never rebuilt under the Operator's hands (an open
+  // note box, a half-typed reply, a modify field).
+  var LAST = {};
+  var STOPPED = false;
+  function changed(name, body){
+    var sig = JSON.stringify(body);
+    if (LAST[name] === sig) return false;
+    LAST[name] = sig;
+    return true;
+  }
+  function busyIn(box){
+    var a = document.activeElement;
+    if (a && box.contains(a) && /^(INPUT|TEXTAREA)$/.test(a.tagName)) return true;
+    if (box.querySelector(".amend-in")) return true;
+    return Array.prototype.some.call(box.querySelectorAll(".ask .act input"), function(i){ return !!i.value; });
+  }
+  function fmtT(t){ return String(t || "").replace("T", " ").replace("Z", "").slice(0, 19); }
+
+  function emptyRow(box, msg){ LAST[box.id] = null; box.innerHTML = '<div class="empty">' + esc(msg) + '</div>'; }
 
   var CURRENT = null;
 
@@ -608,9 +684,15 @@
       if (!r.ok) return emptyRow(box, "sidecar unreachable");
       if (!r.body.present) return emptyRow(box, "no task index at " + r.body.path + " — nothing has been inducted yet");
       var rows = r.body.rows || [];
+      var threads = r.body.threads || {}, pending = r.body.pending || [];
       $("c-tasks").textContent = rows.length ? rows.length : "";
+      $("c-asks").textContent = pending.length ? (pending.length + " ?") : "";
       if (!rows.length) return emptyRow(box, "task index exists but holds no rows");
+      if (!changed(box.id, r.body)) return;                                      // nothing new since the last draw
+      if (box.dataset.drawn && busyIn(box)) { LAST[box.id] = null; return; }     // mid-edit: try again next poll
+      box.dataset.drawn = "1";
       box.innerHTML = "";
+      if (pending.length) box.appendChild(pendingCard(pending, threads));
       rows.forEach(function(t){
         var el = document.createElement("div");
         el.className = "row";
@@ -679,9 +761,100 @@
               .then(function(rr){ if (rr.ok) loadTasks(); else btn.textContent = rr.body.error || 'refused'; });
           });
         }
+        // The thread: what the agents asked about this row, what you answered, and
+        // any comments. Pending questions are answered in the card at the top, so
+        // here they are a pointer, not a second set of buttons.
+        var th = threads[t.key];
+        if (th && (th.asks.length || th.notes.length)) {
+          var wrap = document.createElement("div");
+          wrap.className = "thr";
+          th.asks.forEach(function(a){ wrap.appendChild(askEl(t.key, a, a.status === "PENDING")); });
+          th.notes.forEach(function(n){
+            var c = document.createElement("div");
+            c.className = "cmt";
+            c.innerHTML = '<span class="tag t-' + esc(n.verb) + '">' + esc(n.verb) + '</span> <b>' + esc(n.from) +
+                          '</b> &rsaquo; ' + esc(n.to) + ' · ' + esc(fmtT(n.time)) + ' — ' + esc(n.text);
+            wrap.appendChild(c);
+          });
+          el.appendChild(wrap);
+        }
         box.appendChild(el);
       });
     }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
+  }
+
+  // --- the Operator's questions ---------------------------------------------
+  // An agent asks on the bus (ASK re:<key>); Approve / Deny / Reply appends the
+  // ANS and tells the agent. It records a decision and starts nothing.
+  function sendAnswer(key, askId, verdict, note, msgEl, inputEl){
+    msgEl.textContent = "recording…";
+    api("/tasks/answer", { method:"POST", headers:{"content-type":"application/json"},
+                           body: JSON.stringify({ key: key, ask: askId, verdict: verdict, note: note }) })
+      .then(function(rr){
+        if (rr.ok) {
+          // Answered: empty the note box and let go of focus, or the "never redraw
+          // under the Operator's hands" guard would keep the old card on screen.
+          if (inputEl) { inputEl.value = ""; inputEl.blur(); }
+          LAST.tasks = null; LAST.bus = null; loadTasks(); loadBus();
+        }
+        else msgEl.textContent = (rr.body.error || "refused") + (rr.body.reason ? " — " + rr.body.reason : "");
+      }).catch(function(){ msgEl.textContent = "sidecar unreachable"; });
+  }
+
+  function askEl(key, a, pointerOnly){
+    var el = document.createElement("div");
+    var pend = a.status === "PENDING";
+    el.className = "ask" + (pend ? " pend" : "");
+    var h = '<div class="hd"><span class="tag t-' + esc(a.status) + '">' + (pend ? 'ASKS YOU' : esc(a.status)) + '</span>' +
+            '<b>' + esc(a.from) + '</b><span>' + esc(fmtT(a.time)) + '</span></div>' +
+            '<div class="q">' + esc(a.text) + '</div>';
+    (a.answers || []).forEach(function(x){
+      h += '<div class="ans">&#8627; ' +
+           (x.console ? '' : '<span class="tag t-bad">CLAIMED &mdash; not from the console</span> ') +
+           esc(x.verdict) + ' · ' + esc(x.from) + ' · ' + esc(fmtT(x.time)) + (x.note ? ' — ' + esc(x.note) : '') + '</div>';
+    });
+    if (pend && pointerOnly) {
+      h += '<div class="ans">awaiting your decision &mdash; answer it in the card at the top of this list</div>';
+      el.innerHTML = h; return el;
+    }
+    var act = '<div class="act"' + (pend ? '' : ' hidden') + '>' +
+        '<input maxlength="400" placeholder="note to the agent (optional)" aria-label="note to the agent">' +
+        '<button class="mini ok" data-v="approve">Approve</button>' +
+        '<button class="mini no" data-v="deny">Deny</button>' +
+        '<button class="mini" data-v="note" title="send a reply without deciding">Reply</button>' +
+        '<span class="msg"></span></div>';
+    h += act + (pend ? '' : '<button class="mini" data-v="reopen">change answer</button>');
+    el.innerHTML = h;
+    var actEl = el.querySelector(".act"), msg = el.querySelector(".msg"), inp = el.querySelector("input");
+    Array.prototype.forEach.call(actEl.querySelectorAll("button"), function(b){
+      b.disabled = STOPPED;
+      b.addEventListener("click", function(){
+        var v = b.dataset.v, note = inp.value.trim();
+        if (v === "note" && !note) { msg.textContent = "type a reply first"; inp.focus(); return; }
+        sendAnswer(key, a.id, v, note, msg, inp);
+      });
+    });
+    var re = el.querySelector('[data-v=reopen]');
+    if (re) re.addEventListener("click", function(){ actEl.hidden = false; re.remove(); inp.focus(); });
+    return el;
+  }
+
+  function pendingCard(pending, threads){
+    var card = document.createElement("div");
+    card.className = "asks";
+    card.innerHTML = '<h3>Awaiting your decision &middot; ' + pending.length + '</h3>';
+    pending.forEach(function(p){
+      var th = threads[p.key], a = null;
+      if (th) th.asks.forEach(function(x){ if (x.id === p.ask) a = x; });
+      if (!a) a = { id: p.ask, time: p.time, from: p.from, text: p.text, status: "PENDING", answers: [] };
+      var re = document.createElement("div");
+      re.className = "re";
+      re.textContent = "about: " + (p.what ? p.what : "(a row older than the newest 80)") +
+                       (p.rowClosed ? "   [that request is already closed]" : "");
+      card.appendChild(re);
+      card.appendChild(askEl(p.key, a, false));
+    });
+    return card;
   }
 
   function loadBus(){
@@ -692,6 +865,7 @@
       var lines = r.body.lines || [];
       $("c-bus").textContent = lines.length ? lines.length : "";
       if (!lines.length) return emptyRow(box, "broadcast log is empty");
+      if (!changed(box.id, lines)) return;      // nothing new on the bus since the last draw
       box.innerHTML = "";
       lines.forEach(function(l){
         var el = document.createElement("div");
@@ -718,12 +892,16 @@
       var files = r.body.files || [];
       $("c-surface").textContent = files.length ? files.length : "";
       if (!files.length) return emptyRow(box, "surface is clear — nothing waiting for you");
+      if (!changed(box.id, files)) return;
       box.innerHTML = "";
       files.forEach(function(f){
         var el = document.createElement("div");
-        el.className = "row";
+        // Click to read, the same way a document opens — read-only: the surface is
+        // a notification directory, and _os is not something the UI edits.
+        el.className = "row click";
         el.innerHTML = '<span class="nm">' + esc(f.name) + '</span>' +
           '<span class="meta">' + esc(f.mtime ? f.mtime.replace("T", " ").slice(0, 19) : "—") + '</span>';
+        el.addEventListener("click", function(){ openSurface(f); });
         box.appendChild(el);
       });
     }).catch(function(){ emptyRow(box, "sidecar unreachable"); });
@@ -938,16 +1116,36 @@
 
     // --- aisle floors: the lanes a crane actually travels ---
     var railZ0 = bayZ(0, p) - BAY_PITCH * 0.8, railZ1 = bayZ(p.bays - 1, p) + BAY_PITCH * 0.8;
+    var dockZ0 = railZ0 - 0.85, dockZ1 = railZ1 + 0.85;
+
+    // TRACK. Flat quads, not lines: lines paint over every solid, so a rail drawn
+    // as a line would cut across the crane standing on it. Quads are depth-sorted
+    // with the crane, so the crane sits ON the rail. The rail is cut into short
+    // segments so that sort stays correct along its length.
+    function flat(x0, z0, x1, z1, y, c){
+      quads.push({ pts: [{x:x0,y:y,z:z0},{x:x1,y:y,z:z0},{x:x1,y:y,z:z1},{x:x0,y:y,z:z1}], c: c, meta: null });
+    }
+    function track(x0, z0, x1, z1){
+      var rc = stopped ? COL.red : shade(COL.grey, 40), tc = stopped ? shade(COL.red, -30) : shade(COL.grey, -36);
+      var alongZ = Math.abs(x1 - x0) < 1e-6;
+      var lo = alongZ ? Math.min(z0, z1) : Math.min(x0, x1), hi = alongZ ? Math.max(z0, z1) : Math.max(x0, x1);
+      for (var u = lo; u < hi; u += 0.9) {
+        var e = Math.min(u + 0.9, hi);
+        if (alongZ) flat(x0 - 0.03, u, x0 + 0.03, e, -0.03, rc); else flat(u, z0 - 0.03, e, z0 + 0.03, -0.03, rc);
+      }
+      for (var tt = lo; tt <= hi; tt += 0.45) {
+        if (alongZ) flat(x0 - 0.17, tt - 0.035, x0 + 0.17, tt + 0.035, -0.045, tc);
+        else flat(tt - 0.035, z0 - 0.17, tt + 0.035, z0 + 0.17, -0.045, tc);
+      }
+    }
     for (var a = 0; a < p.aisles; a++) {
       var ax = aisleX(a, p);
       quads.push({ pts: [{x:ax-AISLE_W/2,y:-0.06,z:railZ0},{x:ax+AISLE_W/2,y:-0.06,z:railZ0},
                          {x:ax+AISLE_W/2,y:-0.06,z:railZ1},{x:ax-AISLE_W/2,y:-0.06,z:railZ1}],
                    c: stopped ? "rgba(207,74,65,.13)" : "rgba(127,140,155,.13)", meta: null });
-      // the rails themselves
-      lines.push({ a:{x:ax-AISLE_W/2+0.08,y:-0.05,z:railZ0}, b:{x:ax-AISLE_W/2+0.08,y:-0.05,z:railZ1},
-                   c: COL.line, w: 1 });
-      lines.push({ a:{x:ax+AISLE_W/2-0.08,y:-0.05,z:railZ0}, b:{x:ax+AISLE_W/2-0.08,y:-0.05,z:railZ1},
-                   c: COL.line, w: 1 });
+      // ONE rail per aisle, down its centreline, running out to both docks so a
+      // crane can leave the aisle at either end. Every crane rides one of these.
+      track(ax, dockZ0, ax, dockZ1);
     }
 
     // --- rack frames: uprights at every bay boundary, on both faces ---
@@ -984,12 +1182,16 @@
       // old -22 shade rendered an ordinary directory as near-black against a
       // dark deck, so the floor looked empty when it was full. Brightness now
       // tracks how loaded the location is: a fuller rack reads lighter.
-      var lift = load === null ? 0 : Math.round(26 + Math.min(1, load / 40) * 40);
+      var lift = load === null ? 0 : Math.round(-34 + Math.min(1, load / 40) * 34);
+      // OPERATOR RULING 2026-09-30 ("pallets need to be yellow", approved on the Tasks
+      // tab): a stored location is YELLOW, as a pallet is. State rides on the other
+      // colours - green = written in the last 10 minutes, red = stopped, grey = could
+      // not be read. How full it is shows in height and brightness, not a colour of
+      // its own. (The -34..0 lift keeps even an empty one a solid, never near-black.)
       var col = stopped ? COL.red
               : load === null ? COL.grey
               : pal.hot ? COL.green
-              : full ? COL.amber
-              : shade(COL.blue, lift);
+              : shade(COL.amber, lift);
 
       var fill = load === null ? 0.30 : Math.max(0.34, Math.min(1, 0.34 + Math.log10(1 + load) * 0.42));
       var hgt = LEVEL_H * 0.74 * fill;
@@ -1047,6 +1249,13 @@
     // lot surface
     box(quads, lotX0 + lotW / 2 - LOT_BAY_W / 2, lotCz, lotW + 0.22, lotD + 0.22, 0.04,
         shade(COL.grey, -46), { kind: "parking" }, 0);
+
+    // Parking is a siding: one rail per column, each joined to the inbound lane.
+    // The lanes are the cross-track at each dock; a crane changes rail only there.
+    var laneX0 = -deckW / 2 + 0.4;
+    track(laneX0, dockZ0, lotX0 + (LOT_COLS - 1) * LOT_BAY_W + 0.3, dockZ0);      // inbound (inductor) lane
+    track(laneX0, dockZ1, deckW / 2 - 0.4, dockZ1);                                // outbound (spur) lane
+    for (var lc = 0; lc < LOT_COLS; lc++) track(lotX0 + lc * LOT_BAY_W, dockZ0, lotX0 + lc * LOT_BAY_W, lotZ0 + lotD);
     // bay markings
     for (var br = 0; br <= lotRows; br++) {
       var bz = lotZ0 + br * LOT_BAY_D;
@@ -1065,68 +1274,128 @@
       return { x: lotX0 + col * LOT_BAY_W, z: lotZ0 + row * LOT_BAY_D + LOT_BAY_D / 2 };
     }
 
-    // --- cranes: in the aisle, travelling along it, carriage at a level ---
+    // --- loads waiting at the docks ---------------------------------------------
+    // What is stacked at the inductor is the open REQ rows in the ledger; what is
+    // stacked at the spur is the newest deliverables in the surface dir. Both are
+    // counted from disk by the sidecar, never drawn to look busy.
+    var inductX = aisleX(0, p), spurX = aisleX(p.aisles - 1, p);
+    var INDUCT_Z = dockZ0 + 0.34, SPUR_Z = dockZ1 - 0.34;
+    (function(){
+      var L = d.loads || { induct: [], spur: [] };
+      for (var li2 = 0; li2 < L.induct.length; li2++)
+        box(quads, inductX + ((li2 % 3) - 1) * 0.30, dockZ0 + (li2 < 3 ? -0.05 : 0.09), 0.22, 0.17, 0.15,
+            stopped ? COL.red : shade(COL.blue, 10), { kind: "induct" }, 0.24);
+      for (var si2 = 0; si2 < L.spur.length; si2++)
+        box(quads, spurX + ((si2 % 3) - 1) * 0.30, dockZ1 + (si2 < 3 ? 0.05 : -0.09), 0.22, 0.17, 0.15,
+            stopped ? COL.red : shade(COL.green, -10), { kind: "spur" }, 0.24);
+    })();
+
+    // --- cranes: they ride RAILS ---------------------------------------------------
+    // One rail per aisle, one per parking column, joined by the two lanes at the
+    // docks. A crane is always ON a rail: it runs along its own rail, stops at the
+    // lane, crosses on the lane, and runs out along the next rail. It never takes a
+    // diagonal across the floor and never drops in from the air.
+    //
+    // Work moves between the docks:
+    //   worker  - picks a load up at the INDUCTOR, carries it to its location,
+    //             and delivers the finished load at a SPUR;
+    //   rework  - picks a deliverable up at a SPUR, modifies it, and drops the
+    //             result back at the INDUCTOR.
+    // Each leg is driven by a measured fact (a claim file, a .done file, a REQ row
+    // that names a spur file). Where none exists the crane simply parks.
     var now = performance.now();
+    var dtMs = Math.min(64, Math.max(0, now - (WH.lastDraw || now)));
+    WH.lastDraw = now;
+    var RAIL_STEP = 2.4 * dtMs / 1000;     // world units this slice: same speed at any frame rate
+    function stepTo(a, b){ var dl = b - a; return Math.abs(dl) <= RAIL_STEP ? b : a + (dl < 0 ? -RAIL_STEP : RAIL_STEP); }
+    function ride(q2, gx, gz){
+      if (Math.abs(q2.x - gx) > 0.002) {
+        if (Math.abs(q2.z - dockZ0) > 0.002) q2.z = stepTo(q2.z, dockZ0);   // back out along this rail to the lane
+        else q2.x = stepTo(q2.x, gx);                                        // cross on the lane
+      } else q2.z = stepTo(q2.z, gz);                                        // run down the destination rail
+    }
+    function railPath(q2, gx, gz){   // the polyline ride() will follow, for the path overlay
+      var pts = [{ x: q2.x, z: q2.z }];
+      if (Math.abs(q2.x - gx) > 0.002) { pts.push({ x: q2.x, z: dockZ0 }); pts.push({ x: gx, z: dockZ0 }); }
+      pts.push({ x: gx, z: gz });
+      return pts;
+    }
+    function legPoint(name, wp2){
+      if (name === "spur") return { x: spurX, z: SPUR_Z };
+      if (name === "work" && wp2) return wp2;
+      return { x: inductX, z: INDUCT_Z };
+    }
+
     for (var k = 0; k < d.cranes.length; k++) {
       var cr = d.cranes[k];
+      var cid = cr.session || cr.agent;
+      var cmeta = { kind: "crane", name: cr.agent, cr: cr };
       var tgt = null;
       if (cr.at) for (var q = 0; q < WH.layout.length; q++) if (WH.layout[q].name === cr.at) { tgt = WH.layout[q]; break; }
+      var workPt = tgt ? { x: aisleX(tgt.sl.aisle, p), z: tgt.z } : null;
+      var bay = parkBay(cid);
 
-      // A crane is bound to one aisle. With no attribution it holds at the
-      // induct end of aisle 0 — parked, grey, never placed somewhere invented.
-      var aIdx = tgt ? tgt.sl.aisle : 0;
-
-      // No attributed work -> it belongs in the parking lot, in its own bay.
-      var bay = tgt ? null : parkBay(cr.session || cr.agent);
-      var tx, tz;
-      if (tgt) {
-        tx = aisleX(aIdx, p); tz = tgt.z;
-      } else if (!stopped && cr.state === "scheduled") {
-        // A scheduled crane has open REQ rows and no attributed location: it is
-        // queued for dispatch, so it shuttles between its bay and the induct
-        // dock where work arrives. The travel is not decoration — it encodes
-        // "this agent has queued work it has not started". An idle crane, which
-        // has none, stays in its bay.
-        var duty = (Math.sin(now / 4200 + (cid.length * 1.3)) * 0.5 + 0.5);
-        tx = bay.x + (aisleX(0, p) - bay.x) * duty;
-        tz = bay.z + (dockZ0 + 0.5 - bay.z) * duty;
-      } else {
-        tx = bay.x; tz = bay.z;
+      // The job this crane is on, from measured facts only.
+      var jobKey = null, legs = null, carryFrom = 0, carryTo = 0;
+      if (!stopped) {
+        if (cr.delivered) {
+          jobKey = "dl:" + cr.delivered.key; legs = ["spur"]; carryFrom = 0; carryTo = 1;
+        } else if (cr.rework) {
+          jobKey = "rw:" + cr.rework + ":" + (tgt ? 1 : 0);
+          legs = tgt ? ["spur", "work", "induct"] : ["spur", "induct"]; carryFrom = 1; carryTo = legs.length;
+        } else if (cr.carrying || cr.state === "moving") {
+          jobKey = "wk:" + (cr.carrying ? cr.carrying.key : "live") + ":" + (tgt ? 1 : 0);
+          legs = tgt ? ["induct", "work"] : ["induct"]; carryFrom = 1; carryTo = 99;
+        }
       }
-      var tLevel = tgt ? levelY(tgt.sl.level) : 0;
 
-      var cid = cr.session || cr.agent;
+      var ps = WH.cranePos[cid], fresh = !ps;
+      if (fresh) ps = { x: 0, z: dockZ0, y: 0, job: null, sh: "bay", dwell: 0 };
+      if (!jobKey) ps.job = null;
+      else if (!ps.job || ps.job.key !== jobKey) ps.job = { key: jobKey, i: 0 };
+      var job = ps.job;
 
-      // SPAWN — a crane that has just appeared drops onto the rail rather than
-      // blinking into existence, so you can see WHICH agent just signed on.
-      // 08 §4: a marker appears at sign-on, so an arrival is a real event and
-      // animating it states something true.
-      if (!WH.craneSeen) WH.craneSeen = {};
-      if (WH.craneSeen[cid] === undefined) WH.craneSeen[cid] = now;
-      var age = now - WH.craneSeen[cid];
-      var SPAWN = 900;
-      var spawning = age < SPAWN;
-      var spawnEase = spawning ? (1 - Math.pow(1 - age / SPAWN, 3)) : 1;   // ease-out cubic
-      // NOTE: not named sp — this function already uses sp for a quad's
-      // projected points further down, and var is function-scoped.
-      var drop = spawning ? (1 - spawnEase) * 3.2 : 0;
+      // Where it is headed right now.
+      // explicit undefined: var is function-scoped, so a bare `var tx` would keep the PREVIOUS crane's target
+      var tx = undefined, tz = undefined, tkind = "park";
+      if (job && job.i < legs.length) {
+        var lp = legPoint(legs[job.i], workPt); tx = lp.x; tz = lp.z; tkind = legs[job.i];
+      } else if (job && jobKey.indexOf("wk:") === 0) {
+        var hp = workPt || legPoint("induct"); tx = hp.x; tz = hp.z; tkind = workPt ? "work" : "induct";
+      } else if (job && jobKey.indexOf("dl:") === 0) {
+        tx = spurX; tz = SPUR_Z; tkind = "spur";
+      }
+      if (tx === undefined) {
+        if (workPt) { tx = workPt.x; tz = workPt.z; tkind = "work"; }
+        else if (!stopped && cr.state === "scheduled" && ps.sh === "induct") { tx = inductX; tz = INDUCT_Z; tkind = "induct"; }
+        else { tx = bay.x; tz = bay.z; tkind = "park"; }
+      }
 
-      var pos = WH.cranePos[cid] || { x: tx, z: tz, y: tLevel };
-      pos.x += (tx - pos.x) * 0.10;
-      pos.z += (tz - pos.z) * 0.07;
-      pos.y += (tLevel - pos.y) * 0.09;
-      WH.cranePos[cid] = pos;
+      if (fresh) { ps.x = tx; ps.z = stopped ? tz : dockZ0; WH.cranePos[cid] = ps; }   // a new crane enters from the lane, on its own rail
 
-      // Idle presence. A parked crane must not read as a travelling one (09 §3),
+      if (!stopped && now >= ps.dwell) {
+        ride(ps, tx, tz);
+        if (Math.abs(ps.x - tx) < 0.01 && Math.abs(ps.z - tz) < 0.01) {
+          if (job && job.i < legs.length) { job.i++; ps.dwell = now + 650; }                          // picked up / set down
+          else if (!job && cr.state === "scheduled" && !workPt) {                                     // queued work: shuttle bay <-> inductor
+            if (tkind === "induct") { ps.sh = "bay"; ps.dwell = now + 1400; }
+            else { ps.sh = "induct"; ps.dwell = now + 2200; }
+          }
+        }
+      }
+      var loaded = !!job && job.i >= carryFrom && job.i < carryTo;
+
+      var tLevel = (tkind === "work" && tgt) ? levelY(tgt.sl.level) : 0;
+      ps.y += (tLevel - ps.y) * 0.09;
+      var pos = ps;
+
+      // Idle presence. A parked crane must not read as a travelling one (09 S3),
       // so the carriage rides slowly up and down its own mast rather than moving
-      // along the floor — unmistakably "powered, holding station", not "in
-      // transit". The previous amplitude was 0.035 world units, roughly one
-      // pixel, which is the same as no animation at all.
+      // along the floor - unmistakably "powered, holding station", not "in transit".
       var phase = (now / 2600) + (cid.length * 0.9);
       var breath = (!stopped && cr.state === "idle") ? (Math.sin(phase) * 0.5 + 0.5) * 0.9 : 0;
 
-      // Beacon: every crane carries a status light that pulses while it is
-      // signed on. Presence is a fact worth showing even when nothing moves.
+      // Beacon: every crane carries a status light that pulses while it is signed on.
       var beat = 0.55 + 0.45 * Math.sin(now / 520 + cid.length);
 
       var ccol = stopped ? COL.red
@@ -1137,40 +1406,33 @@
       var hovC = WH.hover && WH.hover.kind === "crane" && WH.hover.name === cr.agent;
       var cc = hovC ? shade(ccol, 86) : ccol;
 
-      // mast, from the rail to above the top level
-      box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, { kind: "crane", name: cr.agent, cr: cr }, drop);
-      // base bogie on the rail
-      box(quads, pos.x, pos.z, AISLE_W * 0.82, 0.36, 0.12, shade(cc, -22), { kind: "crane", name: cr.agent, cr: cr }, drop);
+      // mast, standing on the rail
+      box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, cmeta, 0);
+      // bogie: one axle pair on the single rail
+      box(quads, pos.x, pos.z, 0.36, 0.44, 0.10, shade(cc, -22), cmeta, 0.03);
+      box(quads, pos.x, pos.z - 0.15, 0.15, 0.11, 0.05, shade(cc, -70), cmeta, 0);
+      box(quads, pos.x, pos.z + 0.15, 0.15, 0.11, 0.05, shade(cc, -70), cmeta, 0);
       // carriage at the serving level
-      box(quads, pos.x, pos.z, AISLE_W * 0.6, 0.30, 0.22, shade(cc, 12), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.06 + drop + breath);
+      box(quads, pos.x, pos.z, AISLE_W * 0.6, 0.30, 0.22, shade(cc, 12), cmeta, pos.y + 0.06 + breath);
       // Status beacon at the mast head.
       if (!stopped) {
         box(quads, pos.x, pos.z, 0.13 + beat * 0.10, 0.13 + beat * 0.10, 0.10 + beat * 0.08,
-            shade(cc, Math.round(beat * 60)), { kind: "crane", name: cr.agent, cr: cr },
-            frameTop + 0.55 + drop);
+            shade(cc, Math.round(beat * 60)), cmeta, frameTop + 0.55);
+      }
+      // the load it is carrying - only between a measured pickup and a measured drop
+      if (loaded && !stopped) {
+        box(quads, pos.x, pos.z, 0.36, 0.36, 0.24, shade(COL.amber, -4), cmeta, pos.y + 0.30 + breath);
       }
 
-      // Landing ring while it drops in — the touchdown marker on the rail.
-      if (spawning) {
-        var rr = 0.30 + (1 - spawnEase) * 1.5;
-        lines.push({ a:{x:pos.x-rr,y:0.06,z:pos.z-rr*0.5}, b:{x:pos.x+rr,y:0.06,z:pos.z+rr*0.5}, c: cc, w: 1.6 });
-        lines.push({ a:{x:pos.x-rr,y:0.06,z:pos.z+rr*0.5}, b:{x:pos.x+rr,y:0.06,z:pos.z-rr*0.5}, c: cc, w: 1.6 });
-      }
-      // a carried load, only while actually moving to a location
-      if (cr.state === "moving" && !stopped && tgt) {
-        box(quads, pos.x, pos.z, 0.36, 0.36, 0.24, shade(COL.amber, -4), { kind: "crane", name: cr.agent, cr: cr }, pos.y + 0.30 + drop);
-      }
-
-      // The path: green while moving, blue while scheduled. On a real floor
-      // this is the line that tells you where a crane is going before it
-      // gets there.
-      if (tgt && !stopped && (cr.state === "moving" || cr.state === "scheduled")) {
-        lines.push({ a:{x:pos.x,y:pos.y+0.14,z:pos.z}, b:{x:tgt.x,y:tgt.y+0.1,z:tgt.z},
-                     c: cr.state === "moving" ? COL.green : COL.blue,
-                     w: cr.state === "moving" ? 2 : 1.4,
-                     dash: cr.state === "scheduled",
-                     arrow: true,
-                     flow: cr.state === "moving" });
+      // The path, following the rails it will actually ride: green while on a job,
+      // blue (dashed) while queued work shuttles it out to the inductor.
+      if (!stopped && (job || cr.state === "scheduled") && (Math.abs(ps.x - tx) > 0.03 || Math.abs(ps.z - tz) > 0.03)) {
+        var rp = railPath(ps, tx, tz);
+        for (var sg = 0; sg < rp.length - 1; sg++) {
+          if (Math.abs(rp[sg].x - rp[sg + 1].x) + Math.abs(rp[sg].z - rp[sg + 1].z) < 0.02) continue;
+          lines.push({ a:{x:rp[sg].x,y:0.14,z:rp[sg].z}, b:{x:rp[sg + 1].x,y:0.14,z:rp[sg + 1].z},
+                       c: job ? COL.green : COL.blue, w: job ? 2 : 1.4, dash: !job, arrow: true, flow: !!job });
+        }
       }
     }
 
@@ -1366,6 +1628,7 @@
     $("wh-hud").textContent =
       (d.path ? "/" + d.path : "/") + "   ·   " + p.aisles + " aisles · " + p.bays + " bays · " +
       LEVELS + " levels   ·   " + n + " stored · " + d.cranes.length + " cranes" +
+      (d.staleSessions ? " (" + d.staleSessions + " expired sessions not drawn)" : "") +
       "   ·   read " + d.readAt.slice(11, 19) + "Z" + (stopped ? "   ·   E-STOPPED" : "");
 
     $("wh-wrap").classList.toggle("stopped", stopped);
@@ -1416,7 +1679,7 @@
       html = "<b>" + esc(p.name) + "</b><br>" +
              (p.dirs === null ? "unreadable — no live source"
                : p.dirs + " dirs · " + p.files + " files") +
-             (p.mtime ? "<br>touched " + esc(p.mtime.replace("T", " ").slice(0, 16)) : "") +
+             ((p.lastWrite || p.mtime) ? "<br>last write " + esc((p.lastWrite || p.mtime).replace("T", " ").slice(0, 16)) + (p.activityPartial ? " +" : "") : "") +
              "<br><span style=\"color:var(--ink3)\">click to descend</span>";
     } else if (hit.kind === "crane") {
       var c2 = hit.cr;
@@ -1515,7 +1778,7 @@
       h += '<div class="it" style="cursor:default;color:var(--ink3)">empty floor</div>';
     } else {
       d.pallets.forEach(function(p){
-        var col = stopped ? "var(--red)" : p.dirs === null ? "var(--ink3)" : p.hot ? "var(--green)" : "var(--blue)";
+        var col = stopped ? "var(--red)" : p.dirs === null ? "var(--ink3)" : p.hot ? "var(--green)" : "var(--amber)";
         h += '<div class="it" data-k="pallet" data-i="' + esc(p.name) + '" aria-selected="false">' +
              '<i class="dot" style="background:' + col + '"></i>' +
              '<span class="nm">' + esc(p.name) + '</span>' +
@@ -1935,6 +2198,22 @@
     });
   }
 
+  // A surface pointer, read-only. Same dialog as a document, minus Save.
+  function openSurface(f){
+    CURRENT = null;
+    $("d-title").textContent = "surface / " + f.name + "   (view only)";
+    $("d-msg").textContent = f.mtime ? "written " + fmtT(f.mtime) + "Z" : "";
+    $("d-save").style.display = "none";
+    $("d-body").readOnly = true;
+    $("d-body").value = "loading…";
+    $("dlg").showModal();
+    api("/surface/file?name=" + encodeURIComponent(f.name)).then(function(r){
+      $("d-body").value = r.ok
+        ? ((r.body.content || "") + (r.body.truncated ? "\n\n[truncated — the file is larger than 1 MB]" : ""))
+        : ("could not read: " + (r.body.error || r.status));
+    }).catch(function(){ $("d-body").value = "sidecar unreachable"; });
+  }
+
   $("d-close").addEventListener("click", function(){ $("dlg").close(); });
   $("d-save").addEventListener("click", function(){
     if (!CURRENT) return;
@@ -1977,6 +2256,16 @@
   // --- boot ----------------------------------------------------------------
   refresh().then(function(){ loadDocs(); loadTasks(); loadBus(); loadSurface(); loadFloor(""); });
   setInterval(refresh, 5000);   // the colours are the state — keep them live
+
+  // The ledger, the bus and the surface feed used to load only on boot and on a
+  // tab click, so a tab you were already looking at went stale while the log
+  // moved. They poll now. A poll redraws only when the data changed and never
+  // while a note box or modify field is being typed into (changed / busyIn), and
+  // not while a file is open in the dialog or the window is hidden.
+  setInterval(function(){
+    if (document.hidden || $("dlg").open) return;
+    loadTasks(); loadBus(); loadSurface();
+  }, 6000);
 
   // The floor polls faster than the rest: a crane that moved five seconds ago
   // should already have moved on screen. It is still a poll, not telemetry —

@@ -7,6 +7,31 @@ All notable changes to this project are recorded here. Format follows
 Because `protocol/` is a specification, a **breaking** change there means wording that existing
 adopters' agents were told to follow. Those get a major version, the same as an API break.
 
+## [1.2.0] — 2026-09-30
+
+The console can be asked to decide, and its panels stay current.
+
+### Added
+
+- **Asking the Operator** ([`protocol/03-BUS.md`](protocol/03-BUS.md) 5a). An agent puts a question
+  on the bus tagged `re:<row key>`; the Tasks tab shows it on that row, in a card at the top, with
+  Approve / Deny / Reply. The answer is an `ANS` line back plus a `TELL` in the asker's inbox.
+  `POST /tasks/answer`; `/tasks` now returns `threads` and `pending`. Refused unless the estop reads
+  `RUN`. Answers not sent by `CONSOLE` are labelled claimed and never counted as decisions.
+- **Surface reader.** `GET /surface/file?name=` — click a pointer in the Surface tab to read it,
+  read-only, `.md` only, inside the surface directory only.
+- **The console's own notices.** An induction now also puts a one-line `TELL re:<key>` on the bus, so
+  the Bus tab shows the console is alive and anything watching the bus sees it.
+- **Live panels.** Tasks, Bus and Surface refresh every 6 seconds while visible, redraw only on change,
+  and never under a half-typed note.
+
+- **Yellow pallets** (Operator ruling): a stored location is amber; green = written in the last 10 minutes, red = stopped; fullness shows in height and brightness. `protocol/09-FLOOR.md` Amendment B.
+- **Expired sessions.** A session marker silent for 24 hours with no live claim is not drawn as a crane; `/floor` returns `staleSessions` and the HUD shows the count. Nothing is deleted.
+- **Heartbeat counts.** A crane is moving if its last bus line *or* its marker's last touch is within 90 seconds.
+
+### Honest limits, stated
+
+- An approval is a record, not a credential; the bus is append-only text any process can write to.
 ## [1.1.0] — 2026-09-11
 
 The agent pickup loop: inducted `REQ` rows can now activate agents, without the console ever

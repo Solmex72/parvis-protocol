@@ -84,6 +84,9 @@ these and is commented at the point of each one.
 | **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
 | **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
 | **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
+| **Surface reader** | `GET /surface/file` — click a pointer in the Surface tab to read it, as a document opens. Read-only, `.md` only, confined to the one directory; `_os` is still not editable. | Ships. |
+| **Operator questions** | The Tasks tab lists what agents asked about each row and takes Approve / Deny / Reply (`POST /tasks/answer`, [`03-BUS.md`](03-BUS.md) 5a). It records a decision and starts nothing. | Ships. |
+| **Live panels** | Tasks, Bus and Surface poll while the window is visible. A poll redraws only when the data changed, and never while a note box is being typed into. | Ships. |
 | **The sidecar** | Loopback bridge: reads tree, writes `REQ` rows, holds no secret | Ships. |
 
 **Ship the panels first.** The 3D floor is the part everyone wants to build and the part that is
