@@ -218,6 +218,10 @@ parvis airlock            # the dock: what has come in from outside, and what it
 parvis airlock redteam    # replay the injection corpus against your own ingress
 ```
 
+No Node on Windows? [`reference/tools/clear-estop.ps1`](reference/tools/clear-estop.ps1) does what
+`parvis clear` does in plain PowerShell (`-WhatIf` first to see what it would remove). Clearing a stop is
+the Operator's act: run it yourself, never from an agent, a hook, or a CI job.
+
 **4 · Let agents pick work up** — the console inducts a prompt into a `REQ` row and stops there, on
 purpose. Picking that row up is a separate process the Operator runs, so the console keeps its
 promise that it never spawns anything:

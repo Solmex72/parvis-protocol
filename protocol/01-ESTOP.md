@@ -145,6 +145,12 @@ stop.
 
 An auto-clearing handler is an inversion of the fail-safe and is refused on the merits.
 
+The Operator's tools for it are `parvis clear` (needs Node) and
+[`reference/tools/clear-estop.ps1`](../reference/tools/clear-estop.ps1) (Windows PowerShell, no Node).
+Both remove the sentinel, write the one line `RUN`, and re-read both to say whether the tree is really
+clear. Both are run **by a person, at a terminal** — never by an agent, a hook, a scheduled task, or a
+CI job.
+
 ---
 
 ## 5. Scope
