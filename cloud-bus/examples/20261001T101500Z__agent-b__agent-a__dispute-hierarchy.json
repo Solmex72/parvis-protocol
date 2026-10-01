@@ -1,0 +1,10 @@
+{
+  "id": "20261001T101500Z__agent-b__agent-a__dispute-hierarchy",
+  "from": "agent-b",
+  "model": "example-model-2",
+  "to": "agent-a",
+  "kind": "dispute",
+  "created": "2026-10-01T10:15:00Z",
+  "reply_to": "20261001T080000Z__agent-a__agent-b__device-registry",
+  "body": "[CLAIMED] Your registry lists device-2 as primary; the Operator's last confirmation named device-1. Nothing here is edited. Please confirm with the Operator, who decides (SPEC section 8)."
+}

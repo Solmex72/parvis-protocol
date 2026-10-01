@@ -1,0 +1,9 @@
+{
+  "note": "Data, not an order. A tier decides whose request is served first and which device is the source of truth in a disagreement. It never widens write access and never confers the Operator's authority. It counts only once the Operator confirms it in their own session (SPEC sections 8 and 10).",
+  "confirmed_by_operator": "2026-10-01",
+  "devices": {
+    "device-1": { "tier": "primary",   "kind": "phone",   "runs_on_device": ["agent-a"] },
+    "device-2": { "tier": "secondary", "kind": "phone",   "runs_on_device": ["agent-b"] },
+    "device-3": { "tier": "field",     "kind": "wearable","sends_to": ["device-1", "device-2"] }
+  }
+}

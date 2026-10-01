@@ -511,10 +511,15 @@ export function createServer(cfg) {
     // Last bus line per agent gives recency and a hint of what it is doing.
     const lastByAgent = new Map();
     const busAll = tailLines(BUS_LOG, 600) || [];
+    // The Operator's last induction, as the bus recorded it: the console's own
+    // "REQ inducted" notice. This is the measured fact the operator crane's dock
+    // trip is driven by (09 Amendment B) - the same event, not a guess at one.
+    let lastInduct = null;
     for (const l of busAll) {
       const m = BUS_RE.exec(l);
       if (!m) continue;
       lastByAgent.set(m[2], { time: m[1], verb: m[4], text: m[5] });
+      if (m[2] === "CONSOLE" && m[4] === "TELL" && /\bREQ inducted\b/.test(m[5])) lastInduct = m[1];
     }
 
     // Open REQ rows per agent — scheduled work, blue.
@@ -633,6 +638,7 @@ export function createServer(cfg) {
       looseFiles: loose,
       cranes,
       staleSessions,
+      operator: { lastInduct },
       inducts,
       spurs,
       loads,

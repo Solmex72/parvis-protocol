@@ -1453,20 +1453,55 @@
                    ($("ctl-p") && !$("wh-ctl").hidden && $("ctl-p").value.trim());
       var ocol = COL.red;
       var meta = { kind: "operator" };
+
+      // DOCK TRIP (the Operator approved this on the Tasks tab, 2026-09-30). When an
+      // induction lands, the operator carries it from its post to the inductor, sets
+      // it down, and comes back. The trigger is a measured fact: the sidecar reports
+      // the time of the console's last "REQ inducted" notice on the bus (d.operator).
+      // Nothing is drawn for an induction that did not happen, and old news (a page
+      // opened an hour after the last induction) does not replay.
+      var P0 = { x: opx, z: opz };
+      var P1 = { x: inductX, z: opz };                 // along the apron to the inductor's column
+      var P2 = { x: inductX, z: INDUCT_Z };            // in to the dock
+      var len1 = Math.abs(P1.x - P0.x), len2 = Math.abs(P2.z - P1.z), PL = len1 + len2;
+      var li = d.operator && d.operator.lastInduct ? Date.parse(d.operator.lastInduct) : 0;
+      if (li && li !== WH.opSeen) {
+        WH.opSeen = li;
+        if (!stopped && (Date.now() - li) < 20000) WH.opTrip = { t0: now };
+      }
+      var ox = opx, oz = opz, carrying = false, tripping = false;
+      if (WH.opTrip && !stopped && PL > 0) {
+        var V = 1.5, DWELL = 0.7;
+        var el2 = (now - WH.opTrip.t0) / 1000, tOut = PL / V, tBack = PL / V;
+        var at = function(s){
+          if (s <= len1) return { x: P0.x + (P1.x - P0.x) * (len1 ? s / len1 : 1), z: P0.z };
+          var u = len2 ? (s - len1) / len2 : 1;
+          return { x: P1.x, z: P1.z + (P2.z - P1.z) * Math.min(1, u) };
+        };
+        var pp;
+        if (el2 < tOut) { pp = at(el2 * V); carrying = true; tripping = true; }
+        else if (el2 < tOut + DWELL) { pp = P2; tripping = true; }
+        else if (el2 < tOut + DWELL + tBack) { pp = at(PL - (el2 - tOut - DWELL) * V); tripping = true; }
+        else { WH.opTrip = null; }
+        if (pp) { ox = pp.x; oz = pp.z; }
+      } else if (stopped) { WH.opTrip = null; }
+
       // mast
-      box(quads, opx, opz, 0.19, 0.19, frameTop + 0.70, ocol, meta, 0);
+      box(quads, ox, oz, 0.19, 0.19, frameTop + 0.70, ocol, meta, 0);
       // base
-      box(quads, opx, opz, AISLE_W * 0.78, 0.40, 0.14, shade(ocol, -24), meta, 0);
+      box(quads, ox, oz, AISLE_W * 0.78, 0.40, 0.14, shade(ocol, -24), meta, 0);
       // carriage — rides up while a prompt is being written, parks when empty
       var oy = typing ? (0.5 + pulse * 1.4) : 0.22;
-      box(quads, opx, opz, AISLE_W * 0.58, 0.34, 0.24, shade(ocol, 14), meta, oy);
+      box(quads, ox, oz, AISLE_W * 0.58, 0.34, 0.24, shade(ocol, 14), meta, oy);
+      // the induction itself, on the carriage until it is set down at the dock
+      if (carrying) box(quads, ox, oz, 0.22, 0.17, 0.15, stopped ? COL.red : shade(COL.blue, 10), meta, oy + 0.26);
       // beacon
-      box(quads, opx, opz, 0.14 + pulse * 0.11, 0.14 + pulse * 0.11, 0.11 + pulse * 0.09,
+      box(quads, ox, oz, 0.14 + pulse * 0.11, 0.14 + pulse * 0.11, 0.11 + pulse * 0.09,
           shade(ocol, Math.round(pulse * 70)), meta, frameTop + 0.70);
       // the line from the operator to the induct dock: where human input lands
-      lines.push({ a:{x:opx,y:0.13,z:opz}, b:{x:aisleX(0,p),y:0.13,z:dockZ0},
-                   c: ocol, w: 2, arrow: true, flow: !!typing });
-      WH.operatorAt = { x: opx, z: opz };
+      lines.push({ a:{x:ox,y:0.13,z:oz}, b:{x:aisleX(0,p),y:0.13,z:dockZ0},
+                   c: ocol, w: 2, arrow: true, flow: !!typing || tripping });
+      WH.operatorAt = { x: ox, z: oz };
     })();
 
     // --- project, depth sort, paint ---
@@ -2262,10 +2297,25 @@
   // moved. They poll now. A poll redraws only when the data changed and never
   // while a note box or modify field is being typed into (changed / busyIn), and
   // not while a file is open in the dialog or the window is hidden.
-  setInterval(function(){
-    if (document.hidden || $("dlg").open) return;
+  //
+  // A window that is covered or minimised reports itself hidden. It used to stop
+  // polling then, and show stale panels until the next tick after you looked at it
+  // again. Now a hidden window keeps polling at a third of the rate (the browser
+  // throttles a background timer anyway), and the moment it is visible or focused
+  // again everything refreshes at once.
+  function pollNow(){
+    if ($("dlg").open) return;
     loadTasks(); loadBus(); loadSurface();
+    if ($("p-warehouse").classList.contains("on")) loadFloor(WH.path);
+  }
+  var hiddenTick = 0;
+  setInterval(function(){
+    if (document.hidden && (++hiddenTick % 3)) return;
+    pollNow();
   }, 6000);
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) { refresh(); pollNow(); } });
+  window.addEventListener("focus", function(){ refresh(); pollNow(); });
+  $("dlg").addEventListener("close", pollNow);
 
   // The floor polls faster than the rest: a crane that moved five seconds ago
   // should already have moved on screen. It is still a poll, not telemetry —

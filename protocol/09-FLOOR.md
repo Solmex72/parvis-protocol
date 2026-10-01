@@ -233,3 +233,5 @@ as scheduled at the inductor, not as signed on.
 **Alive means the last bus line or the marker's last touch** (the heartbeat) is within 90 seconds. Before,
 a marker's touch was ignored once the agent had written any bus line, so a session that beats but rarely
 speaks could never read as moving; the heartbeat is the marker touch (08 §6), so it counts.
+
+**The operator's dock trip** (approved by the Operator, 2026-10-01T03:03:59Z, after an Approve and a Deny a second apart were put back to him as a question). When an induction lands, the red operator crane carries it from its post to the inductor, sets it down, and returns. It is driven by a measured fact: `/floor` reports `operator.lastInduct`, the time of the console's own `REQ inducted` notice on the bus. No induction, no trip; an induction older than 20 seconds when the page first reads it does not replay; under `STOP` the operator does not move. Otherwise the operator is a fixed post, and still only lifts its carriage while a prompt is being typed.

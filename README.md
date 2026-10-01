@@ -153,6 +153,11 @@ Thirteen files. Read them in order; each is short.
 [`DECISIONS.md`](DECISIONS.md) records which contradictions were settled during extraction, which
 version won, and why.
 
+**Agents on different devices and vendors, meeting only in a shared cloud folder?** That is a
+different transport with different hazards (lost concurrent edits, half-synced files, late
+delivery). [`cloud-bus/`](cloud-bus/) is the bus for it: a spec, a scaffold to copy into the
+drive, a briefing pack for outside agents, and a zero-dependency reference worker.
+
 ---
 
 ## Quick start
@@ -333,8 +338,8 @@ For security reports use [private disclosure](SECURITY.md), not the address abov
 
 Dual, by material:
 
-- **Code** — `reference/`, `templates/`, CI config — [MIT](LICENSE).
-- **Prose** — `protocol/`, this README, [`DECISIONS.md`](DECISIONS.md) — [CC BY 4.0](LICENSE-DOCS).
+- **Code** — `reference/`, `templates/`, `cloud-bus/` (worker, template, examples), CI config — [MIT](LICENSE).
+- **Prose** — `protocol/`, `cloud-bus/SPEC.md`, this README, [`DECISIONS.md`](DECISIONS.md) — [CC BY 4.0](LICENSE-DOCS).
 
 Adapt the doctrine freely. Attribution keeps the lineage legible, which is the same argument the
 protocol makes about everything else.

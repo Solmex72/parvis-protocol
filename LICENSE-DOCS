@@ -5,12 +5,13 @@ Copyright (c) 2026 Connor Woods
 Applies to the prose specification in this repository:
 
     protocol/*.md
+    cloud-bus/SPEC.md, cloud-bus/README.md
     README.md
     DECISIONS.md
     CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, CHANGELOG.md
 
-The code in `reference/` and `templates/` is licensed under the MIT License
-instead — see LICENSE.
+The code in `reference/`, `templates/` and `cloud-bus/` (other than the two
+prose files above) is licensed under the MIT License instead — see LICENSE.
 
 ------------------------------------------------------------------------------
 

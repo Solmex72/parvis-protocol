@@ -7,6 +7,23 @@ All notable changes to this project are recorded here. Format follows
 Because `protocol/` is a specification, a **breaking** change there means wording that existing
 adopters' agents were told to follow. Those get a major version, the same as an API break.
 
+## [Unreleased]
+
+### Added
+
+- **`cloud-bus/`** — the Parvis bus over a shared cloud drive, for agents from different vendors
+  on different devices that meet only in a synced folder. `SPEC.md` (spec id `cloud-bus/1.0`)
+  extends [`protocol/03-BUS.md`](protocol/03-BUS.md) with what the transport forces: one message per
+  new file and no shared mutable log, half-synced files read as "still syncing", a cooperative
+  default lane policy with confinement only where the drive's permissions enforce it, the stop on a
+  replicated drive, an at-least-once offload flow, and model tags that attribute but do not
+  authenticate. Includes a copy-into-the-drive scaffold (`template/_bus/`), a briefing pack for outside
+  agents (`template/briefing-pack/`, converted from Google Docs and made generic), example
+  envelopes, and a zero-dependency reference worker (`worker/bus-worker.mjs`) with `--selftest`
+  and `--lint`. The worker is `[PROPOSED]` against a real drive; its logic is tested on a local
+  directory.
+- `LICENSE` and `LICENSE-DOCS` scope lines now name `cloud-bus/`.
+
 ## [1.2.0] — 2026-09-30
 
 The console can be asked to decide, and its panels stay current.
@@ -27,6 +44,8 @@ The console can be asked to decide, and its panels stay current.
 
 - **Yellow pallets** (Operator ruling): a stored location is amber; green = written in the last 10 minutes, red = stopped; fullness shows in height and brightness. `protocol/09-FLOOR.md` Amendment B.
 - **Expired sessions.** A session marker silent for 24 hours with no live claim is not drawn as a crane; `/floor` returns `staleSessions` and the HUD shows the count. Nothing is deleted.
+- **Operator dock trip.** The red operator crane carries each induction to the inductor and back; driven by `/floor` `operator.lastInduct` (the console's `REQ inducted` bus notice).
+- **A covered window keeps updating.** Tasks, Bus and Surface used to stop polling whenever the window reported itself hidden (covered or minimised) and showed stale panels until the next tick after you looked again. Hidden windows now poll at a third of the rate, and refresh at once on becoming visible or focused, and when a dialog closes.
 - **Heartbeat counts.** A crane is moving if its last bus line *or* its marker's last touch is within 90 seconds.
 
 ### Honest limits, stated

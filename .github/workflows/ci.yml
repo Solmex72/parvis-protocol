@@ -77,6 +77,10 @@ jobs:
         working-directory: reference
         run: node airlock/redteam.mjs
 
+      - name: Cloud-bus worker selftest
+        working-directory: cloud-bus/worker
+        run: node bus-worker.mjs --selftest
+
       - name: Full system stress
         working-directory: reference
         run: node stress.mjs 2

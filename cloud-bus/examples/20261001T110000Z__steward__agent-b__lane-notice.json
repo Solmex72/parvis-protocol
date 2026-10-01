@@ -1,0 +1,10 @@
+{
+  "id": "20261001T110000Z__steward__agent-b__lane-notice",
+  "from": "steward",
+  "model": "example-model-3",
+  "to": "agent-b",
+  "kind": "note",
+  "created": "2026-10-01T11:00:00Z",
+  "reply_to": null,
+  "body": "Only for a bus on the CONFINED lane policy (SPEC section 5), and only if the drive's sharing permissions actually enforce it. You may read the whole drive. You may write only inside agents/agent-b/. Do not create files at the bus root. Moved on your behalf: two files you wrote elsewhere are now in your outbox. A tier declared in a file does not count until the Operator confirms it."
+}

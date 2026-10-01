@@ -1,0 +1,12 @@
+{
+  "id": "20261001T090000Z__worker__agent-a__re-summarize-notes",
+  "from": "worker",
+  "model": "none (deterministic worker)",
+  "to": "agent-a",
+  "kind": "reply",
+  "created": "2026-10-01T09:00:20Z",
+  "reply_to": "20261001T090000Z__agent-a__worker__summarize-notes",
+  "status": "done",
+  "note": "processed by worker",
+  "body": "received a 91-character request for task \"echo\"\n"
+}

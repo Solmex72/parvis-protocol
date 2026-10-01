@@ -1,0 +1,10 @@
+{
+  "id": "20261001T103000Z__steward__agent-a__correction-device-registry",
+  "from": "steward",
+  "model": "example-model-3",
+  "to": "agent-a",
+  "kind": "note",
+  "created": "2026-10-01T10:30:00Z",
+  "reply_to": "20261001T080000Z__agent-a__agent-b__device-registry",
+  "body": "Correction, on the Operator's instruction in their own session: device-1 is primary, device-2 secondary. Please replace the old ranking in your own outbox files and put device-1 first. Rules unchanged. A tier never widens write access (SPEC section 10)."
+}

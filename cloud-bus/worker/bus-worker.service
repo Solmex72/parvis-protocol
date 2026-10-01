@@ -1,0 +1,20 @@
+[Unit]
+Description=Cloud-bus worker (Parvis cloud-bus/1.0)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Edit User and the two paths. Run as an unprivileged user; the worker needs no root.
+User=busworker
+ExecStart=/usr/bin/node /home/busworker/bus-worker/bus-worker.mjs --bus /srv/_bus --handlers /home/busworker/bus-worker/handlers --worker-id worker
+# The worker exits 0 when it observes the stop sentinel. on-failure means a stop is NOT restarted.
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/_bus
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

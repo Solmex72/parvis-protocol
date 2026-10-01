@@ -1,0 +1,11 @@
+{
+  "id": "20261001T090000Z__agent-a__worker__summarize-notes",
+  "from": "agent-a",
+  "model": "example-model-1",
+  "to": "worker",
+  "kind": "job",
+  "task": "echo",
+  "created": "2026-10-01T09:00:00Z",
+  "reply_to": null,
+  "body": "Summarise the file named 20261001T085900Z__agent-a__summarize-notes-input.md in this folder."
+}
