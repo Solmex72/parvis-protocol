@@ -235,3 +235,57 @@ a marker's touch was ignored once the agent had written any bus line, so a sessi
 speaks could never read as moving; the heartbeat is the marker touch (08 §6), so it counts.
 
 **The operator's dock trip** (approved by the Operator, 2026-10-01T03:03:59Z, after an Approve and a Deny a second apart were put back to him as a question). When an induction lands, the red operator crane carries it from its post to the inductor, sets it down, and returns. It is driven by a measured fact: `/floor` reports `operator.lastInduct`, the time of the console's own `REQ inducted` notice on the bus. No induction, no trip; an induction older than 20 seconds when the page first reads it does not replay; under `STOP` the operator does not move. Otherwise the operator is a fixed post, and still only lifts its carriage while a prompt is being typed.
+
+
+---
+
+## Amendment C — more than one warehouse, and extra folders (the Operator's order, 2026-10-01)
+
+The floor can show storage beyond the governed tree. Two config keys, both read-only listings:
+
+- **`warehouses`** — a list of `{ "id", "label", "root" }`. Each is a separate warehouse chosen from a
+  switcher above the floor; `main` is the governed tree and is always present. A root that is not
+  mounted reports **offline** and the floor is cleared. It is never drawn as an empty warehouse.
+- **`extraFolders`** — absolute paths that **expand the main warehouse**. Each is mounted at the main
+  floor's top level as a pallet named `@<folder>` and navigated by that prefix (`@docs/sub/dir`).
+  Edited in Settings and **applied live**: the sidecar re-reads this one key from the file, no restart.
+
+**One fleet serves every warehouse.** Session markers, the ledger (the inductor) and the surface dir
+(the spurs) stay under the governed tree and are shown on every floor. What changes per floor is where
+a crane is **placed**, and that stays measured: on the main floor a bus line naming a pallet is enough
+(unchanged); on any other floor, or inside an extra folder, folder names are generic, so the line must
+name the **full path**. A crane whose last line names a path in a different warehouse is `away` (`/floor`
+carries `where` and `away`): listed, parked at the dock, never placed on a floor it is not on.
+
+**Nothing is written to another warehouse.** No document is opened or edited from one, and it has no
+ledger or bus of its own. An induction made while viewing one carries its scope in the REQ text, as
+`[drive:/Advertising] …`, because the ledger is shared and `/Advertising` alone could mean either tree.
+Activity on a network-backed root is walked with a small per-pallet budget and kept 20 s, still marked
+partial when it runs out (07 §2.2).
+
+---
+
+## Amendment D — cranes work down the aisle, and depth order (the Operator's order, 2026-10-01)
+
+**A crane is placed by the directory it is writing to.** On the floor above that directory it parks in
+the aisle in front of the pallet on the way there, carriage raised to that pallet's level, with the load on
+the carriage and a **green arrow into the rack location** it is going to. Descend, and the same crane is
+in front of the next pallet down, until the floor IS the directory it is writing to: there it sits on that
+floor's **inductor**, carriage empty. A crane writing somewhere that is not under the floor you are on
+parks in the lot (or is `away` in another warehouse).
+
+`/floor` carries per crane `work` (`wh`, `rel`, `file`, `src`, `when`) and `here`. The directory is measured,
+never guessed: it comes from the agent's own **bus line** (recent, and naming a path that exists), or from a
+**ledger row dated today that names a file which exists and was modified in the last ten minutes**. A row
+naming only a directory counts for nothing, because anyone's write moves a directory's mtime. Neither shows
+who wrote the bytes; both show that the agent says it did, and the bytes are fresh. An agent that is writing
+but is neither signed on nor holding a REQ still gets a crane: the work is the evidence.
+
+**Depth order.** Painter's order is **farthest first**, decided **per solid** and not per face; flat ground
+(deck, lanes, rails, the lot) is a layer under everything. The earlier sort drew nearest first, so a pallet
+behind another was painted over it: a green (recently written) pallet in front of an amber one was hidden.
+**A crane with no task does not move.** A task is a claim it holds, a directory it is measured writing to,
+a delivery or rework leg, or a recent bus line that names a place on this floor. Being signed on, recently
+chatty, or having a REQ queued is not a task. Such a crane is placed in its bay (it does not drive in to
+get there) and holds it with the carriage down: the idle carriage bob and the bay-to-inductor shuttle for
+queued work are gone. Only the status beacon pulses, in place. When a task ends the crane returns to its bay.

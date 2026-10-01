@@ -17,6 +17,12 @@
   "//lockedFiles": "Readable in the UI, never writable through it, at any estop state. An interface that can edit the stop is not a safety interface.",
   "lockedFiles": ["01-ESTOP.md", "00-PRECEDENCE.md", "COVENANT.md", "ESTOP.md"],
 
+  "//warehouses": "Other storage roots shown on the floor beside the main tree, picked from a switcher. Read-only. id is a-z, 0-9, dash and may not be main; root is absolute. Needs a restart.",
+  "warehouses": [],
+
+  "//extraFolders": "Absolute paths that expand the MAIN warehouse: each appears as an @folder pallet at the top level. Edit in Settings; applies live, no restart.",
+  "extraFolders": [],
+
   "//operator": "Name written into REQ rows and stop reasons. null falls back to the OS username.",
   "operator": null
 }

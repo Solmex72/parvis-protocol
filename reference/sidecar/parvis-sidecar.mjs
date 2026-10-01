@@ -50,6 +50,47 @@ export function createServer(cfg) {
   const BOARD_FILE = path.join(ROOT, "_os", "exchange", "board", "BOARD.md");
   const LOCKED = new Set(cfg.lockedFiles);
 
+  // Warehouses: "main" is the governed tree (cranes, ledger, bus). Any configured secondary
+  // is a second storage root the floor LISTS and nothing more — no agents are measured there,
+  // nothing is written there, no document is opened from it. A secondary that is not mounted
+  // reports offline; it never renders as an empty floor.
+  const WAREHOUSES = new Map([["main", { id: "main", label: "Claude tree", root: ROOT, primary: true }]]);
+  for (const w of cfg.warehouses || []) {
+    WAREHOUSES.set(w.id, { id: w.id, label: w.label || w.id, root: path.resolve(w.root), primary: false });
+  }
+  const warehouseOnline = (wh) => { try { return fs.statSync(wh.root).isDirectory(); } catch { return false; } };
+
+  // Extra folders expand the MAIN warehouse: each is mounted at its top level as a pallet named
+  // "@<alias>" and navigated by that prefix. Re-read from the config file when it changes, so
+  // adding one in Settings shows up on the floor without a restart. Listing only — a mount is
+  // never writable, never editable, and never joins the ledger or bus paths.
+  const EXTRA = { mtime: -1, raw: null, key: "", list: [] };
+  function extraFolders() {
+    let raw = cfg.extraFolders;
+    try {
+      const st = fs.statSync(cfg.configPath);
+      if (st.mtimeMs !== EXTRA.mtime) {
+        EXTRA.mtime = st.mtimeMs;
+        try { EXTRA.raw = JSON.parse(fs.readFileSync(cfg.configPath, "utf8")).extraFolders; } catch { /* keep the last good read */ }
+      }
+      if (Array.isArray(EXTRA.raw)) raw = EXTRA.raw;
+    } catch { /* no file: the startup value stands */ }
+    const key = JSON.stringify(raw || []);
+    if (key === EXTRA.key) return EXTRA.list;
+    const used = new Set();
+    const list = [];
+    for (const p of Array.isArray(raw) ? raw : []) {
+      if (typeof p !== "string" || !path.isAbsolute(p)) continue;
+      const rootPath = path.resolve(p);
+      let alias = (path.basename(rootPath) || rootPath.replace(/[^A-Za-z0-9]+/g, "")).replace(/[\\/]/g, "-") || "folder";
+      for (let n = 2; used.has(alias); n++) alias = alias.replace(/~\d+$/, "") + "~" + n;
+      used.add(alias);
+      list.push({ alias, root: rootPath });
+    }
+    EXTRA.key = key; EXTRA.list = list;
+    return list;
+  }
+
   // -------------------------------------------------------------------------
   // ESTOP — 01 §2. THE FAIL-SAFE DIRECTION MATTERS MORE THAN ANY OTHER LINE.
   //
@@ -239,9 +280,11 @@ export function createServer(cfg) {
     // raw is what /tasks/amend must be pinned to: a client can only amend a row
     // it actually read, so it sends this back verbatim. key is the same row's
     // content hash, the handle the watcher and the manifest use.
-    const rows = parseIndex(lines.join("\n")).map((r) => ({
+    // Protocol rows plus display-only rows under other verbs (NOTE, WAIT, ...), in file order.
+    const parsed = parseIndex(lines.join("\n"));
+    const rows = parsed.concat(parsed.other || []).sort((a, b) => a.line - b.line).map((r) => ({
       status: r.status, date: r.date, who: r.who, what: r.what, evidence: r.evidence, raw: r.raw,
-      key: r.key, closed: r.closed, taken: r.taken,
+      key: r.key, closed: r.closed, taken: r.taken, nonstandard: !!r.nonstandard,
     }));
     return rows.slice(-limit).reverse();
   }
@@ -375,15 +418,29 @@ export function createServer(cfg) {
   const LIVE_MS = 90 * 1000;       // a crane counts as moving within this
   const SESSION_TTL_MS = 24 * 60 * 60 * 1000;   // a marker silent this long is a dead session, not a crane
 
+  // Path evidence in free text (a bus line): compare case-insensitively with "/" separators, and
+  // require the path to end on a boundary so "G:/My Drive" never matches "G:/My Drive Old".
+  const normPath = (s) => String(s).replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  const pathHit = (textN, pathN) =>
+    new RegExp("(^|[^a-z0-9_.-])" + pathN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[/\\s\"'`,.;:)\\]])").test(textN);
+
   // A path from the UI is a relative directory inside the root. Same
   // containment discipline as the document editor: resolve, then confirm.
-  function resolveDir(rel) {
+  function resolveDir(rel, root = ROOT, mounts = []) {
     const clean = String(rel || "").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
-    if (clean.split("/").includes("..")) return null;
+    const segs = clean.split("/");
+    if (segs.includes("..")) return null;
+    // "@alias/..." addresses an extra folder; containment is then checked against THAT folder.
+    let base = root, sub = clean;
+    if (segs[0].startsWith("@")) {
+      const m = mounts.find((x) => "@" + x.alias === segs[0]);
+      if (!m) return null;
+      base = m.root; sub = segs.slice(1).join("/");
+    }
     let real, realRoot;
     try {
-      real = fs.realpathSync(path.resolve(ROOT, clean));
-      realRoot = fs.realpathSync(ROOT);
+      real = fs.realpathSync(path.resolve(base, sub));
+      realRoot = fs.realpathSync(base);
     } catch { return null; }
     if (real !== realRoot && !real.startsWith(realRoot + path.sep)) return null;
     try { if (!fs.statSync(real).isDirectory()) return null; } catch { return null; }
@@ -399,9 +456,13 @@ export function createServer(cfg) {
   // of reporting a quiet floor it did not finish checking (07 S2.2).
   const ACT_CACHE = new Map();          // abs path -> { at, val }
   const ACT_TTL_MS = 4000;
-  function newestWrite(abs, deadline) {
+  // `slow` = a network-backed root (a secondary warehouse such as a Drive mount), where every stat
+  // is expensive: the result is kept for SLOW_TTL_MS even when partial, so a 5 s poll does not
+  // re-walk it. A partial result is still marked partial — it is never reported as a quiet floor.
+  const SLOW_TTL_MS = 20000;
+  function newestWrite(abs, deadline, slow = false) {
     const hit = ACT_CACHE.get(abs);
-    if (hit && Date.now() - hit.at < ACT_TTL_MS) return hit.val;
+    if (hit && Date.now() - hit.at < (slow ? SLOW_TTL_MS : ACT_TTL_MS)) return hit.val;
     let newest = 0, partial = false, seen = 0;
     (function walk(d, depth) {
       if (partial) return;
@@ -419,7 +480,7 @@ export function createServer(cfg) {
       }
     })(abs, 0);
     const val = { newest: newest || null, partial };
-    if (!partial) ACT_CACHE.set(abs, { at: Date.now(), val });
+    if (!partial || slow) ACT_CACHE.set(abs, { at: Date.now(), val });
     return val;
   }
 
@@ -461,8 +522,118 @@ export function createServer(cfg) {
   // at the inductor. Only a row that says so counts; nothing is inferred.
   const REWORK_RE = /events[\\/]+surface/i;
 
-  function floor(relPath) {
-    const dir = resolveDir(relPath);
+  // ---- WORK: which directory an agent is writing to, from facts it left behind ----------------
+  // A crane is placed by a directory, not just a name: it goes to the pallet on the way to where
+  // it is writing, and sits on that directory's inductor once the floor IS that directory. The
+  // directory comes from two measured facts and never from a guess:
+  //   (a) its own last bus line, if the line is recent and names a path that exists on disk;
+  //   (b) one of its ledger rows dated today that names a FILE which exists and was modified
+  //       in the last WORK_MS. A directory named in a row proves nothing (anyone's write moves a
+  //       directory's mtime), so a row only counts through a file.
+  // Neither can show who wrote the bytes; both show the agent says it did, and the bytes are fresh.
+  const WORK_MS = HOT_MS;
+  const agentKey = (s) => String(s || "").replace(/\s*\(.*?\)\s*$/, "").trim().toLowerCase();
+  const realOf = (p) => { try { return fs.realpathSync.native(p); } catch { return null; } };
+  const isDirSync = (p) => { try { return fs.statSync(p).isDirectory(); } catch { return false; } };
+
+  // Where a real absolute path sits: which warehouse, and the relative path the floor would use.
+  // Longest root first, so an extra folder mounted inside the main tree wins over the tree.
+  function placeOf(realAbs) {
+    const roots = [
+      ...extraFolders().map((m) => ({ wh: "main", base: m.root, prefix: "@" + m.alias })),
+      ...[...WAREHOUSES.values()].map((w) => ({ wh: w.id, base: w.root, prefix: "" })),
+    ].sort((a, b) => b.base.length - a.base.length);
+    for (const r of roots) {
+      const rb = realOf(r.base);
+      if (!rb) continue;
+      const rel = path.relative(rb, realAbs);
+      if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) {
+        return { wh: r.wh, rel: [r.prefix, ...rel.split(path.sep)].filter(Boolean).join("/") };
+      }
+    }
+    return null;
+  }
+
+  // Walk an absolute path out of free text ("wrote G:\My Drive\_bus\x.md just now"): each interior
+  // segment must exist as written, and trailing words after the last segment are prose.
+  function diskPathFrom(s) {
+    let cur = s.slice(0, 3), rest = s.slice(3), best = null;
+    if (!isDirSync(cur)) return null;
+    for (;;) {
+      const mm = /^([^\\/]*)([\\/]?)/.exec(rest);
+      const seg = mm[1], sep = mm[2];
+      if (!seg && !sep) break;
+      if (sep) {
+        const next = path.join(cur, seg);
+        if (isDirSync(next)) { cur = next; best = cur; rest = rest.slice(mm[0].length); if (!rest) break; continue; }
+      }
+      let cand = seg.replace(/[.,;:)\]"'`]+$/, "");
+      while (cand) {
+        const next = path.join(cur, cand);
+        if (fs.existsSync(next)) { best = next; break; }
+        const i = cand.lastIndexOf(" ");
+        if (i < 0) break;
+        cand = cand.slice(0, i).replace(/[.,;:)\]"'`]+$/, "");
+      }
+      break;
+    }
+    return best;
+  }
+
+  function evidenceIn(text) {
+    const t = String(text || ""), out = [];
+    for (const m of t.matchAll(/(?<![A-Za-z0-9_])[A-Za-z]:[\\/]/g)) {
+      const p = diskPathFrom(t.slice(m.index));
+      if (p) out.push(p);
+    }
+    // Relative names resolve against the governed tree and must exist there.
+    for (const m of t.matchAll(/(?<![A-Za-z0-9_:.\\/~@-])((?:[A-Za-z0-9_.@~-]+[\\/])+[A-Za-z0-9_.@~-]*)/g)) {
+      const abs = path.resolve(ROOT, m[1].replace(/[.,;:)\]"'`]+$/, "").replace(/[\\/]+/g, path.sep));
+      if (fs.existsSync(abs)) out.push(abs);
+    }
+    return out;
+  }
+
+  function describePath(abs) {
+    const real = realOf(abs);
+    if (!real) return null;
+    let st; try { st = fs.statSync(real); } catch { return null; }
+    const file = st.isFile();
+    const place = placeOf(file ? path.dirname(real) : real);
+    return place ? { wh: place.wh, rel: place.rel, file, mtimeMs: st.mtimeMs } : null;
+  }
+
+  const localDay = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const WORK = { at: 0, map: new Map() };
+  function workByAgent(lastByAgent, rows) {
+    const now = Date.now();
+    if (now - WORK.at < 4000) return WORK.map;       // independent of the floor; the disk is not cheap on a mount
+    const map = new Map();
+    const consider = (key, ev) => { const cur = map.get(key); if (!cur || ev.when > cur.when) map.set(key, ev); };
+    for (const [agent, last] of lastByAgent) {
+      const when = Date.parse(last.time);
+      if (!when || now - when > WORK_MS) continue;
+      for (const p of evidenceIn(last.text)) { const d = describePath(p); if (d) consider(agentKey(agent), { ...d, when, src: "bus" }); }
+    }
+    const today = new Set([new Date().toISOString().slice(0, 10), localDay(new Date())]);
+    for (const r of rows) {
+      if (!today.has(r.date)) continue;
+      const key = agentKey(r.who);
+      if (!key) continue;
+      for (const p of evidenceIn((r.what || "") + " " + (r.evidence || ""))) {
+        const d = describePath(p);
+        if (d && d.file && now - d.mtimeMs <= WORK_MS) consider(key, { ...d, when: d.mtimeMs, src: "ledger" });
+      }
+    }
+    WORK.at = now; WORK.map = map;
+    return map;
+  }
+
+  function floor(relPath, whId = "main") {
+    const wh = WAREHOUSES.get(whId);
+    if (!wh) return null;
+    const mounts = wh.primary ? extraFolders() : [];
+    const dir = resolveDir(relPath, wh.root, mounts);
     if (!dir) return null;
     const now = Date.now();
     const g = gate();
@@ -473,7 +644,10 @@ export function createServer(cfg) {
     let entries = [];
     try { entries = fs.readdirSync(dir.abs, { withFileTypes: true }); } catch { /* unreadable */ }
 
+    // The governed tree shares one 600 ms walk budget. A secondary root gets a small budget per
+    // pallet inside a total cap, so one big folder cannot turn every other pallet partial.
     const actDeadline = Date.now() + 600;
+    const slowCap = Date.now() + 1500;
     for (const e of entries) {
       if (e.name === "node_modules" || e.name === ".git") continue;
       if (!e.isDirectory()) { loose++; continue; }
@@ -485,7 +659,9 @@ export function createServer(cfg) {
         files = kids.length - dirs;
         mtime = fs.statSync(abs).mtime.toISOString();
       } catch { /* leave null -> renders grey */ }
-      const act = newestWrite(abs, actDeadline);
+      const act = wh.primary && !dir.rel.startsWith("@")
+        ? newestWrite(abs, actDeadline)
+        : newestWrite(abs, Math.min(Date.now() + 100, slowCap), true);
       const lastMs = Math.max(act.newest || 0, mtime ? Date.parse(mtime) : 0) || null;
       pallets.push({
         name: e.name,
@@ -497,7 +673,36 @@ export function createServer(cfg) {
         hot: lastMs ? (now - lastMs) < HOT_MS : false,
       });
     }
+    // Extra folders mount at the main floor's top level, each with its own activity budget so a
+    // big mounted drive cannot starve the real pallets of theirs. Offline = null counts = grey.
+    if (wh.primary && !dir.rel) {
+      for (const m of mounts) {
+        let dirs = null, files = null, mtime = null;
+        try {
+          const kids = fs.readdirSync(m.root, { withFileTypes: true });
+          dirs = kids.filter((k) => k.isDirectory()).length;
+          files = kids.length - dirs;
+          mtime = fs.statSync(m.root).mtime.toISOString();
+        } catch { /* not mounted */ }
+        const act = dirs === null ? { newest: null, partial: false } : newestWrite(m.root, Date.now() + 400, true);
+        const lastMs = Math.max(act.newest || 0, mtime ? Date.parse(mtime) : 0) || null;
+        pallets.push({
+          name: "@" + m.alias, rel: "@" + m.alias, mounted: true, source: m.root,
+          dirs, files, mtime,
+          lastWrite: lastMs ? new Date(lastMs).toISOString() : null,
+          activityPartial: act.partial,
+          hot: lastMs ? (now - lastMs) < HOT_MS : false,
+        });
+      }
+    }
     pallets.sort((a, b) => a.name.localeCompare(b.name));
+
+    // One fleet serves every warehouse. The session markers, the ledger (the inductor) and the
+    // surface dir (the spurs) all live under the governed tree, and the same cranes work all
+    // of the floors: what changes per floor is WHERE a crane is placed, and that stays measured.
+    // On the main floor a bus line naming a pallet is enough (existing rule). Elsewhere folder
+    // names are generic ("Memory", "Core"), so a position needs the line to name the FULL path.
+    // A crane whose last line names a path in a different warehouse is marked `away`, not placed.
 
     // --- cranes: agents with a session marker ------------------------------
     // A marker is written at sign-on and deleted by its own owner at sign-off
@@ -526,7 +731,8 @@ export function createServer(cfg) {
     const openByAgent = new Map();
     const reworkByAgent = new Map();
     const openRows = [];
-    for (const r of taskRows(400) || []) {
+    const ledgerRows = taskRows(400) || [];
+    for (const r of ledgerRows) {
       if (r.status !== "REQ" || r.closed || r.taken) continue;
       openByAgent.set(r.who, (openByAgent.get(r.who) || 0) + 1);
       openRows.push({ who: r.who, what: String(r.what || "").slice(0, 80) });
@@ -534,7 +740,18 @@ export function createServer(cfg) {
     }
     const claims = claimState();
 
-    const palletNames = new Set(pallets.map((p) => p.name));
+    // Absolute paths a bus line could use to name a pallet on this floor.
+    const pathCandidates = (p) => p.mounted ? [p.source] : [
+      path.join(dir.abs, p.name),
+      ...(dir.rel.startsWith("@") ? [] : [path.join(wh.root, dir.rel, p.name)]),
+    ];
+    // Which warehouse a line names a path in: a secondary root, or an extra folder (which is
+    // part of the main warehouse). Null when it names none — unknown, never guessed.
+    const whereText = (textN) => {
+      for (const w of WAREHOUSES.values()) if (!w.primary && pathHit(textN, normPath(w.root))) return w.id;
+      for (const m of extraFolders()) if (pathHit(textN, normPath(m.root))) return "main";
+      return null;
+    };
 
     for (const f of markers) {
       // <AGENT>-<id>.on
@@ -562,11 +779,16 @@ export function createServer(cfg) {
       // Where is it working? Only if the agent's own last message names a
       // directory on THIS floor. Otherwise null — the crane parks at the dock
       // and renders grey rather than being placed somewhere invented.
-      let at = null;
+      let at = null, where = null;
       if (last) {
-        for (const name of palletNames) {
-          if (new RegExp("(^|[\\s/\"'`])" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([\\s/\"'`,.]|$)").test(last.text)) { at = name; break; }
+        const textN = normPath(last.text);
+        for (const p of pallets) {
+          const byPath = pathCandidates(p).some((c) => pathHit(textN, normPath(c)));
+          const byName = wh.primary && !p.mounted && !dir.rel.startsWith("@") &&
+            new RegExp("(^|[\\s/\"'`])" + p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([\\s/\"'`,.]|$)").test(last.text);
+          if (byPath || byName) { at = p.name; break; }
         }
+        where = whereText(textN);
       }
 
       const gated = last && last.verb === "GATE";
@@ -576,6 +798,7 @@ export function createServer(cfg) {
         session: id,
         signedOn,
         at,
+        where,
         state: g.verb === "STOP" ? "stopped"
              : gated ? "gated"
              : (recent || claim) ? "moving"
@@ -621,6 +844,52 @@ export function createServer(cfg) {
       });
     }
 
+    // WORK placement. An agent writing under this floor is placed by the directory it is writing
+    // to: at the pallet on the way there, or `here` (on this directory's inductor) when this
+    // floor is that directory. Evidence of work in another warehouse or elsewhere in this one
+    // clears any weaker name-match above, so a crane is never drawn in two places.
+    const workMap = workByAgent(lastByAgent, ledgerRows);
+    const applyWork = (c, w) => {
+      c.work = { wh: w.wh, rel: w.rel, file: w.file, src: w.src, when: new Date(w.when).toISOString() };
+      c.where = w.wh;
+      c.here = false;
+      c.at = null;
+      if (w.wh === wh.id) {
+        if (w.rel === dir.rel) c.here = true;
+        else if (!dir.rel || w.rel.startsWith(dir.rel + "/")) {
+          const child = (dir.rel ? w.rel.slice(dir.rel.length + 1) : w.rel).split("/")[0];
+          if (pallets.some((p) => p.name === child)) c.at = child;
+        }
+      }
+      if (g.verb === "STOP") c.state = "stopped";
+      else if (c.state !== "gated") c.state = "moving";
+    };
+    const keyed = new Set();
+    for (const c of cranes) {
+      keyed.add(agentKey(c.agent));
+      const w = workMap.get(agentKey(c.agent));
+      if (w) applyWork(c, w);
+    }
+    for (const [key, w] of workMap) {
+      if (keyed.has(key)) continue;
+      // Writing, but neither signed on nor holding a REQ: still a crane — the work is the evidence.
+      const c = { agent: key, session: null, signedOn: null, at: null, here: false, where: null,
+                  state: "moving", last: null, note: "writing /" + w.rel, scheduled: 0,
+                  carrying: null, delivered: null, rework: 0 };
+      applyWork(c, w);
+      cranes.push(c);
+    }
+    cranes.sort((a, b) => a.agent.localeCompare(b.agent));
+
+    // `where` is the warehouse the agent's own last line names a path in (null = it names none).
+    // On a floor other than that one the crane is `away`: still listed, parked at the dock.
+    for (const c of cranes) {
+      if (c.here === undefined) c.here = false;
+      if (c.where === undefined) c.where = null;
+      c.away = c.where && c.where !== wh.id && WAREHOUSES.has(c.where)
+        ? { id: c.where, label: WAREHOUSES.get(c.where).label } : null;
+    }
+
     const spurFiles = surfaceFeed(500) || [];
     const spurs = spurFiles.length;
     const inducts = [...openByAgent.values()].reduce((a, b) => a + b, 0);
@@ -631,6 +900,7 @@ export function createServer(cfg) {
 
     const parts = dir.rel ? dir.rel.split("/") : [];
     return {
+      warehouse: wh.id, label: wh.label, readOnly: !wh.primary,
       path: dir.rel,
       parent: parts.length ? parts.slice(0, -1).join("/") : null,
       breadcrumb: parts,
@@ -832,8 +1102,17 @@ export function createServer(cfg) {
           } finally { fs.closeSync(fd); }
         } catch { return json(res, { error: "unreadable" }, 500); }
       }
+      if (url.pathname === "/warehouses" && req.method === "GET") {
+        return json(res, [...WAREHOUSES.values()].map((w) => ({
+          id: w.id, label: w.label, primary: w.primary, online: warehouseOnline(w),
+        })));
+      }
       if (url.pathname === "/floor" && req.method === "GET") {
-        const f = floor(url.searchParams.get("path") || "");
+        const whId = url.searchParams.get("wh") || "main";
+        const wh = WAREHOUSES.get(whId);
+        if (!wh) return json(res, { error: "no such warehouse" }, 404);
+        if (!warehouseOnline(wh)) return json(res, { error: "warehouse offline — " + wh.label + " is not mounted" }, 503);
+        const f = floor(url.searchParams.get("path") || "", whId);
         if (!f) return json(res, { error: "not a directory inside the root" }, 404);
         return json(res, f);
       }
@@ -863,7 +1142,8 @@ export function createServer(cfg) {
           warnings: cfg.warnings,
           // Which keys only take effect on restart. Saying so is better than a
           // settings panel that appears to change the bind address live.
-          restartRequired: ["root", "host", "port", "editableDirs", "lockedFiles"],
+          restartRequired: ["root", "host", "port", "editableDirs", "lockedFiles", "warehouses"],
+          liveKeys: config.LIVE_KEYS,
         });
       }
 
@@ -872,8 +1152,15 @@ export function createServer(cfg) {
         if (g.verb !== "RUN") return json(res, { error: `estop ${g.verb} — no writes`, reason: g.reason }, 423);
         const patch = await readJson(req);
         try {
+          let prev = {};
+          try { prev = JSON.parse(fs.readFileSync(cfg.configPath, "utf8")) || {}; } catch { /* new file */ }
           const written = config.save(cfg.configPath, patch);
-          return json(res, { ok: true, written, path: cfg.configPath, restart: true });
+          // A key counts as changed against what the file said, or the default where it said nothing.
+          const was = (k) => JSON.stringify(k in prev ? prev[k] : config.DEFAULTS[k]);
+          const changed = Object.keys(written).filter((k) => config.KEYS.includes(k) && was(k) !== JSON.stringify(written[k]));
+          // Only keys the sidecar re-reads live can skip the restart.
+          const restart = changed.some((k) => !config.LIVE_KEYS.includes(k));
+          return json(res, { ok: true, written, path: cfg.configPath, restart, changed });
         } catch (e) {
           return json(res, { error: e.message }, 400);
         }

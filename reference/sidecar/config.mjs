@@ -24,7 +24,17 @@ export const DEFAULTS = Object.freeze({
   lockedFiles: ["01-ESTOP.md", "00-PRECEDENCE.md", "COVENANT.md", "ESTOP.md"],
   operator: null,
   refreshMs: 5000,
+  // Secondary warehouses: other storage roots shown on the floor beside the main tree.
+  // [{ "id": "drive", "label": "Google Drive", "root": "G:\\My Drive" }] — read-only, storage only.
+  warehouses: [],
+  // Extra folders that EXPAND the main warehouse: absolute paths, each shown as a pallet named
+  // "@<folder>" on the main floor's top level and navigable like any other. Read-only listing.
+  // Applies live — the sidecar re-reads this key from the file, no restart.
+  extraFolders: [],
 });
+
+// Keys the sidecar picks up from the file without a restart.
+export const LIVE_KEYS = Object.freeze(["extraFolders"]);
 
 export const KEYS = Object.keys(DEFAULTS);
 
@@ -89,6 +99,34 @@ function validate(cfg, warnings) {
   }
   if (!Array.isArray(cfg.lockedFiles) || cfg.lockedFiles.some((d) => typeof d !== "string")) {
     errors.push("lockedFiles must be an array of strings");
+  }
+
+  if (!Array.isArray(cfg.extraFolders) || cfg.extraFolders.some((d) => typeof d !== "string")) {
+    errors.push("extraFolders must be an array of strings");
+  } else {
+    for (const d of cfg.extraFolders) {
+      if (!path.isAbsolute(d)) errors.push(`extraFolders entry "${d}" must be an absolute path`);
+    }
+  }
+
+  // A secondary warehouse is a second root the floor may LIST. It never gets the document
+  // editor or the ledger, so the only things that must hold are a clean id and an absolute root.
+  if (!Array.isArray(cfg.warehouses)) {
+    errors.push("warehouses must be an array");
+  } else {
+    const seen = new Set(["main"]);
+    for (const w of cfg.warehouses) {
+      if (w === null || typeof w !== "object" || Array.isArray(w)) { errors.push("warehouses entries must be objects"); continue; }
+      if (typeof w.id !== "string" || !/^[a-z][a-z0-9-]{0,19}$/.test(w.id)) {
+        errors.push(`warehouse id ${JSON.stringify(w.id)} must be 1-20 chars of a-z, 0-9, "-", starting with a letter`);
+      } else if (seen.has(w.id)) {
+        errors.push(`warehouse id "${w.id}" is already taken ("main" is reserved)`);
+      } else seen.add(w.id);
+      if (typeof w.root !== "string" || !path.isAbsolute(w.root)) {
+        errors.push(`warehouse "${w.id}" root must be an absolute path`);
+      }
+      if (w.label !== undefined && typeof w.label !== "string") errors.push(`warehouse "${w.id}" label must be a string`);
+    }
   }
 
   // A relative or parent-escaping editable dir would defeat the allowlist.

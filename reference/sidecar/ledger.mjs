@@ -46,6 +46,9 @@ import crypto from "node:crypto";
 // ---------------------------------------------------------------------------
 
 export const ROW_RE = /^(REQ|DONE|BLOCKED|REFUSED)\s*\|/;
+// A row in the same column layout under a verb the protocol does not define (NOTE, WAIT, ...).
+// Agents write these; dropping them silently made the console look frozen while the ledger grew.
+export const OTHER_RE = /^([A-Z][A-Z_]{1,11})\s*\|/;
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const CLOSES_RE = /\bcloses\s+([0-9a-f]{6,40})\b/gi;
 
@@ -73,9 +76,22 @@ function keyMatches(a, b) {
 export function parseIndex(text) {
   const rows = [];
   const invisible = [];
+  const other = [];
   const lines = String(text == null ? "" : text).split(LF).map((x) => x.split(CR).join(""));
   lines.forEach((l, i) => {
-    if (!ROW_RE.test(l)) return;
+    if (!ROW_RE.test(l)) {
+      // Display-only: kept out of `rows` so the netting below, the watcher and the
+      // manifest never treat a NOTE as a REQ or as something that closes one.
+      const o = OTHER_RE.exec(l);
+      if (o) {
+        const q = l.split("|").map((s) => s.trim());
+        if (DATE_RE.test(q[1] || "")) {
+          other.push({ line: i + 1, status: o[1], date: q[1], who: q[2] || "", what: q[3] || "",
+                       evidence: q[4] || "", raw: l, key: rowKey(l), closed: null, taken: null, nonstandard: true });
+        }
+      }
+      return;
+    }
     const p = l.split("|").map((s) => s.trim());
     if (!DATE_RE.test(p[1] || "")) { invisible.push({ line: i + 1, raw: l }); return; }
     const note = p[4] || "";
@@ -101,6 +117,7 @@ export function parseIndex(text) {
     }
   }
   rows.invisible = invisible;
+  rows.other = other;
   return rows;
 }
 

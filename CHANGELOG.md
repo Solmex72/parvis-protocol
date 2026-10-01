@@ -23,6 +23,35 @@ adopters' agents were told to follow. Those get a major version, the same as an 
   and `--lint`. The worker is `[PROPOSED]` against a real drive; its logic is tested on a local
   directory.
 - `LICENSE` and `LICENSE-DOCS` scope lines now name `cloud-bus/`.
+- **More than one warehouse** ([`09-FLOOR.md`](protocol/09-FLOOR.md) Amendment C). Config key
+  `warehouses` adds read-only storage roots (a mounted drive, say) beside the governed tree, picked
+  from a switcher above the floor; an unmounted root reports offline and is never drawn as empty. Config
+  key `extraFolders` mounts absolute paths on the main floor's top level as `@<folder>` pallets and
+  applies live from Settings, no restart. One fleet serves every floor and a crane is placed only where
+  its own bus line names the full path. `/floor` takes `wh`, and `/warehouses` lists them.
+- **Cranes work down the aisle** (Amendment D). A crane writing to a directory parks in front of the
+  pallet on the way there with the load on its carriage and a green arrow into the rack, follows you as
+  you descend, and sits on the inductor of the directory it is writing to. The directory is measured
+  from the agent's own recent bus line, or from a ledger row dated today naming a file that exists and
+  was modified in the last ten minutes. `/floor` carries `work` and `here` per crane.
+
+### Changed
+
+- **A crane with no task does not move.** The idle carriage bob, the bay-to-inductor shuttle for merely
+  queued work, and the pickup by a crane that was only recently chatty are gone. A task is a claim, a
+  measured write, a delivery or rework leg, or a recent line naming a place on the floor.
+- `/config/save` reports `restart: false` and the changed keys when only live keys changed.
+
+### Fixed
+
+- **The Tasks tab looked frozen.** The ledger parser accepted only `REQ`, `DONE`, `BLOCKED` and
+  `REFUSED`, so rows under any other verb (`NOTE`, `WAIT`, ...) were dropped without a word, including
+  the newest. They are now listed, tagged grey, in file order. They are display-only: they never open
+  a REQ, never close one, and the watcher and manifest are unchanged (`parseIndex` returns them as
+  `rows.other`).
+- **A pallet behind another was painted over it.** The floor's painter's order ran nearest-first, so a
+  recently written (green) pallet in front of an amber one was hidden. It is now farthest-first, decided
+  per solid rather than per face, with flat ground as a layer underneath.
 
 ## [1.2.0] — 2026-09-30
 

@@ -122,6 +122,7 @@
        border-radius:4px;border:1px solid currentColor;white-space:nowrap;flex:none}
   .t-REQ{color:var(--blue)} .t-DONE{color:var(--green)} .t-BLOCKED{color:var(--amber)}
   .t-REFUSED{color:var(--red)} .t-lock{color:var(--amber)}
+  .t-NOTE,.t-WAIT,.t-OPEN,.t-PARTIAL,.t-ANSWERED{color:var(--ink2)}
   .t-FLASH{color:var(--ink3)} .t-ASK{color:var(--blue)} .t-ANS{color:var(--green)}
   .t-TELL{color:var(--ink2)} .t-GATE{color:var(--red)} .t-ACK{color:var(--ink3)}
   .t-bad{color:var(--red)}
@@ -202,6 +203,14 @@
      runtime because it wraps on narrow viewports. */
   position:sticky;top:calc(var(--barh,46px) + var(--navh,38px));z-index:15;background:var(--bg);
   padding:8px 0 10px;margin-bottom:0}
+  .whsel{display:inline-flex;gap:0}
+  .whsel button{font-family:var(--mono);font-size:11px;padding:4px 11px;background:transparent;color:var(--ink2);
+    border:1px solid var(--line2);cursor:pointer}
+  .whsel button:first-child{border-radius:6px 0 0 6px}
+  .whsel button:last-child{border-radius:0 6px 6px 0}
+  .whsel button+button{border-left:0}
+  .whsel button[aria-pressed="true"]{color:var(--ink);background:var(--line2)}
+  .whsel button.off{color:var(--ink3);text-decoration:line-through}
   .crumb{font-family:var(--mono);font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
   .crumb b{color:var(--ink)}
   .crumb span{cursor:pointer;color:var(--blue)}
@@ -333,6 +342,7 @@
   <!-- WAREHOUSE -->
   <section class="panel" id="p-warehouse">
     <div class="whbar">
+      <span class="whsel" id="wh-sel" role="group" aria-label="Warehouse" hidden></span>
       <span class="crumb" id="wh-crumb">/</span>
       <span class="spacer"></span>
       <span class="legend">
@@ -932,7 +942,7 @@
   // dock and renders grey. Never a guessed position. (09 §3.)
   // =========================================================================
   var WH = {
-    path: "", data: null, yaw: -0.62, pitch: 0.72, zoom: 1, top: false,
+    id: "main", list: [], path: "", data: null, yaw: -0.62, pitch: 0.72, zoom: 1, top: false,
     drag: null, hover: null, raf: null, t0: performance.now(), layout: [], cranePos: {}
   };
 
@@ -1000,8 +1010,12 @@
   //
   // `y0` lifts the box onto a rack level: a stored load is not on the ground,
   // it is in a location.
+  var BOXN = 0;
   function box(out, cxw, czw, w, d, h, color, meta, y0){
     y0 = y0 || 0;
+    // Every face of one solid carries the same gid and the solid's centre, so the painter can
+    // order whole boxes (see the paint stage) instead of ordering each face on its own.
+    var gid = ++BOXN, ctr = { x: cxw, y: y0 + h / 2, z: czw };
     var x0 = cxw - w/2, x1 = cxw + w/2, z0 = czw - d/2, z1 = czw + d/2, y1 = y0 + h;
     var P = function(x,y,z){ return {x:x,y:y,z:z}; };
     // Shading by facing axis, so a cube still reads as a solid rather than a
@@ -1014,7 +1028,7 @@
       { p:[P(x1,y0,z1),P(x1,y0,z0),P(x1,y1,z0),P(x1,y1,z1)], c: shade(color, -38) }, // right  +X
       { p:[P(x0,y0,z0),P(x0,y0,z1),P(x0,y1,z1),P(x0,y1,z0)], c: shade(color, -44) }  // left   -X
     ];
-    for (var i = 0; i < faces.length; i++) out.push({ pts: faces[i].p, c: faces[i].c, meta: meta, solid: true });
+    for (var i = 0; i < faces.length; i++) out.push({ pts: faces[i].p, c: faces[i].c, meta: meta, solid: true, gid: gid, ctr: ctr });
   }
 
   // Signed area of the projected polygon decides whether a face points at the
@@ -1235,7 +1249,7 @@
       var cpk = d.cranes[pk];
       var hasTgt = false;
       if (cpk.at) for (var qq = 0; qq < WH.layout.length; qq++) if (WH.layout[qq].name === cpk.at) { hasTgt = true; break; }
-      if (!hasTgt) parkedList.push(cpk.session || cpk.agent);
+      if (!hasTgt && !cpk.here) parkedList.push(cpk.session || cpk.agent);   // a crane sitting on this directory's inductor is not parked in the lot
     }
     var LOT_COLS = 2;
     var lotRows = Math.max(1, Math.ceil(parkedList.length / LOT_COLS));
@@ -1333,17 +1347,27 @@
       var tgt = null;
       if (cr.at) for (var q = 0; q < WH.layout.length; q++) if (WH.layout[q].name === cr.at) { tgt = WH.layout[q]; break; }
       var workPt = tgt ? { x: aisleX(tgt.sl.aisle, p), z: tgt.z } : null;
+      // WRITING HERE: this floor IS the directory the agent is writing to, so its crane sits on
+      // this directory's inductor. WRITING BELOW: `at` names the pallet on the way there, and the
+      // crane parks in front of it in the aisle (workPt above), carriage up at that pallet's level.
+      var sitting = !!cr.here;
       var bay = parkBay(cid);
 
       // The job this crane is on, from measured facts only.
       var jobKey = null, legs = null, carryFrom = 0, carryTo = 0;
-      if (!stopped) {
+      // Measured to be writing somewhere that is NOT on this floor (another branch of this
+      // warehouse, or another warehouse): it has no business at THIS inductor, so it parks in the lot.
+      var elsewhere = !!cr.work && !sitting && !tgt;
+      if (!stopped && !elsewhere) {
         if (cr.delivered) {
           jobKey = "dl:" + cr.delivered.key; legs = ["spur"]; carryFrom = 0; carryTo = 1;
         } else if (cr.rework) {
           jobKey = "rw:" + cr.rework + ":" + (tgt ? 1 : 0);
           legs = tgt ? ["spur", "work", "induct"] : ["spur", "induct"]; carryFrom = 1; carryTo = legs.length;
-        } else if (cr.carrying || cr.state === "moving") {
+        } else if (cr.carrying || cr.work || (cr.state === "moving" && (tgt || sitting))) {
+          // A TASK is a claim it holds, a directory it is measured writing to, or a recent line
+          // that names a place on this floor. "Signed on and recently chatty" is not a task, and
+          // a crane with no task does not move: it holds its bay.
           jobKey = "wk:" + (cr.carrying ? cr.carrying.key : "live") + ":" + (tgt ? 1 : 0);
           legs = tgt ? ["induct", "work"] : ["induct"]; carryFrom = 1; carryTo = 99;
         }
@@ -1367,33 +1391,36 @@
       }
       if (tx === undefined) {
         if (workPt) { tx = workPt.x; tz = workPt.z; tkind = "work"; }
-        else if (!stopped && cr.state === "scheduled" && ps.sh === "induct") { tx = inductX; tz = INDUCT_Z; tkind = "induct"; }
+        else if (sitting) { tx = inductX; tz = INDUCT_Z; tkind = "sit"; }
         else { tx = bay.x; tz = bay.z; tkind = "park"; }
       }
 
-      if (fresh) { ps.x = tx; ps.z = stopped ? tz : dockZ0; WH.cranePos[cid] = ps; }   // a new crane enters from the lane, on its own rail
+      // A crane with a task enters from the lane, on its own rail, and rides to it. A crane with
+      // no task is simply there: it is placed in its bay, it does not drive in to get there.
+      if (fresh) { ps.x = tx; ps.z = (stopped || tkind === "park") ? tz : dockZ0; WH.cranePos[cid] = ps; }
 
       if (!stopped && now >= ps.dwell) {
         ride(ps, tx, tz);
         if (Math.abs(ps.x - tx) < 0.01 && Math.abs(ps.z - tz) < 0.01) {
           if (job && job.i < legs.length) { job.i++; ps.dwell = now + 650; }                          // picked up / set down
-          else if (!job && cr.state === "scheduled" && !workPt) {                                     // queued work: shuttle bay <-> inductor
-            if (tkind === "induct") { ps.sh = "bay"; ps.dwell = now + 1400; }
-            else { ps.sh = "induct"; ps.dwell = now + 2200; }
-          }
         }
       }
       var loaded = !!job && job.i >= carryFrom && job.i < carryTo;
+      var arrived = Math.abs(ps.x - tx) < 0.03 && Math.abs(ps.z - tz) < 0.03;
+      // Parked in front of the pallet it is writing toward: the load it brought is on the carriage.
+      if (!stopped && tkind === "work" && tgt && cr.work && arrived) loaded = true;
+      // Sitting on the inductor, the work is already in this directory: nothing left on the carriage.
+      if (sitting && arrived) loaded = false;
 
       var tLevel = (tkind === "work" && tgt) ? levelY(tgt.sl.level) : 0;
       ps.y += (tLevel - ps.y) * 0.09;
       var pos = ps;
 
-      // Idle presence. A parked crane must not read as a travelling one (09 S3),
-      // so the carriage rides slowly up and down its own mast rather than moving
-      // along the floor - unmistakably "powered, holding station", not "in transit".
-      var phase = (now / 2600) + (cid.length * 0.9);
-      var breath = (!stopped && cr.state === "idle") ? (Math.sin(phase) * 0.5 + 0.5) * 0.9 : 0;
+      // No idle motion at all. A crane with no task holds its bay with the carriage down: it used to
+      // bob its carriage up and its mast down, and shuttle to the inductor while work was only queued,
+      // which read as work being done. "Powered, holding station" is the beacon below, which pulses
+      // in place and moves nothing (09 S3).
+      var breath = 0;
 
       // Beacon: every crane carries a status light that pulses while it is signed on.
       var beat = 0.55 + 0.45 * Math.sin(now / 520 + cid.length);
@@ -1406,8 +1433,10 @@
       var hovC = WH.hover && WH.hover.kind === "crane" && WH.hover.name === cr.agent;
       var cc = hovC ? shade(ccol, 86) : ccol;
 
-      // mast, standing on the rail
-      box(quads, pos.x, pos.z, 0.17, 0.17, frameTop + 0.55, cc, cmeta, 0);
+      // mast, standing on the rail — three stacked sections, so the painter orders a tall mast
+      // by where each part is rather than by one centre point halfway up.
+      var mastH = (frameTop + 0.55) / 3;
+      for (var ms = 0; ms < 3; ms++) box(quads, pos.x, pos.z, 0.17, 0.17, mastH, cc, cmeta, ms * mastH);
       // bogie: one axle pair on the single rail
       box(quads, pos.x, pos.z, 0.36, 0.44, 0.10, shade(cc, -22), cmeta, 0.03);
       box(quads, pos.x, pos.z - 0.15, 0.15, 0.11, 0.05, shade(cc, -70), cmeta, 0);
@@ -1424,9 +1453,18 @@
         box(quads, pos.x, pos.z, 0.36, 0.36, 0.24, shade(COL.amber, -4), cmeta, pos.y + 0.30 + breath);
       }
 
+      // DELIVERY ARROW: parked in front of its pallet with the carriage raised to that level, the
+      // load on the carriage points green into the rack location it is going to. Only while the
+      // crane is actually there, and only for a crane the sidecar measured writing below this floor.
+      if (!stopped && tkind === "work" && tgt && cr.work && arrived) {
+        var ay = levelY(tgt.sl.level) + 0.42, sgn = tgt.x >= pos.x ? 1 : -1;
+        lines.push({ a:{x:pos.x + sgn * 0.20,y:ay,z:pos.z}, b:{x:tgt.x - sgn * 0.12,y:ay,z:tgt.z},
+                     c: COL.green, w: 3, arrow: true, flow: true, head: true });
+      }
+
       // The path, following the rails it will actually ride: green while on a job,
       // blue (dashed) while queued work shuttles it out to the inductor.
-      if (!stopped && (job || cr.state === "scheduled") && (Math.abs(ps.x - tx) > 0.03 || Math.abs(ps.z - tz) > 0.03)) {
+      if (!stopped && job && (Math.abs(ps.x - tx) > 0.03 || Math.abs(ps.z - tz) > 0.03)) {
         var rp = railPath(ps, tx, tz);
         for (var sg = 0; sg < rp.length - 1; sg++) {
           if (Math.abs(rp[sg].x - rp[sg + 1].x) + Math.abs(rp[sg].z - rp[sg + 1].z) < 0.02) continue;
@@ -1505,17 +1543,38 @@
     })();
 
     // --- project, depth sort, paint ---
-    var tris = [];
+    // Painter's algorithm, FARTHEST FIRST. project() returns depth = y*sin(pitch) + z*cos(pitch),
+    // which GROWS toward the camera (the camera is above and on the +z side, which is also why
+    // nearer floor sits lower on the canvas). The old sort drew the largest depth first, i.e.
+    // nearest first, so anything behind painted over anything in front: an orange pallet behind
+    // a green one hid it. Ascending depth is far-to-near.
+    //
+    // Order is decided per SOLID, not per face: faces of different boxes interleave when each is
+    // sorted on its own centroid, and a big far face then lands on top of a small near one. The
+    // visible faces of one convex box never overlap each other, so their order is free.
+    // Flat ground (deck, aisle lanes, rails, the lot surface) is a layer underneath everything,
+    // stacked by height, so a rail can never paint over the crane standing on it.
+    var ground = [], units = {};
     for (var f = 0; f < quads.length; f++) {
-      var qd = quads[f], sp = [], dsum = 0;
-      for (var v = 0; v < qd.pts.length; v++) { var s = project(qd.pts[v], vp); sp.push(s); dsum += s.d; }
-      // Backface cull, but only for closed solids. The deck and the aisle
-      // lanes are single-sided planes and must draw from underneath too,
-      // or the floor vanishes when you orbit below the horizon.
-      if (qd.solid && facingAway(sp)) continue;
-      tris.push({ sp: sp, c: qd.c, d: dsum / qd.pts.length, meta: qd.meta });
+      var qd = quads[f], sp = [], dsum = 0, ysum = 0;
+      for (var v = 0; v < qd.pts.length; v++) { var s = project(qd.pts[v], vp); sp.push(s); dsum += s.d; ysum += qd.pts[v].y; }
+      var item = { sp: sp, c: qd.c, d: dsum / qd.pts.length, meta: qd.meta };
+      // Single-sided planes (and the lot) draw from underneath too, or the floor vanishes when
+      // you orbit below the horizon; only closed solids are backface-culled.
+      if (!qd.solid || (qd.meta && qd.meta.kind === "parking")) { item.y = ysum / qd.pts.length; ground.push(item); continue; }
+      if (facingAway(sp)) continue;
+      var un = units[qd.gid];
+      if (!un) un = units[qd.gid] = { d: project(qd.ctr, vp).d, faces: [] };
+      un.faces.push(item);
     }
-    tris.sort(function(x, y){ return y.d - x.d; });
+    ground.sort(function(x, y){ return (x.y - y.y) || (x.d - y.d); });
+    var order = Object.keys(units).map(function(k){ return units[k]; });
+    order.sort(function(x, y){ return x.d - y.d; });
+    var tris = ground;
+    for (var oi = 0; oi < order.length; oi++) {
+      order[oi].faces.sort(function(x, y){ return x.d - y.d; });
+      tris = tris.concat(order[oi].faces);
+    }
     for (var t = 0; t < tris.length; t++) {
       var tr = tris[t];
       ctx.beginPath();
@@ -1543,8 +1602,9 @@
       // Arrowheads: which way along the path, not just where it runs.
       if (ln.arrow) {
         var dx = B.x - A.x, dy = B.y - A.y, len = Math.sqrt(dx*dx + dy*dy);
-        if (len > 26) {
-          var ux = dx/len, uy = dy/len, hd = 7.5, heads = Math.min(3, Math.floor(len/48));
+        if (len > (ln.head ? 14 : 26)) {
+          // ln.head: an arrow that must always show its head (the delivery arrow is short)
+          var ux = dx/len, uy = dy/len, hd = 7.5, heads = Math.max(ln.head ? 1 : 0, Math.min(3, Math.floor(len/48)));
           ctx.setLineDash([]); ctx.globalAlpha = 0.95; ctx.fillStyle = ln.c;
           for (var h = 1; h <= heads; h++) {
             var t2 = (h / (heads + 1)) + (ln.flow ? ((performance.now()/2600) % (1/(heads+1))) : 0);
@@ -1661,8 +1721,9 @@
     ctx.globalAlpha = 1;
 
     $("wh-hud").textContent =
-      (d.path ? "/" + d.path : "/") + "   ·   " + p.aisles + " aisles · " + p.bays + " bays · " +
-      LEVELS + " levels   ·   " + n + " stored · " + d.cranes.length + " cranes" +
+      (d.readOnly ? d.label + "  " : "") + (d.path ? "/" + d.path : "/") + "   ·   " + p.aisles + " aisles · " + p.bays + " bays · " +
+      LEVELS + " levels   ·   " + n + " stored · " +
+      d.cranes.length + " cranes" +
       (d.staleSessions ? " (" + d.staleSessions + " expired sessions not drawn)" : "") +
       "   ·   read " + d.readAt.slice(11, 19) + "Z" + (stopped ? "   ·   E-STOPPED" : "");
 
@@ -1719,7 +1780,10 @@
     } else if (hit.kind === "crane") {
       var c2 = hit.cr;
       html = "<b>" + esc(c2.agent) + "</b> · " + esc(c2.state) +
-             (c2.at ? "<br>at " + esc(c2.at) : "<br><span style=\"color:var(--ink3)\">position unknown — parked at the dock</span>") +
+             (c2.work ? "<br>writing /" + esc(c2.work.rel) + (c2.here ? " — on this inductor" : c2.at ? " — via " + esc(c2.at) : "") : "") +
+             (c2.at ? "<br>at " + esc(c2.at)
+               : c2.away ? "<br><span style=\"color:var(--ink3)\">working in " + esc(c2.away.label) + " — parked at this dock</span>"
+               : "<br><span style=\"color:var(--ink3)\">position unknown — parked at the dock</span>") +
              (c2.note ? "<br>" + esc(c2.note) : "") +
              (c2.scheduled ? "<br>" + c2.scheduled + " queued" : "");
     } else if (hit.kind === "truck") {
@@ -1765,7 +1829,7 @@
 
   function crumb(d){
     var el = $("wh-crumb");
-    var html = '<span data-r="">root</span>';
+    var html = '<span data-r="">' + esc(d.readOnly ? d.label : "root") + '</span>';
     var acc = [];
     d.breadcrumb.forEach(function(seg, i){
       acc.push(seg);
@@ -1804,7 +1868,7 @@
         h += '<div class="it" data-k="crane" data-i="' + esc(c3.agent) + '" aria-selected="false">' +
              '<i class="dot" style="background:' + craneColour(c3, stopped) + '"></i>' +
              '<span class="nm">' + esc(c3.agent) + '</span>' +
-             '<span class="mt">' + esc(c3.state) + '</span></div>';
+             '<span class="mt">' + (c3.away ? '→ ' + esc(c3.away.label) : esc(c3.state)) + '</span></div>';
       });
     }
 
@@ -1869,6 +1933,8 @@
       $("ctl-name").textContent = c3.agent;
       $("ctl-dot").style.background = craneColour(c3, stopped);
       $("ctl-kvs").innerHTML = kv("state", c3.state) + kv("at", c3.at || "position unknown") +
+        kv("working in", c3.away ? c3.away.label : null) +
+        kv("writing", c3.work ? "/" + c3.work.rel + (c3.work.src === "bus" ? "  (its own bus line)" : "  (a file its ledger row names, modified just now)") : null) +
         kv("signed on", c3.signedOn ? c3.signedOn.replace("T", " ").slice(0, 19) : null) +
         kv("queued", c3.scheduled);
       if (c3.note) { $("ctl-last").textContent = c3.note; $("ctl-last").hidden = false; }
@@ -1991,7 +2057,7 @@
     if (!SEL) return;
     var txt = $("ctl-p").value.trim();
     if (!txt) return;
-    var body = { prompt: txt };
+    var body = { prompt: scopeTag() + txt };
     if (SEL.kind === "crane") body.agent = SEL.id;
     $("ctl-msg").textContent = "inducting…";
     api("/induct", { method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body) })
@@ -2019,8 +2085,15 @@
   // would remove the only thing holding that line.
   var PEND = null;
 
+  // A REQ row names its warehouse when the floor is not the plain main one: the ledger is shared,
+  // so "/Advertising" alone could mean either tree.
+  function scopeTag(){
+    if (WH.id === "main" && (WH.path || "").indexOf("@") !== 0) return "";
+    return "[" + WH.id + ":/" + (WH.path || "") + "] ";
+  }
+
   function pbarSummary(v){
-    var where = WH.path ? "/" + WH.path : "/";
+    var where = (WH.id === "main" ? "" : WH.id + ":") + (WH.path ? "/" + WH.path : "/");
     return '<b>About to induct</b> — nothing runs yet.' +
       '<br>· write a <code>REQ</code> row to <code>_os/tasks/INDEX.md</code>' +
       '<br>· scope <code>' + esc(where) + '</code>' +
@@ -2049,7 +2122,7 @@
     $("pbar-go").classList.remove("armed");
     $("pbar-msg").textContent = "inducting…";
     api("/induct", { method:"POST", headers:{"content-type":"application/json"},
-                     body: JSON.stringify({ prompt: v }) })
+                     body: JSON.stringify({ prompt: scopeTag() + v }) })
       .then(function(r){
         if (r.ok) {
           $("pbar-msg").innerHTML = "REQ row written · pointer <code>" + esc(r.body.pointer) +
@@ -2075,16 +2148,60 @@
     }
   });
 
+  // --- warehouses ----------------------------------------------------------
+  // "main" is the governed tree. Others are extra storage roots from the config; one fleet of
+  // cranes serves all of them, and each floor places a crane only where its own line says.
+  function renderWhSel(){
+    var box = $("wh-sel");
+    if (WH.list.length < 2) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = "";
+    WH.list.forEach(function(w){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = w.label;
+      b.setAttribute("aria-pressed", w.id === WH.id ? "true" : "false");
+      if (!w.online) { b.className = "off"; b.title = w.label + " is not mounted"; }
+      b.addEventListener("click", function(){ setWarehouse(w.id); });
+      box.appendChild(b);
+    });
+  }
+
+  function loadWarehouses(){
+    api("/warehouses").then(function(r){
+      if (!r.ok || !Array.isArray(r.body)) return;
+      WH.list = r.body;
+      if (!WH.list.some(function(w){ return w.id === WH.id; })) WH.id = "main";
+      renderWhSel();
+    });
+  }
+
+  function setWarehouse(id){
+    if (id === WH.id) return;
+    WH.id = id; WH.path = ""; WH.cranePos = {}; SEL = null; $("wh-ctl").hidden = true;
+    renderWhSel();
+    loadFloor("");
+  }
+
   function loadFloor(rel){
     if (rel === null || rel === undefined) rel = WH.path;
-    api("/floor?path=" + encodeURIComponent(rel)).then(function(r){
-      if (!r.ok) { $("wh-equip").innerHTML = '<div class="empty">' + esc(r.body.error || "sidecar unreachable") + '</div>'; return; }
+    var asked = WH.id;
+    api("/floor?wh=" + encodeURIComponent(asked) + "&path=" + encodeURIComponent(rel)).then(function(r){
+      if (asked !== WH.id) return;      // the Operator switched warehouse while this was in flight
+      if (!r.ok) {
+        // An offline warehouse must not leave the previous floor on screen under its name.
+        WH.data = null;
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        $("wh-hud").textContent = r.body.error || "sidecar unreachable";
+        $("wh-equip").innerHTML = '<div class="empty">' + esc(r.body.error || "sidecar unreachable") + '</div>';
+        return;
+      }
       var changed = r.body.path !== WH.path;
       WH.path = r.body.path;
       WH.data = r.body;
       if (changed) { WH.cranePos = {}; SEL = null; $("wh-ctl").hidden = true; }
       crumb(r.body);
-      $("c-wh").textContent = r.body.cranes.length ? r.body.cranes.length : "";
+      if (WH.id === "main") $("c-wh").textContent = r.body.cranes.length ? r.body.cranes.length : "";
       show($("wh-cranes"), r.body.cranes.length);
       show($("wh-pallets"), r.body.pallets.length);
       show($("wh-inducts"), r.body.inducts);
@@ -2093,7 +2210,7 @@
 
       // Red outranks the bar: a stopped floor takes no new orders.
       var stopped = r.body.estop !== "RUN";
-      $("pbar-pfx").textContent = "/" + (r.body.path || "");
+      $("pbar-pfx").textContent = (WH.id === "main" ? "" : WH.id + ":") + "/" + (r.body.path || "");
       $("pbar-in").disabled = stopped;
       $("pbar-go").disabled = stopped;
       $("wh-pbar").classList.toggle("stopped", stopped);
@@ -2130,6 +2247,12 @@
       return '<input type="checkbox" id="' + id + '"' + (value ? " checked" : "") +
              (editable ? "" : " disabled") + ' style="width:18px;height:18px;accent-color:var(--amber)">';
     }
+    if (Array.isArray(value) && value.some(function(x){ return x !== null && typeof x === "object"; })) {
+      // A list of objects (warehouses) is edited in parvis.config.json: a comma box would corrupt it.
+      return '<input id="' + id + '" value="' + esc(JSON.stringify(value)) + '" disabled' +
+             ' title="edit this key in the config file" style="flex:1;min-width:180px;background:var(--bg);' +
+             'border:1px solid var(--line2);color:var(--ink3);padding:6px 9px;border-radius:6px;font-family:var(--mono);font-size:12px">';
+    }
     if (Array.isArray(value)) {
       return '<input id="' + id + '" value="' + esc(value.join(", ")) + '"' + (editable ? "" : " disabled") +
              ' style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--line2);' +
@@ -2161,12 +2284,14 @@
         // here — showing it as editable would be a lie the next restart exposes.
         var editable = (src === "file" || src === "default");
         var needsRestart = (CFG.restartRequired || []).indexOf(k) !== -1;
+        var isLive = (CFG.liveKeys || []).indexOf(k) !== -1;
         var row = document.createElement("div");
         row.className = "row";
         row.innerHTML =
           '<span class="nm" style="flex:0 0 150px">' + esc(k) + '</span>' +
           inputFor(k, v, editable) +
           (needsRestart ? '<span class="tag t-BLOCKED">RESTART</span>' : '') +
+          (isLive ? '<span class="tag t-DONE" title="applies on save, no restart">LIVE</span>' : '') +
           '<span class="meta">' + esc(src) + (editable ? '' : ' · pinned') + '</span>';
         box.appendChild(row);
       });
@@ -2180,7 +2305,7 @@
       var src = CFG.sources[k];
       if (src !== "file" && src !== "default") return;     // pinned elsewhere
       var el = $("cfg-f-" + k);
-      if (!el) return;
+      if (!el || el.disabled) return;
       var orig = CFG.values[k];
       if (typeof orig === "boolean") patch[k] = el.checked;
       else if (Array.isArray(orig)) {
@@ -2199,8 +2324,12 @@
       body: JSON.stringify(patch)
     }).then(function(r){
       if (r.ok) {
-        $("cfg-msg").innerHTML = "written to <code>" + esc(r.body.path) + "</code> · restart the sidecar to apply";
+        $("cfg-msg").innerHTML = "written to <code>" + esc(r.body.path) + "</code> · " +
+          (r.body.restart ? "restart the sidecar to apply"
+            : (r.body.changed && r.body.changed.length ? "applied live — no restart needed" : "no change"));
         loadConfig();
+        loadWarehouses();
+        if ($("p-warehouse").classList.contains("on")) loadFloor(WH.path);
       } else {
         $("cfg-msg").textContent = r.body.error || "refused";
       }
@@ -2215,7 +2344,7 @@
     loadDocs();
   });
 
-  var loaders = { overview: refresh, warehouse: function(){ loadFloor(WH.path); },
+  var loaders = { overview: refresh, warehouse: function(){ loadWarehouses(); loadFloor(WH.path); },
                   docs: loadDocs, tasks: loadTasks, bus: loadBus,
                   surface: loadSurface, board: loadBoard, settings: loadConfig };
 
@@ -2289,7 +2418,7 @@
   $("p").addEventListener("keydown", function(e){ if (e.key === "Enter") induct(); });
 
   // --- boot ----------------------------------------------------------------
-  refresh().then(function(){ loadDocs(); loadTasks(); loadBus(); loadSurface(); loadFloor(""); });
+  refresh().then(function(){ loadDocs(); loadTasks(); loadBus(); loadSurface(); loadWarehouses(); loadFloor(""); });
   setInterval(refresh, 5000);   // the colours are the state — keep them live
 
   // The ledger, the bus and the surface feed used to load only on boot and on a
