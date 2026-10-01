@@ -84,6 +84,7 @@ these and is commented at the point of each one.
 | **Parvis Console** | Tabbed panels — state, documents, ledger, bus, surface, settings | Ships. |
 | **Parvis Floor** | The Warehouse tab: 3D floor, orbit and drill-in, equipment controls | Ships. See [`09-FLOOR.md`](09-FLOOR.md). |
 | **Prompt bar** | The induction input, on the console and on each piece of floor equipment | Ships. |
+| **Stop button** | `ESTOP`, beside the state pill (`POST /estop`). One press, no confirmation: it places the sentinel and the STATE mirror, appends one `FLASH` to the bus, and the pill turns red from the sidecar's own re-read. It **trips only**; there is no route that clears a stop, at any state. A stop that did not take returns an error and says so, and a stopped console shows `STOPPED`. Works at every state; needs only the session token. | Ships. |
 | **Surface reader** | `GET /surface/file` — click a pointer in the Surface tab to read it, as a document opens. Read-only, `.md` only, confined to the one directory; `_os` is still not editable. | Ships. |
 | **Operator questions** | The Tasks tab lists what agents asked about each row and takes Approve / Deny / Reply (`POST /tasks/answer`, [`03-BUS.md`](03-BUS.md) 5a). It records a decision and starts nothing. | Ships. |
 | **Live panels** | Tasks, Bus and Surface poll while the window is visible. A poll redraws only when the data changed, and never while a note box is being typed into. | Ships. |
@@ -98,7 +99,8 @@ and on an empty tree it correctly shows nothing.
 ## 5. Standing
 
 - **The page reads. The sidecar writes. The Operator commits.**
-- No surface spawns, sends, deploys, or clears an estop.
+- No surface spawns, sends, deploys, or clears an estop. A surface may **trip** one, as the Operator's
+  hand (the stop button, 01 §2); clearing is `parvis clear` at a terminal and nowhere else.
 - No secret reaches the browser, ever.
 - Output goes to files and the console, not to a chat window
   ([`04-OUTPUT-CONTRACT.md`](04-OUTPUT-CONTRACT.md)).

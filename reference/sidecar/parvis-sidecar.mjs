@@ -20,6 +20,7 @@
 
 import http from "node:http";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -1164,6 +1165,42 @@ export function createServer(cfg) {
         } catch (e) {
           return json(res, { error: e.message }, 400);
         }
+      }
+
+      // --- the stop button -------------------------------------------------
+      // THE ONE WRITE THAT IS ALLOWED AT EVERY STATE, and the only estop route there is. The
+      // Operator's hand, on the Operator's surface (01 §2: only the Operator writes the stop).
+      // It TRIPS the stop and nothing else: there is deliberately no route that clears one, at
+      // any state, because no surface clears an estop (07 §5) — that is `parvis clear` at a
+      // terminal. Tripping is the safe direction, so it is gated by nothing but the session token.
+      //
+      // It writes what `parvis estop` writes: the sentinel (a regular file named `estop` at the
+      // root) and the STATE mirror. Either one alone is enough to read as STOP, so a tree where the
+      // sentinel name is taken by a directory still stops through the mirror. It only ever claims
+      // STOPPED after re-reading the gate: a stop that did not take must say so.
+      if (url.pathname === "/estop" && POST) {
+        const before = gate();
+        if (before.verb === "STOP") return json(res, { ok: true, already: true, reason: before.reason, sentinel: before.sentinel });
+        const b = await readJson(req);
+        const reason = String(b.reason || "").replace(/\s+/g, " ").trim().slice(0, 200) || "stopped from the console by the Operator";
+        const stamp = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+        const who = String(cfg.operator || os.userInfo().username || "operator").replace(/\s+/g, "-");
+        const sentinelPath = path.join(ROOT, "estop");
+        let sentinel = null, sentinelError = null, mirror = false, mirrorError = null;
+        try { fs.writeFileSync(sentinelPath, `${stamp}  ${who}  ${reason}\n`, { encoding: "utf8", flag: "wx" }); sentinel = sentinelPath; }
+        catch (e) { sentinelError = String(e.code || e.message); }
+        try {
+          fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+          fs.writeFileSync(STATE_FILE, `STOP  ${stamp}  ${who}  ${reason}\n`, "utf8");
+          mirror = true;
+        } catch (e) { mirrorError = String(e.code || e.message); }
+        const after = gate();
+        if (after.verb !== "STOP") {
+          return json(res, { error: "NOT STOPPED — neither the sentinel nor the STATE mirror could be written", sentinelError, mirrorError, state: after.verb }, 500);
+        }
+        // The log-off line: the one thing a stopped sidecar still writes. Best-effort; the stop has already taken.
+        try { appendBus(`${busTime()}  CONSOLE > ALL  FLASH  ESTOP tripped from the console by ${who}: ${reason}`); } catch { /* the bus is not the stop */ }
+        return json(res, { ok: true, already: false, reason, sentinel, sentinelError, mirror, mirrorError });
       }
 
       // --- write -----------------------------------------------------------
