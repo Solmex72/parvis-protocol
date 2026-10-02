@@ -102,6 +102,15 @@ version that survives scrutiny — never by modification date.
 | **Pruned** | The three competing three-tag definitions. |
 | **Why** | The tags are not rivals; they are one vocabulary that three files each sampled. `[ASSUMED]` (an unchecked working premise) and `[PROPOSED]` (a recommendation) are genuinely different states and collapsing them loses information. Defining the set once, in [`02`](protocol/02-EVIDENCE.md), is the fix. |
 
+## D-11 · Who ratifies a tree's Constitution
+
+| | |
+|---|---|
+| **Rivals** | (a) Each tree's Operator decides its own constitution, and the public copy is only a proposal. (b) The model running the tree ratifies its own, with the Operator able to refuse. (c) The model decides, with the Operator informed. |
+| **Kept** | (a). |
+| **Pruned** | (b) and (c). |
+| **Why** | (b) and (c) change the premise of the protocol, not a clause. [`08`](protocol/08-AGENTS.md) §7 states the philosophy once: the machine reports, the human decides. Under (a) the public [`CONSTITUTION.md`](CONSTITUTION.md) stays unratified and binds nothing here. Inside a tree that adopts it, the Operator ratifies and amends it, an agent never enacts, and no amendment gives an agent the irreversible act (Articles III.1, XI.1, XI.3 and XI.6). The maintainer decided this on 2026-10-02, having first been asked whether the model should ratify. |
+
 ---
 
 # Part 2 · Unresolved
@@ -241,23 +250,6 @@ ever release the act it blocks, are for the owner to decide.
 
 **What shipped.** The rule, in the proposed Constitution only, with the exclusions written out. `03` is
 unchanged.
-
-## U-09 · Who ratifies a tree's Constitution? — *the premise of the protocol*
-
-**The conflict.** The proposed [`CONSTITUTION.md`](CONSTITUTION.md) says that inside a tree that adopts it, only the
-Operator ratifies and amends it, and that an agent never enacts (Articles III.1, XI.1 and XI.6). It bars any
-amendment that gives an agent the irreversible act (XI.3). That follows the sentence [`08`](protocol/08-AGENTS.md)
-§7 calls the philosophy, stated once: the machine reports, the human decides. The maintainer's position is that
-this copy stays unratified, because the model running a file system will ultimately decide its own constitution.
-
-**Why it was not settled.** The two do not say how they fit. The position could mean that each tree's Operator
-decides and this copy is only a proposal; or that the model running the tree ratifies its own constitution, with
-the Operator able to refuse; or that the model decides with the Operator informed. The second and third change the
-premise of the protocol, not a clause.
-
-**What shipped.** This copy is unratified and binds nothing. Article XI.6 says a tree decides its own
-constitution. The articles that name the Operator as the ratifier are unchanged, as a default an adopter can
-replace by writing it down.
 
 ---
 

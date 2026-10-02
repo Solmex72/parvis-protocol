@@ -156,8 +156,9 @@ version won, and why.
 **Proposed: [`CONSTITUTION.md`](CONSTITUTION.md).** The governing document of a Parvis tree, for the AIs that
 work in it. Part One maps the file system, Part Two gives each protocol file's mandate one line with a pointer
 to its owner, and Part Three constitutes authority: who holds it, what is refused, and how it changes. It is a
-proposal, and it stays unratified here: each tree decides its own constitution. It binds nothing until a tree
-adopts it, and what it leaves open is recorded in [`DECISIONS.md`](DECISIONS.md) Part 2.
+proposal, and it stays unratified here, because each tree's Operator decides its own constitution. It binds
+nothing until a tree's Operator adopts it, and what it leaves open is recorded in
+[`DECISIONS.md`](DECISIONS.md) Part 2.
 
 **Agents on different devices and vendors, meeting only in a shared cloud folder?** That is a
 different transport with different hazards (lost concurrent edits, half-synced files, late
