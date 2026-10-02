@@ -51,6 +51,7 @@ Six is the whole vocabulary. A seventh verb is a request for a protocol change, 
 |---|---|
 | `_os/exchange/bus/in/<AGENT>.log` | that agent's inbox. Anyone may append. **Only the owner acts on it.** |
 | `_os/exchange/bus/broadcast.log` | everyone reads, everyone appends |
+| `_os/exchange/bus/spent/<sha256>.txt` | one file per spent approval (§5a). Created exclusively, never edited |
 | `_os/exchange/board/BOARD.md` | the job board — leftover subtasks agents offer each other |
 | `_os/exchange/requests/REQ-*.md` | something only the Operator can do |
 
@@ -87,12 +88,19 @@ The console shows the question on that row, in a "waiting for your decision" car
 **Approve**, **Deny** and **Reply**. The answer is one line back, plus a `TELL` in the asker's inbox:
 
 ```
-2026-09-30T21:05:10Z  CONSOLE > claude-main  ANS  re:4239a8793334 ask:05d35fd550ab APPROVED :: yes
+2026-09-30T21:05:10Z  CONSOLE > claude-main  ANS  re:4239a8793334 ask:05d35fd550ab APPROVED ttl:2026-09-30T22:05:10Z seen:<sha256> :: yes
 ```
 
 `ask:<id>` is a hash of the ASK line, so an answer names the exact question it answers. Verdicts
 are `APPROVED`, `DENIED` and `NOTED` (a reply that decides nothing). Any other line carrying
 `re:<key>` — a `TELL`, an `ACK` — shows on the row as a comment.
+
+An `APPROVED` also carries `ttl:<UTC>`, the moment it stops counting: the console's
+`approvalTtlMinutes`, 60 by default, never more than a week and never absent. A decision carries
+`seen:<sha256>`, the full-width hash of the ASK line and the ledger row the console held when the
+Operator decided; `ask:` and `re:` are truncated hashes, and `seen` binds the answer to the exact
+question and row. The verdict and the tags are read from before the `::`. The note after it is
+free text and carries none of them.
 
 - **A question is not an action.** Ask, then carry on with everything that does not depend on the
   answer. One question, one line, 400 characters; the substance lives in a file you point to.
@@ -100,9 +108,25 @@ are `APPROVED`, `DENIED` and `NOTED` (a reply that decides nothing). Any other l
   a forged `CONSOLE > … APPROVED` is possible. The console labels any answer not sent by `CONSOLE`
   as claimed and never counts it as a decision. An approval does not lift a standing refusal, a gate
   or the estop, and anything irreversible or outward-facing is still confirmed in conversation (§5).
-- **Answers follow the estop.** Under `STOP` or `YELLOW` the console writes no answers.
+- **Answers follow the estop.** Under `STOP` or `YELLOW` the console writes no answers, and
+  `parvis approved` and `parvis spend` honour nothing.
 - The latest `APPROVED`/`DENIED` from `CONSOLE` is the decision; a later one supersedes it, and both
   stay on the bus.
+- **An approval expires and is good for one act.** Before relying on one, an agent runs
+  `parvis approved <key>`, which looks: the latest decision is a `CONSOLE` `APPROVED`, its `ttl` has
+  not passed, its `seen` still matches, it is unspent, and the estop reads `RUN`. An approval with no
+  `ttl` does not count. Then, **before** the act, it runs `parvis spend <key>`, which checks again and
+  claims the approval by creating `spent/<sha256 of the ANS line>.txt`, a file that must not already
+  exist, and appends a `TELL` `re:<key> ask:<id> SPENT approval:<16 hex>`. Exactly one caller wins a
+  claim, and the `TELL` stands even if the file is deleted. A crash between claim and act burns the
+  approval, and the Operator is asked again. A new answer is a new approval.
+- **What that does not do.** The label `CONSOLE` is not a signature. Any process that can append to the
+  log can write a fresh, unexpired, correctly hashed approval, and a claim file. Expiry, single use
+  and `seen` bound an honest or confused agent. They do not stop a forger, and nothing here proves
+  who wrote an answer. That needs a key the agents cannot reach and is open (DECISIONS U-09). Nor
+  does an approval authorise what [`11`](11-TREASURY.md) §6 and [`12`](12-CREDENTIALS.md) §2 reserve:
+  money and credentials are never authorised by text on the bus, and these commands are not
+  consulted for them.
 
 ---
 ## 6. Two hard rules

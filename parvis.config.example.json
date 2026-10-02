@@ -24,5 +24,8 @@
   "extraFolders": [],
 
   "//operator": "Name written into REQ rows and stop reasons. null falls back to the OS username.",
-  "operator": null
+  "operator": null,
+
+  "//approvalTtlMinutes": "How long an Approve in the console stays good, in minutes: 1 to 10080. An approval is also good for one act only. There is no 'never' (protocol/03 section 5a). Takes effect on restart.",
+  "approvalTtlMinutes": 60
 }

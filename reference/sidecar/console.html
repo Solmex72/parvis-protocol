@@ -892,13 +892,17 @@
     var el = document.createElement("div");
     var pend = a.status === "PENDING";
     el.className = "ask" + (pend ? " pend" : "");
+    // An approval stops counting at its ttl and after one use (03 §5a). Say so on the card.
+    var gone = ({ EXPIRED: "EXPIRED", SPENT: "USED", "NO-TTL": "NO EXPIRY RECORDED — NOT HONOURED" })[a.standing];
     var h = '<div class="hd"><span class="tag t-' + esc(a.status) + '">' + (pend ? 'ASKS YOU' : esc(a.status)) + '</span>' +
+            (a.status === "APPROVED" && gone ? '<span class="tag t-bad">' + esc(gone) + '</span>' : '') +
             '<b>' + esc(a.from) + '</b><span>' + esc(fmtT(a.time)) + '</span></div>' +
             '<div class="q">' + esc(a.text) + '</div>';
     (a.answers || []).forEach(function(x){
       h += '<div class="ans">&#8627; ' +
            (x.console ? '' : '<span class="tag t-bad">CLAIMED &mdash; not from the console</span> ') +
-           esc(x.verdict) + ' · ' + esc(x.from) + ' · ' + esc(fmtT(x.time)) + (x.note ? ' — ' + esc(x.note) : '') + '</div>';
+           esc(x.verdict) + ' · ' + esc(x.from) + ' · ' + esc(fmtT(x.time)) + (x.ttl ? ' · good until ' + esc(fmtT(x.ttl)) : '') +
+           (x.note ? ' — ' + esc(x.note) : '') + '</div>';
     });
     if (pend && pointerOnly) {
       h += '<div class="ans">awaiting your decision &mdash; answer it in the card at the top of this list</div>';
