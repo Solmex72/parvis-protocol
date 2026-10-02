@@ -54,28 +54,78 @@ export function createServer(cfg) {
   // Warehouses: "main" is the governed tree (cranes, ledger, bus). Any configured secondary
   // is a second storage root the floor LISTS and nothing more — no agents are measured there,
   // nothing is written there, no document is opened from it. A secondary that is not mounted
-  // reports offline; it never renders as an empty floor.
+  // reports offline; it never renders as an empty floor. The list is LIVE: it is re-read from the
+  // config file whenever that file changes (syncWarehouses below), so adding a directory from the
+  // Warehouse tab shows up at once and needs no restart.
   const WAREHOUSES = new Map([["main", { id: "main", label: "Claude tree", root: ROOT, primary: true }]]);
-  for (const w of cfg.warehouses || []) {
-    WAREHOUSES.set(w.id, { id: w.id, label: w.label || w.id, root: path.resolve(w.root), primary: false });
+  // Is a warehouse root answering? NEVER a synchronous stat: an unreachable network share can take
+  // seconds to fail, and a blocking call in a request handler freezes every panel for that long. The
+  // check runs on the thread pool, is bounded, and its answer is remembered for ONLINE_TTL_MS. A root
+  // that does not answer in time is reported OFFLINE (never as an empty floor), and the slow stat is
+  // left to finish in the background.
+  const ONLINE = new Map();            // id -> { at, ok }
+  const ONLINE_TTL_MS = 15000, ONLINE_WAIT_MS = 1500;
+  async function warehouseUp(wh) {
+    const hit = ONLINE.get(wh.id);
+    if (hit && Date.now() - hit.at < ONLINE_TTL_MS) return hit.ok;
+    const probe = fs.promises.stat(wh.root).then((s) => s.isDirectory(), () => false);
+    const slow = new Promise((resolve) => setTimeout(() => resolve(false), ONLINE_WAIT_MS));
+    const ok = await Promise.race([probe, slow]);
+    ONLINE.set(wh.id, { at: Date.now(), ok });
+    return ok;
   }
-  const warehouseOnline = (wh) => { try { return fs.statSync(wh.root).isDirectory(); } catch { return false; } };
+  const knownOffline = (wh) => ONLINE.get(wh.id)?.ok === false;
+  // Drive letters whose warehouse is known to be down: text naming a path there is not walked, or a
+  // dead share would block the walk of every bus line that mentions it.
+  const offlineDrives = () => new Set([...WAREHOUSES.values()].filter(knownOffline)
+    .map((w) => /^[A-Za-z]:/.test(w.root) ? w.root[0].toUpperCase() : null).filter(Boolean));
 
   // Extra folders expand the MAIN warehouse: each is mounted at its top level as a pallet named
   // "@<alias>" and navigated by that prefix. Re-read from the config file when it changes, so
   // adding one in Settings shows up on the floor without a restart. Listing only — a mount is
   // never writable, never editable, and never joins the ledger or bus paths.
-  const EXTRA = { mtime: -1, raw: null, key: "", list: [] };
-  function extraFolders() {
-    let raw = cfg.extraFolders;
+  // The keys the sidecar re-reads from the config file whenever it changes (config.LIVE_KEYS):
+  // one stat per call, one parse per change.
+  const LIVE = { mtime: -1, file: {} };
+  function liveKey(k, fallback) {
     try {
       const st = fs.statSync(cfg.configPath);
-      if (st.mtimeMs !== EXTRA.mtime) {
-        EXTRA.mtime = st.mtimeMs;
-        try { EXTRA.raw = JSON.parse(fs.readFileSync(cfg.configPath, "utf8")).extraFolders; } catch { /* keep the last good read */ }
+      if (st.mtimeMs !== LIVE.mtime) {
+        LIVE.mtime = st.mtimeMs;
+        try {
+          const j = JSON.parse(fs.readFileSync(cfg.configPath, "utf8"));
+          LIVE.file = (j && typeof j === "object" && !Array.isArray(j)) ? j : {};
+        } catch { /* keep the last good read */ }
       }
-      if (Array.isArray(EXTRA.raw)) raw = EXTRA.raw;
     } catch { /* no file: the startup value stands */ }
+    return Array.isArray(LIVE.file[k]) ? LIVE.file[k] : fallback;
+  }
+
+  // Rebuild the warehouse list in place when the config's `warehouses` changed. An entry that does not
+  // validate is skipped, never half-applied; "main" can neither be replaced nor removed.
+  let WH_KEY = "";
+  function syncWarehouses() {
+    const raw = liveKey("warehouses", cfg.warehouses || []);
+    const key = JSON.stringify(raw);
+    if (key === WH_KEY) return;
+    WH_KEY = key;
+    const keep = new Set(["main"]);
+    for (const w of raw) {
+      if (!w || typeof w.id !== "string" || !/^[a-z][a-z0-9-]{0,19}$/.test(w.id) || keep.has(w.id)) continue;
+      if (typeof w.root !== "string" || !path.isAbsolute(w.root)) continue;
+      keep.add(w.id);
+      const root = path.resolve(w.root);
+      const prev = WAREHOUSES.get(w.id);
+      if (prev && prev.root !== root) ONLINE.delete(w.id);
+      WAREHOUSES.set(w.id, { id: w.id, label: (typeof w.label === "string" && w.label) || w.id, root, primary: false });
+    }
+    for (const id of [...WAREHOUSES.keys()]) if (!keep.has(id)) { WAREHOUSES.delete(id); ONLINE.delete(id); }
+  }
+  syncWarehouses();
+
+  const EXTRA = { key: "", list: [] };
+  function extraFolders() {
+    const raw = liveKey("extraFolders", cfg.extraFolders);
     const key = JSON.stringify(raw || []);
     if (key === EXTRA.key) return EXTRA.list;
     const used = new Set();
@@ -422,6 +472,19 @@ export function createServer(cfg) {
   // Path evidence in free text (a bus line): compare case-insensitively with "/" separators, and
   // require the path to end on a boundary so "G:/My Drive" never matches "G:/My Drive Old".
   const normPath = (s) => String(s).replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  // A directory this machine can reach RIGHT NOW, on the thread pool and bounded: a dead share must
+  // cost a wait, never a frozen console.
+  const isReachableDir = (p, ms) => Promise.race([
+    fs.promises.stat(p).then((s) => s.isDirectory(), () => false),
+    new Promise((resolve) => setTimeout(() => resolve(false), ms)),
+  ]);
+  // A warehouse id: a-z, 0-9 and dashes, starting with a letter, at most 20 characters.
+  const slugId = (s) => {
+    let id = String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if (!/^[a-z]/.test(id)) id = "w-" + id;
+    id = id.slice(0, 18).replace(/-+$/, "");
+    return id || "folder";
+  };
   const pathHit = (textN, pathN) =>
     new RegExp("(^|[^a-z0-9_.-])" + pathN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[/\\s\"'`,.;:)\\]])").test(textN);
 
@@ -443,7 +506,10 @@ export function createServer(cfg) {
       real = fs.realpathSync(path.resolve(base, sub));
       realRoot = fs.realpathSync(base);
     } catch { return null; }
-    if (real !== realRoot && !real.startsWith(realRoot + path.sep)) return null;
+    // Containment by relative path, not by prefix: a drive root ("C:\") already ends in a separator,
+    // so "root + sep" is "C:\\" and no child of a whole file system ever matched it.
+    const within = path.relative(realRoot, real);
+    if (within.startsWith("..") || path.isAbsolute(within)) return null;
     try { if (!fs.statSync(real).isDirectory()) return null; } catch { return null; }
     return { abs: real, rel: clean };
   }
@@ -540,11 +606,14 @@ export function createServer(cfg) {
   // Where a real absolute path sits: which warehouse, and the relative path the floor would use.
   // Longest root first, so an extra folder mounted inside the main tree wins over the tree.
   function placeOf(realAbs) {
+    syncWarehouses();
     const roots = [
       ...extraFolders().map((m) => ({ wh: "main", base: m.root, prefix: "@" + m.alias })),
       ...[...WAREHOUSES.values()].map((w) => ({ wh: w.id, base: w.root, prefix: "" })),
     ].sort((a, b) => b.base.length - a.base.length);
+    const down = offlineDrives();
     for (const r of roots) {
+      if (/^[A-Za-z]:/.test(r.base) && down.has(r.base[0].toUpperCase())) continue;   // never stat a dead share
       const rb = realOf(r.base);
       if (!rb) continue;
       const rel = path.relative(rb, realAbs);
@@ -583,7 +652,9 @@ export function createServer(cfg) {
 
   function evidenceIn(text) {
     const t = String(text || ""), out = [];
+    const down = offlineDrives();
     for (const m of t.matchAll(/(?<![A-Za-z0-9_])[A-Za-z]:[\\/]/g)) {
+      if (down.has(m[0][0].toUpperCase())) continue;   // a path on a known-dead share is not walked
       const p = diskPathFrom(t.slice(m.index));
       if (p) out.push(p);
     }
@@ -631,6 +702,7 @@ export function createServer(cfg) {
   }
 
   function floor(relPath, whId = "main") {
+    syncWarehouses();
     const wh = WAREHOUSES.get(whId);
     if (!wh) return null;
     const mounts = wh.primary ? extraFolders() : [];
@@ -1104,15 +1176,103 @@ export function createServer(cfg) {
         } catch { return json(res, { error: "unreadable" }, 500); }
       }
       if (url.pathname === "/warehouses" && req.method === "GET") {
-        return json(res, [...WAREHOUSES.values()].map((w) => ({
-          id: w.id, label: w.label, primary: w.primary, online: warehouseOnline(w),
+        syncWarehouses();
+        const list = await Promise.all([...WAREHOUSES.values()].map(async (w) => ({
+          id: w.id, label: w.label, primary: w.primary, online: await warehouseUp(w), root: w.root,
         })));
+        return json(res, { warehouses: list, folders: extraFolders().map((m) => ({ alias: m.alias, root: m.root })) });
       }
+
+      // --- add / remove a directory on the floor -----------------------------
+      // Everything here edits the config file and nothing else: a directory is only ever LISTED
+      // (names and counts), never written to, never opened, and a removal never touches the
+      // directory itself. Like every config write it refuses unless the state is RUN.
+      if (url.pathname === "/warehouses/candidates" && req.method === "GET") {
+        syncWarehouses();
+        const have = new Set([...WAREHOUSES.values()].map((w) => normPath(w.root)).concat(extraFolders().map((m) => normPath(m.root))));
+        const probes = [];
+        if (process.platform === "win32") for (const L of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") probes.push({ p: L + ":\\", label: L + ":" });
+        else probes.push({ p: "/", label: "/" });
+        const home = os.homedir();
+        for (const n of ["OneDrive", "iCloudDrive", "iCloud Drive", "Dropbox", "Google Drive"]) probes.push({ p: path.join(home, n), label: n });
+        for (const base of ["/Volumes", "/mnt", "/media"]) {
+          try { for (const v of fs.readdirSync(base)) probes.push({ p: path.join(base, v), label: v }); } catch { /* not this OS */ }
+        }
+        // Probed in parallel and bounded, so a dead network share costs one wait, not one per letter.
+        const found = [];
+        await Promise.all(probes.map(async (c) => { if (await isReachableDir(c.p, 1200)) found.push(c); }));
+        const out = [], seen = new Set();
+        for (const c of found.sort((a, b) => a.p.localeCompare(b.p))) {
+          const k = normPath(c.p);
+          if (have.has(k) || seen.has(k)) continue;
+          seen.add(k);
+          out.push({ path: c.p, label: c.label });
+        }
+        return json(res, out);
+      }
+
+      if (url.pathname === "/warehouses/add" && POST) {
+        const g = gate();
+        if (g.verb !== "RUN") return json(res, { error: `estop ${g.verb} — no writes`, reason: g.reason }, 423);
+        const b = await readJson(req);
+        const raw = typeof b.path === "string" ? b.path.trim().replace(/^"(.*)"$/, "$1") : "";
+        if (!raw || raw.includes("\0")) return json(res, { error: "a path is required" }, 400);
+        if (!path.isAbsolute(raw)) return json(res, { error: "the path must be absolute, like D:\\Projects or /home/you/data" }, 400);
+        const root = path.resolve(raw);
+        if (!(await isReachableDir(root, 3000))) return json(res, { error: "that is not a directory this machine can reach right now" }, 400);
+        syncWarehouses();
+        let file = {};
+        try { file = JSON.parse(fs.readFileSync(cfg.configPath, "utf8")) || {}; } catch { /* no config file yet */ }
+        try {
+          if (b.as === "folder") {
+            const cur = Array.isArray(file.extraFolders) ? file.extraFolders : (cfg.extraFolders || []);
+            if (cur.some((x) => normPath(x) === normPath(root))) return json(res, { error: "that directory is already a pallet on the main floor" }, 409);
+            config.save(cfg.configPath, { extraFolders: [...cur, root] });
+            LIVE.mtime = -1;
+            return json(res, { ok: true, as: "folder", path: root });
+          }
+          const cur = Array.isArray(file.warehouses) ? file.warehouses : (cfg.warehouses || []);
+          if (cur.some((w) => w && normPath(w.root) === normPath(root))) return json(res, { error: "that directory is already a warehouse" }, 409);
+          const label = String(b.label || "").replace(/\s+/g, " ").trim().slice(0, 40) || (path.basename(root) || root.replace(/[\\/]+$/, ""));
+          const base = slugId(label), taken = new Set(["main", ...cur.map((w) => w && w.id)]);
+          let id = base;
+          for (let n = 2; taken.has(id); n++) id = base.slice(0, 16) + "-" + n;
+          config.save(cfg.configPath, { warehouses: [...cur, { id, label, root }] });
+          LIVE.mtime = -1;
+          return json(res, { ok: true, as: "warehouse", id, label, root });
+        } catch (e) { return json(res, { error: String(e.message || e) }, 400); }
+      }
+
+      if (url.pathname === "/warehouses/remove" && POST) {
+        const g = gate();
+        if (g.verb !== "RUN") return json(res, { error: `estop ${g.verb} — no writes`, reason: g.reason }, 423);
+        const b = await readJson(req);
+        let file = {};
+        try { file = JSON.parse(fs.readFileSync(cfg.configPath, "utf8")) || {}; } catch { /* nothing to remove */ }
+        try {
+          if (typeof b.id === "string") {
+            if (b.id === "main") return json(res, { error: "the main warehouse cannot be removed" }, 400);
+            const cur = Array.isArray(file.warehouses) ? file.warehouses : [];
+            const next = cur.filter((w) => !(w && w.id === b.id));
+            if (next.length === cur.length) return json(res, { error: "no such warehouse in the config" }, 404);
+            config.save(cfg.configPath, { warehouses: next });
+          } else if (typeof b.folder === "string") {
+            const cur = Array.isArray(file.extraFolders) ? file.extraFolders : [];
+            const next = cur.filter((x) => normPath(x) !== normPath(b.folder));
+            if (next.length === cur.length) return json(res, { error: "no such folder in the config" }, 404);
+            config.save(cfg.configPath, { extraFolders: next });
+          } else return json(res, { error: "say which: an id, or a folder path" }, 400);
+          LIVE.mtime = -1;
+          return json(res, { ok: true });
+        } catch (e) { return json(res, { error: String(e.message || e) }, 400); }
+      }
+
       if (url.pathname === "/floor" && req.method === "GET") {
+        syncWarehouses();
         const whId = url.searchParams.get("wh") || "main";
         const wh = WAREHOUSES.get(whId);
         if (!wh) return json(res, { error: "no such warehouse" }, 404);
-        if (!warehouseOnline(wh)) return json(res, { error: "warehouse offline — " + wh.label + " is not mounted" }, 503);
+        if (!(await warehouseUp(wh))) return json(res, { error: "warehouse offline — " + wh.label + " is not mounted" }, 503);
         const f = floor(url.searchParams.get("path") || "", whId);
         if (!f) return json(res, { error: "not a directory inside the root" }, 404);
         return json(res, f);
@@ -1135,7 +1295,8 @@ export function createServer(cfg) {
       // --- settings --------------------------------------------------------
       if (url.pathname === "/config" && req.method === "GET") {
         return json(res, {
-          values: Object.fromEntries(config.KEYS.map((k) => [k, cfg[k]])),
+          // A live key shows what the file says NOW, not the value the sidecar started with.
+          values: Object.fromEntries(config.KEYS.map((k) => [k, config.LIVE_KEYS.includes(k) ? liveKey(k, cfg[k]) : cfg[k]])),
           sources: cfg.sources,
           defaults: config.DEFAULTS,
           configPath: cfg.configPath,
@@ -1143,7 +1304,7 @@ export function createServer(cfg) {
           warnings: cfg.warnings,
           // Which keys only take effect on restart. Saying so is better than a
           // settings panel that appears to change the bind address live.
-          restartRequired: ["root", "host", "port", "editableDirs", "lockedFiles", "warehouses"],
+          restartRequired: ["root", "host", "port", "editableDirs", "lockedFiles"],
           liveKeys: config.LIVE_KEYS,
         });
       }

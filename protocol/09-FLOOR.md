@@ -289,3 +289,25 @@ a delivery or rework leg, or a recent bus line that names a place on this floor.
 chatty, or having a REQ queued is not a task. Such a crane is placed in its bay (it does not drive in to
 get there) and holds it with the carriage down: the idle carriage bob and the bay-to-inductor shuttle for
 queued work are gone. Only the status beacon pulses, in place. When a task ends the crane returns to its bay.
+
+---
+
+## Amendment E — add a directory from the floor (the Operator's order, 2026-10-01)
+
+The Warehouse tab has a **`+`** beside the warehouse switcher. It opens a dialog to put another disk or
+folder on the floor: type an absolute path or pick a detected disk (drive letters, OneDrive, iCloud Drive,
+`/Volumes`, `/mnt`, `/media`), optionally name it, and choose **its own warehouse** (a button on the
+switcher) or **a pallet on the main floor** (`@folder`, Amendment C). The dialog also lists what was added,
+with Remove.
+
+**It edits the config file and nothing else.** `warehouses` and `extraFolders` are live keys: the sidecar
+re-reads them when the file changes, so no restart. A directory is only ever **listed** (names and counts):
+nothing is written to it and no file inside it is opened, and removing it never touches the directory.
+Routes: `GET /warehouses/candidates`, `POST /warehouses/add`, `POST /warehouses/remove`; `GET /warehouses`
+answers `{ warehouses, folders }`.
+
+**Guards.** The path must be absolute and a directory the machine can reach *right now* (checked on the
+thread pool, bounded, never blocking the console); the same directory cannot be added twice; `main` cannot
+be removed; ids are `a-z`, `0-9` and `-`, made unique. Like every config write these routes refuse at any
+state but `RUN` (`423`). A file system that stops answering is shown **offline**, never as an empty
+floor, and a path on a known-dead drive is not walked.

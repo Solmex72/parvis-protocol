@@ -34,7 +34,7 @@ export const DEFAULTS = Object.freeze({
 });
 
 // Keys the sidecar picks up from the file without a restart.
-export const LIVE_KEYS = Object.freeze(["extraFolders"]);
+export const LIVE_KEYS = Object.freeze(["extraFolders", "warehouses"]);
 
 export const KEYS = Object.keys(DEFAULTS);
 
