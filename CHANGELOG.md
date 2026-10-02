@@ -74,8 +74,12 @@ adopters' agents were told to follow. Those get a major version, the same as an 
 - **A whole file system could not be browsed.** A drive root such as `C:\` already ends in a separator,
   so the containment check built `C:\\` and rejected every folder under it. It now compares relative paths.
 - **A dead network share froze the console.** The warehouse online check was a blocking `statSync`, which
-  can take seconds to fail on an unreachable share and stalled every panel. It now runs on the thread pool,
-  is bounded to 1.5 s and is remembered for 15 s; paths on a known-dead drive are not walked either.
+  can take seconds to fail on an unreachable share and stalled every panel. It now runs on the thread pool;
+  a known answer is returned at once and refreshed in the background every 15 s, only one probe runs per
+  warehouse at a time, and paths on a known-dead drive are not walked either. The governed tree itself is
+  never probed: a first version that timed the probe out at 1.5 s answered `503` for the **main** floor
+  whenever a loaded runner starved the event loop, which the full-system stress test caught. That test now
+  also asks a fresh server for the main floor with every `stat` made slower than that wait.
 - `/config` showed the values the sidecar started with, not the live keys' current values.
 - Switching to an offline warehouse left the previous warehouse's name in the crumb and prompt prefix.
 

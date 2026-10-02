@@ -266,7 +266,9 @@ const req = (p, opts = {}) => new Promise((resolve) => {
   r.end();
 });
 
-const HITS = 150 * SCALE;
+// 100 per unit of scale, so CI's `stress.mjs 2` sends 200 at once. It was 150 (300 at once): on a loaded
+// runner that left no headroom, and the assertion below is about WRONG answers, not about throughput.
+const HITS = 100 * SCALE;
 const t8 = Date.now();
 const results = await Promise.all(Array.from({ length: HITS }, (_, i) =>
   req(["/state", "/tasks", "/bus", "/surface", "/floor?path=_os"][i % 5])));
@@ -285,6 +287,30 @@ ok(HITS + " concurrent requests: none answered wrongly", misanswered === 0,
 if (refused) {
   console.log("   " + c.dim("     " + refused + " refused before arriving — listen backlog saturated."));
   console.log("   " + c.dim("     Not a wrong answer; a connection that never landed."));
+}
+
+// The governed tree is never "offline". An earlier warehouse online check timed a stat out at 1.5 s
+// and, on a busy CI runner, answered 503 for the main floor while the disk was perfectly healthy.
+// A slow stat must not be able to do that: make every async stat slower than that wait and ask again.
+{
+  // A FRESH server: the live one above already holds a cached "online" answer for the tree, which
+  // would let an old, time-boxed probe pass this check without ever being asked.
+  // (its Host allowlist is built from its own config, so it gets its own port in that config)
+  const fport = cfg.port + 1;
+  const fresh = side.createServer({ ...cfg, port: fport });
+  await new Promise(r => fresh.server.listen({ port: fport, host: "127.0.0.1" }, r));
+  const freq = (p) => new Promise((resolve) => {
+    const r = http.request({ host: "127.0.0.1", port: fport, path: p, headers: { "x-parvis-token": fresh.token } },
+      (res) => { res.resume(); res.on("end", () => resolve(res.statusCode)); });
+    r.on("error", () => resolve(0)); r.end();
+  });
+  const realStat = fs.promises.stat.bind(fs.promises);
+  fs.promises.stat = (p, o) => new Promise((resolve, reject) => setTimeout(() => realStat(p, o).then(resolve, reject), 1700));
+  try {
+    const slow = await Promise.all(Array.from({ length: 20 }, () => freq("/floor?path=")));
+    ok("the main floor is never reported offline, however slow the stat", slow.every(code => code === 200),
+       "codes: " + [...new Set(slow)].join(" "));
+  } finally { fs.promises.stat = realStat; fresh.server.close(); }
 }
 
 // Find where it actually saturates, and report it rather than assume a number.

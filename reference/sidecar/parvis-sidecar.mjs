@@ -63,16 +63,42 @@ export function createServer(cfg) {
   // check runs on the thread pool, is bounded, and its answer is remembered for ONLINE_TTL_MS. A root
   // that does not answer in time is reported OFFLINE (never as an empty floor), and the slow stat is
   // left to finish in the background.
-  const ONLINE = new Map();            // id -> { at, ok }
+  //
+  // Three rules, each learned the hard way:
+  //  - The governed tree is never probed. It is the tree this sidecar runs in; if it vanished, the
+  //    floor itself fails. Probing it let a busy loop time the probe out and answer "offline" (503)
+  //    for the main floor under load, which is how the full-system stress test caught this.
+  //  - A known answer is returned at once; once it is older than ONLINE_TTL_MS it is refreshed
+  //    BEHIND the answer. Waiting on a timer inside a request is wrong when the loop is saturated:
+  //    the timer fires before the stat's own callback can run, and a healthy disk reads as dead.
+  //  - One probe per warehouse at a time. A hung share holds one pool thread, not one per poll.
+  const ONLINE = new Map();            // id -> { at, ok (null: never answered), pending }
   const ONLINE_TTL_MS = 15000, ONLINE_WAIT_MS = 1500;
+  function probeWarehouse(wh) {
+    let e = ONLINE.get(wh.id);
+    if (!e) { e = { at: 0, ok: null, pending: null }; ONLINE.set(wh.id, e); }
+    if (e.pending) return e.pending;
+    e.pending = fs.promises.stat(wh.root).then((s) => s.isDirectory(), () => false).then((ok) => {
+      if (ONLINE.get(wh.id) === e) { e.ok = ok; e.at = Date.now(); e.pending = null; }
+      return ok;
+    });
+    return e.pending;
+  }
   async function warehouseUp(wh) {
-    const hit = ONLINE.get(wh.id);
-    if (hit && Date.now() - hit.at < ONLINE_TTL_MS) return hit.ok;
-    const probe = fs.promises.stat(wh.root).then((s) => s.isDirectory(), () => false);
-    const slow = new Promise((resolve) => setTimeout(() => resolve(false), ONLINE_WAIT_MS));
+    if (wh.primary) return true;
+    const e = ONLINE.get(wh.id);
+    if (e && e.ok !== null) {
+      if (!e.pending && Date.now() - e.at >= ONLINE_TTL_MS) probeWarehouse(wh);
+      return e.ok;
+    }
+    // First look at this warehouse: wait for the answer, but only so long.
+    const probe = probeWarehouse(wh);
+    const slow = new Promise((resolve) => { const t = setTimeout(() => resolve(null), ONLINE_WAIT_MS); if (t.unref) t.unref(); });
     const ok = await Promise.race([probe, slow]);
-    ONLINE.set(wh.id, { at: Date.now(), ok });
-    return ok;
+    if (ok !== null) return ok;
+    const cur = ONLINE.get(wh.id);
+    if (cur) { cur.ok = false; cur.at = Date.now(); }   // no answer in time: offline for now; the probe still running may correct it
+    return false;
   }
   const knownOffline = (wh) => ONLINE.get(wh.id)?.ok === false;
   // Drive letters whose warehouse is known to be down: text naming a path there is not walked, or a
@@ -476,7 +502,7 @@ export function createServer(cfg) {
   // cost a wait, never a frozen console.
   const isReachableDir = (p, ms) => Promise.race([
     fs.promises.stat(p).then((s) => s.isDirectory(), () => false),
-    new Promise((resolve) => setTimeout(() => resolve(false), ms)),
+    new Promise((resolve) => { const t = setTimeout(() => resolve(false), ms); if (t.unref) t.unref(); }),
   ]);
   // A warehouse id: a-z, 0-9 and dashes, starting with a letter, at most 20 characters.
   const slugId = (s) => {
