@@ -153,6 +153,12 @@ Thirteen files. Read them in order; each is short.
 [`DECISIONS.md`](DECISIONS.md) records which contradictions were settled during extraction, which
 version won, and why.
 
+**Proposed: [`CONSTITUTION.md`](CONSTITUTION.md).** The governing document of a Parvis tree, for the AIs that
+work in it. Part One maps the file system, Part Two gives each protocol file's mandate one line with a pointer
+to its owner, and Part Three constitutes authority: who holds it, what is refused, and how it changes. It is a
+proposal, and it stays unratified here: each tree decides its own constitution. It binds nothing until a tree
+adopts it, and what it leaves open is recorded in [`DECISIONS.md`](DECISIONS.md) Part 2.
+
 **Agents on different devices and vendors, meeting only in a shared cloud folder?** That is a
 different transport with different hazards (lost concurrent edits, half-synced files, late
 delivery). [`cloud-bus/`](cloud-bus/) is the bus for it: a spec, a scaffold to copy into the
@@ -313,7 +319,7 @@ afternoon of arguing with your own documentation, you can put something back:
 </div>
 
 Sponsorship funds the parts nobody volunteers for: the cross-platform testing matrix that keeps
-the Windows/macOS/Linux claim honest, and the four open questions in
+the Windows/macOS/Linux claim honest, and the open questions in
 [`DECISIONS.md`](DECISIONS.md) getting properly designed rather than left to every adopter to
 answer alone.
 
@@ -334,7 +340,7 @@ GitHub: [@Solmex72](https://github.com/Solmex72)
 Extracted from a private multi-agent system with [Claude Code](https://claude.com/claude-code),
 which also fixed four defects on the way out — the inverted estop fail-safe most consequentially.
 That process is documented rather than hidden: [`DECISIONS.md`](DECISIONS.md) names every rival
-fact that was settled, the four that were not, and everything removed.
+fact that was settled, the ones that were not, and everything removed.
 
 For security reports use [private disclosure](SECURITY.md), not the address above.
 

@@ -29,7 +29,7 @@ half.
 If your change makes two files disagree, fix both in the same PR and say which fact won. See
 [`05-CORRECTION.md`](protocol/05-CORRECTION.md) §7. If you cannot settle it — because it needs
 information you do not have, or because being wrong would be unsafe — say so explicitly and it
-goes in [`DECISIONS.md`](DECISIONS.md) Part 2 alongside the other four open questions.
+goes in [`DECISIONS.md`](DECISIONS.md) Part 2 alongside the other open questions.
 
 ---
 
