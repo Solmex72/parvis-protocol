@@ -1,6 +1,6 @@
-This copy is a proposal and it stays unratified. Each tree decides its own constitution.
+This copy is a proposal and it stays unratified. Each tree's Operator decides its own constitution.
 
-Status: PROPOSED. It binds nothing here, and nothing until a tree adopts it. What it leaves open is recorded in `DECISIONS.md` Part 2 (U-05 to U-09).
+Status: PROPOSED. It binds nothing here, and nothing until a tree's Operator adopts it. What it leaves open is recorded in `DECISIONS.md` Part 2 (U-05 to U-08).
 
 # THE PARVIS CONSTITUTION
 
@@ -295,8 +295,8 @@ fleet's honesty. They are not claims about what any model is owed.
    that has not been explained. The mechanism that signs and verifies is the adopter's, and it must fail
    closed.
 6. Ratification. Effective only when the Operator says so in their own session and the signature verifies.
-   Until then this is a draft and binds nothing. A tree decides its own constitution: this text binds a tree
-   only if that tree adopts it.
+   Until then this is a draft and binds nothing. Each tree's Operator decides its own constitution: this text
+   binds a tree only if its Operator adopts it.
 
 ## Article XII. The honest limit
 
