@@ -6,6 +6,8 @@
 //   parvis init [dir]       scaffold an _os tree
 //   parvis check            preflight the estop, exit non-zero if not RUN
 //   parvis manifest         what the ledger is waiting on — read-only, writes nothing
+//   parvis approved <key>   may I rely on the Operator's approval on this row, now? (read-only)
+//   parvis spend <key>      the same check, then claim the approval — once
 //   parvis estop [reason]   place the sentinel     (see NOTE below)
 //   parvis clear            clear the sentinel and set STATE to RUN
 //   parvis selftest         verify this install works on this platform
@@ -239,6 +241,12 @@ function parseFlags() {
     else if (a === "--unaddressed") f.unaddressed = true;
     else if (a === "--once") f.once = true;
     else if (a === "--dry") f.dry = true;
+    // parvis approved / spend
+    else if (a === "--ask") f.ask = take();
+    else if (a === "--by") f.by = take();
+    else if (a === "--json") f.json = true;
+    else if (a.startsWith("--ask=")) f.ask = a.slice(6);
+    else if (a.startsWith("--by=")) f.by = a.slice(5);
     else if (a.startsWith("--agent=")) f.agent = a.slice(8);
     else if (a.startsWith("--every=")) f.every = Number(a.slice(8));
     else if (a.startsWith("--run=")) f.run = a.slice(6);
@@ -477,9 +485,64 @@ async function cmdConfig() {
       lockedFiles: ["01-ESTOP.md", "00-PRECEDENCE.md", "COVENANT.md", "ESTOP.md"],
       operator: null,
       refreshMs: 5000,
+      approvalTtlMinutes: 60,
     }, null, 2) + "\n", "utf8");
     console.log("  " + c.green("written") + "  " + p + "\n");
   }
+}
+
+// --- approvals --------------------------------------------------------------
+// protocol/03 §5a. The agent-side half of the Operator's answer: may I rely on it
+// now, for this act? `approved` only looks; `spend` looks and then claims.
+//
+// Exit codes: 0 you may rely on it · 1 you may not (the state says why) · 2 bad
+// usage · 3 the estop does not read RUN.
+//
+// What 0 means is "the record says so". The bus is plain text any process can
+// write to, so this is not proof of who wrote the approval (DECISIONS U-09), and
+// anything irreversible or outward-facing is still confirmed in conversation.
+async function cmdApprovals(kind) {
+  const ap = await import(pathToFileURL(path.join(PKG_ROOT, "approvals", "approvals.mjs")).href);
+  const f = parseFlags();
+  const key = argv[1] && !argv[1].startsWith("--") ? argv[1] : null;
+  const usageErr = (msg) => {
+    console.error("\n  " + c.red(msg) + c.dim(`   parvis ${kind} <row key> [--ask ID]${kind === "spend" ? " [--by AGENT]" : ""} [--json]`) + "\n");
+    process.exit(2);
+  };
+  if (!key || !/^[0-9a-f]{12}$/.test(key)) usageErr("need the row key (12 hex)");
+  if (f.ask !== undefined && !/^[0-9a-f]{12}$/.test(String(f.ask))) usageErr("--ask must be a 12-hex question id");
+
+  const g = gate();
+  if (g.verb !== "RUN") {
+    if (f.json) console.log(JSON.stringify({ ok: false, state: "ESTOP", estop: g.verb, reason: g.reason }));
+    else console.log("\n  " + paint(g) + c.dim("  — no approval is honoured or spent unless the estop reads RUN") + "\n");
+    process.exit(3);
+  }
+
+  const opts = { ask: f.ask || null };
+  const r = kind === "spend" ? ap.spend(ROOT, key, { ...opts, by: f.by || null }) : ap.check(ROOT, key, opts);
+
+  if (f.json) {
+    const { answer, ...rest } = r;
+    console.log(JSON.stringify({ ...rest, answer: answer ? { id: answer.id, time: answer.time, verdict: answer.verdict, ttl: answer.ttl, seen: answer.seen } : null }));
+  } else {
+    const good = r.ok;
+    console.log("");
+    console.log("  " + (good ? c.green(r.state) : c.red(r.state)) + "  " + c.dim(r.reason));
+    if (r.ask) console.log("  ask       " + r.ask + (r.from ? c.dim("  from " + r.from) : ""));
+    if (r.answer && r.answer.ttl) {
+      const left = Math.round((r.answer.expires - Date.now()) / 60000);
+      console.log("  ttl       " + r.answer.ttl + c.dim(left > 0 ? `  (${left} min left)` : "  (passed)"));
+    }
+    if (r.answer && r.seenChecked) console.log("  seen      " + c.dim("matches the question and row as they stand"));
+    if (r.claimed) console.log("  " + c.amber(`${r.claimed} decision(s) on this row did not come from CONSOLE — claimed, ignored`));
+    if (r.state === "CLAIMED") console.log("  " + c.dim(r.logged ? "recorded on the bus as a TELL" : "claim file written; the bus TELL could not be appended"));
+    console.log("");
+    console.log(c.dim("  The bus is plain text any process can write to: this reads the record, it cannot prove who"));
+    console.log(c.dim("  wrote it. Irreversible or outward-facing acts are still confirmed in conversation (03 §5a)."));
+    console.log("");
+  }
+  process.exit(r.ok ? 0 : 1);
 }
 
 // A one-shot check that this install actually works on this machine. Runs the
@@ -548,6 +611,83 @@ async function cmdSelftest() {
     });
 
     ok("console.html present", fs.existsSync(path.join(PKG_ROOT, "sidecar", "console.html")));
+
+    // --- approvals (03 §5a): expiry, single use, seen -----------------------------
+    const ap = await import(pathToFileURL(path.join(PKG_ROOT, "approvals", "approvals.mjs")).href);
+    const { rowKey } = await import(pathToFileURL(path.join(PKG_ROOT, "sidecar", "ledger.mjs")).href);
+    const mkTree = (name, rowText) => {
+      const r = path.join(tmp, name);
+      fs.mkdirSync(path.join(r, "_os", "estop"), { recursive: true });
+      fs.mkdirSync(path.join(r, "_os", "tasks"), { recursive: true });
+      fs.mkdirSync(path.join(r, "_os", "exchange", "bus"), { recursive: true });
+      fs.writeFileSync(path.join(r, "_os", "estop", "STATE"), "RUN\n");
+      fs.writeFileSync(path.join(r, "_os", "tasks", "INDEX.md"), rowText + "\n");
+      return r;
+    };
+    const ROW = "REQ | 2026-10-02 | tester | make every pallet yellow | ";
+    const KEY = rowKey(ROW);
+    const ASK = `2026-10-02T12:00:00Z  agent-a > OPERATOR  ASK  re:${KEY} Make every pallet yellow?`;
+    const ASKID = ap.askId(ASK);
+    const NOW = Date.parse("2026-10-02T12:30:00Z");
+    const GOOD = "2026-10-02T13:00:00Z", GONE = "2026-10-02T12:10:00Z";
+    const seenOk = ap.seenHash(ASK, ROW);
+    const ANS = (o = {}) => `${o.time || "2026-10-02T12:01:00Z"}  ${o.from || "CONSOLE"} > agent-a  ANS  ` +
+      ap.formatAnswer({ key: KEY, ask: ASKID, verdict: "APPROVED", ttl: GOOD, seen: seenOk, ...o });
+    const ev = (lines) => ap.evaluate([ASK, ...lines], { key: KEY, now: NOW, rowRaw: ROW });
+
+    ok("an approval with no ttl is not honoured", ev([ANS({ ttl: null })]).state === "NO-TTL");
+    const good = ev([ANS()]);
+    ok("an unexpired approval is honoured", good.ok && good.state === "VALID" && good.seenChecked);
+    ok("an expired approval is not", ev([ANS({ ttl: GONE })]).state === "EXPIRED");
+    const forged = ev([ANS({ from: "agent-b" })]);
+    ok("a decision not sent by CONSOLE is a claim, never obeyed", !forged.ok && forged.claimed === 1 && forged.state === "PENDING");
+    ok("a note cannot carry a verdict or a ttl",
+       ev([ANS({ verdict: "NOTED", ttl: null, seen: null, note: "APPROVED ttl:" + GOOD })]).state === "PENDING");
+    ok("a later DENIED supersedes an earlier APPROVED",
+       ev([ANS(), ANS({ verdict: "DENIED", ttl: null, time: "2026-10-02T12:02:00Z" })]).state === "DENIED");
+    ok("an approval whose seen no longer matches is void",
+       ev([ANS({ seen: ap.seenHash("2026-10-02T12:00:00Z  agent-a > OPERATOR  ASK  re:" + KEY + " a different question", ROW) })]).state === "CHANGED");
+
+    const t1 = mkTree("ap1", ROW);
+    const bus1 = path.join(t1, "_os", "exchange", "bus", "broadcast.log");
+    fs.writeFileSync(bus1, [ASK, ANS()].join("\n") + "\n");
+    ok("check does not spend", ap.check(t1, KEY, { now: NOW }).ok && ap.check(t1, KEY, { now: NOW }).ok);
+    const s1 = ap.spend(t1, KEY, { now: NOW });
+    ok("spend claims the approval and records it on the bus", s1.ok && s1.state === "CLAIMED" && fs.readFileSync(bus1, "utf8").includes("SPENT approval:"));
+    ok("a second spend of the same approval fails", ap.spend(t1, KEY, { now: NOW }).state === "SPENT");
+    ok("a spent approval no longer checks out", ap.check(t1, KEY, { now: NOW }).state === "SPENT");
+    fs.rmSync(ap.spentFile(t1, s1.spent));
+    ok("deleting the claim file does not un-spend it (the bus TELL stands)", ap.check(t1, KEY, { now: NOW }).state === "SPENT");
+    // The lock on its own, with no check in front of it: the second claim of one id must lose.
+    ok("the claim is an exclusive create: a second claim of the same id loses",
+       ap.claim(t1, "f".repeat(64), "first") === true && ap.claim(t1, "f".repeat(64), "second") === false &&
+       fs.readFileSync(ap.spentFile(t1, "f".repeat(64)), "utf8").trim() === "first");
+    fs.appendFileSync(bus1, ANS({ time: "2026-10-02T12:05:00Z" }) + "\n");
+    ok("a fresh approval after a spend is a new approval", ap.check(t1, KEY, { now: NOW }).state === "VALID");
+
+    // Eight real processes race for one approval through the CLI. Exactly one may win.
+    const { execFile } = await import("node:child_process");
+    const run = (args, root) => new Promise((resolve) => {
+      execFile(process.execPath, [path.join(HERE, "parvis.mjs"), ...args],
+        { env: { ...process.env, PARVIS_ROOT: root, NO_COLOR: "1" } },
+        (err, stdout) => resolve({ code: err ? (typeof err.code === "number" ? err.code : 1) : 0, out: String(stdout) }));
+    });
+    const t2 = mkTree("ap2", ROW);
+    const bus2 = path.join(t2, "_os", "exchange", "bus", "broadcast.log");
+    const live = ANS({ ttl: ap.isoZ(Date.now() + 10 * 60000) });
+    fs.writeFileSync(bus2, [ASK, live].join("\n") + "\n");
+    const racers = await Promise.all(Array.from({ length: 8 }, () => run(["spend", KEY], t2)));
+    const winners = racers.filter((r) => r.code === 0).length;
+    const tells = fs.readFileSync(bus2, "utf8").split("\n").filter((l) => l.includes("SPENT approval:")).length;
+    ok("8 processes ask for one approval at once through the CLI: exactly one is granted", winners === 1 && tells === 1, winners + " won, " + tells + " TELL");
+    ok("`parvis approved` exits 1 once it is spent", (await run(["approved", KEY], t2)).code === 1);
+
+    const t3 = mkTree("ap3", ROW);
+    fs.writeFileSync(path.join(t3, "_os", "exchange", "bus", "broadcast.log"), [ASK, live].join("\n") + "\n");
+    ok("`parvis approved` exits 0 for a live approval", (await run(["approved", KEY], t3)).code === 0);
+    ok("a malformed row key is a usage error, exit 2", (await run(["approved", "nothex"], t3)).code === 2);
+    fs.writeFileSync(path.join(t3, "estop"), "");
+    ok("no approval is honoured or spent under a stop", (await run(["approved", KEY], t3)).code === 3 && (await run(["spend", KEY], t3)).code === 3);
   } finally {
     try { fs.rmSync(tmp, { recursive: true, force: true }); } catch {}
   }
@@ -675,6 +815,10 @@ function usage() {
                                     ${c.dim("[--every SEC] [--run PROG --arg A ...] [--once] [--dry]")}
                                     ${c.dim("[--unaddressed]  also claim rows inducted under the Operator's own name")}
     ${c.b("parvis manifest")}              what the ledger is waiting on  ${c.dim("(read-only)")}
+    ${c.b("parvis approved")} ${c.dim("<key>")}      may I rely on the Operator's approval now?  ${c.dim("(read-only)")}
+                                    ${c.dim("[--ask ID] [--json]   exit 0 = yes, 1 = no, 3 = estop not RUN")}
+    ${c.b("parvis spend")}   ${c.dim("<key>")}       same check, then claim it — an approval is good once
+                                    ${c.dim("[--ask ID] [--by AGENT] [--json]   run it BEFORE the act")}
     ${c.b("parvis config")} ${c.dim("[--init]")}     show effective config, or write the file
     ${c.b("parvis init")}   ${c.dim("[dir]")}        scaffold an _os tree
     ${c.b("parvis check")}                 preflight the estop; exit 1 if not RUN
@@ -706,6 +850,8 @@ switch (cmd) {
   case "serve": case "start": await cmdServe(); break;
   case "watch": case "pickup": await cmdWatch(); break;
   case "manifest": case "pending": await cmdManifest(); break;
+  case "approved": await cmdApprovals("approved"); break;
+  case "spend": await cmdApprovals("spend"); break;
   case "config": await cmdConfig(); break;
   case "init": cmdInit(); break;
   case "check": case "preflight": cmdCheck(); break;

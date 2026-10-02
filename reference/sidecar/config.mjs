@@ -13,6 +13,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { TTL } from "../approvals/approvals.mjs";
 
 export const DEFAULTS = Object.freeze({
   root: ".",
@@ -24,6 +25,9 @@ export const DEFAULTS = Object.freeze({
   lockedFiles: ["01-ESTOP.md", "00-PRECEDENCE.md", "COVENANT.md", "ESTOP.md"],
   operator: null,
   refreshMs: 5000,
+  // How long an Approve in the console stays good, in minutes (03 §5a). There is no "never":
+  // the range is approvals.TTL.min..max, and an approval with no ttl is not honoured.
+  approvalTtlMinutes: TTL.def,
   // Secondary warehouses: other storage roots shown on the floor beside the main tree.
   // [{ "id": "drive", "label": "Google Drive", "root": "G:\\My Drive" }] — read-only, storage only.
   warehouses: [],
@@ -93,6 +97,9 @@ function validate(cfg, warnings) {
   }
   if (typeof cfg.host !== "string" || !cfg.host) {
     errors.push("host must be a non-empty string");
+  }
+  if (!Number.isInteger(cfg.approvalTtlMinutes) || cfg.approvalTtlMinutes < TTL.min || cfg.approvalTtlMinutes > TTL.max) {
+    errors.push(`approvalTtlMinutes must be a whole number of minutes, ${TTL.min}–${TTL.max}, got ${JSON.stringify(cfg.approvalTtlMinutes)}`);
   }
   if (!Array.isArray(cfg.editableDirs) || cfg.editableDirs.some((d) => typeof d !== "string")) {
     errors.push("editableDirs must be an array of strings");

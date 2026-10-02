@@ -237,6 +237,8 @@ promise that it never spawns anything:
 parvis watch --agent BRIDGE                       # claim REQ rows addressed to BRIDGE; hand each to the agent as a FILE
 parvis watch --agent BRIDGE --run node --arg agent.mjs   # ...and start the agent, with the row's path in PARVIS_REQ_FILE
 parvis manifest                                   # what the ledger is waiting on — read-only, writes nothing
+parvis approved 4239a8793334                      # may I rely on the Operator's Approve on this row, NOW? exit 0 = yes
+parvis spend    4239a8793334                      # ...then claim it. An approval expires and is good for one act
 ```
 
 A row is data, never a command: it reaches the agent as a file, never on a command line, and rows

@@ -26,6 +26,7 @@ import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as config from "./config.mjs";
 import * as airlock from "../airlock/airlock.mjs";
+import * as approvals from "../approvals/approvals.mjs";
 import { parseIndex, withLedgerLock, rowKey } from "./ledger.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -367,7 +368,7 @@ export function createServer(cfg) {
   }
 
   // 03 §2 — time  from > to  VERB  text
-  const BUS_RE = /^(\S+)\s+(\S+)\s*>\s*(\S+)\s+(FLASH|ASK|ANS|TELL|GATE|ACK)\s+(.*)$/;
+  const BUS_RE = approvals.BUS_RE;
 
   function busLines(limit = 80) {
     const lines = tailLines(BUS_LOG, 3000);
@@ -391,10 +392,13 @@ export function createServer(cfg) {
   //     <time>  <agent> > OPERATOR  ASK  re:<key> <the question, one line>
   // where <key> is the REQ row's content key (what `closes <key>` uses). The
   // console answers with
-  //     <time>  CONSOLE > <agent>  ANS  re:<key> ask:<id> APPROVED|DENIED|NOTED [:: note]
+  //     <time>  CONSOLE > <agent>  ANS  re:<key> ask:<id> APPROVED [ttl:<UTC>] [seen:<sha256>] [:: note]
+  //     <time>  CONSOLE > <agent>  ANS  re:<key> ask:<id> DENIED|NOTED [seen:<sha256>] [:: note]
   // <id> is the hash of the ASK line itself, so an answer names the exact
   // question it answers. Anything else carrying `re:<key>` (a TELL, an ACK) is a
-  // comment on that row.
+  // comment on that row. An approval expires at its ttl and is good for one act;
+  // the parsing, the checks and the spend all live in ../approvals/approvals.mjs
+  // so the console and the agent-side commands cannot disagree about them.
   //
   // WHAT AN ANSWER IS. A record that the Operator answered through the console,
   // nothing more. The bus is append-only plain text that any process can write
@@ -403,33 +407,18 @@ export function createServer(cfg) {
   // something irreversible still confirms in conversation (03 §5, 01). An
   // approval never lifts a standing refusal or a gate.
   // -------------------------------------------------------------------------
-  const RE_TAG = /\bre:([0-9a-f]{12})\b/;
-  const ASK_TAG = /\bask:([0-9a-f]{12})\b/;
-  const VERDICT_RE = /\b(APPROVED|DENIED|NOTED)\b/;
-  const askId = (raw) => crypto.createHash("sha1").update(String(raw).trim()).digest("hex").slice(0, 12);
+  const RE_TAG = approvals.RE_TAG;
+  const askId = approvals.askId;
   const busTime = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
 
-  // Append one line to the broadcast log, keeping it one-line-per-message even if
-  // the last writer left no trailing newline.
-  function appendBus(line) {
-    fs.mkdirSync(BUS_DIR, { recursive: true });
-    let lead = "";
-    try {
-      const fd = fs.openSync(BUS_LOG, "r");
-      try {
-        const st = fs.fstatSync(fd);
-        if (st.size > 0) { const b = Buffer.alloc(1); fs.readSync(fd, b, 0, 1, st.size - 1); if (b[0] !== 10) lead = "\n"; }
-      } finally { fs.closeSync(fd); }
-    } catch { /* no log yet: the append creates it */ }
-    fs.appendFileSync(BUS_LOG, lead + line + "\n", "utf8");
-  }
+  const appendBus = (line) => approvals.appendLine(BUS_LOG, line);
 
-  // key -> { asks: [...], notes: [...] }, read from the bus tail. No writes.
+  // key -> { asks: [...], notes: [...], spent: Set }, read from the bus tail. No writes.
   function threads() {
     const lines = tailLines(BUS_LOG, 6000);
     const by = new Map();
     if (lines === null) return { by, present: false };
-    const get = (key) => { let t = by.get(key); if (!t) { t = { asks: new Map(), notes: [] }; by.set(key, t); } return t; };
+    const get = (key) => { let t = by.get(key); if (!t) { t = { asks: new Map(), notes: [], spent: new Set() }; by.set(key, t); } return t; };
     for (const l of lines) {
       const m = BUS_RE.exec(l);
       if (!m) continue;
@@ -439,15 +428,16 @@ export function createServer(cfg) {
       const body = m[5].replace(RE_TAG, "").trim();
       if (m[4] === "ASK") {
         const id = askId(l);
-        t.asks.set(id, { id, time: m[1], from: m[2], to: m[3], text: body, answers: [] });
+        t.asks.set(id, { id, raw: l, time: m[1], from: m[2], to: m[3], text: body, answers: [] });
       } else if (m[4] === "ANS") {
-        const ak = ASK_TAG.exec(body);
-        const v = VERDICT_RE.exec(body);
-        const note = body.replace(ASK_TAG, "").replace(VERDICT_RE, "").replace(/^\s*(::)?\s*/, "").trim();
-        const ent = { time: m[1], from: m[2], verdict: v ? v[1] : "NOTED", note, console: m[2] === "CONSOLE" };
-        if (ak && t.asks.has(ak[1])) t.asks.get(ak[1]).answers.push(ent);
+        const p = approvals.parseAnswerBody(body);
+        const ent = { id: approvals.answerId(l), time: m[1], from: m[2], verdict: p.verdict, note: p.note,
+                      ttl: p.ttl, expires: p.expires, seen: p.seen, console: m[2] === "CONSOLE" };
+        if (p.ask && t.asks.has(p.ask)) t.asks.get(p.ask).answers.push(ent);
         else t.notes.push({ time: m[1], from: m[2], to: m[3], verb: "ANS", text: body });
       } else {
+        const sp = m[4] === "TELL" ? approvals.SPENT_RE.exec(body) : null;
+        if (sp) t.spent.add(sp[1]);
         t.notes.push({ time: m[1], from: m[2], to: m[3], verb: m[4], text: body });
       }
     }
@@ -456,12 +446,18 @@ export function createServer(cfg) {
 
   // A decision is the latest APPROVED/DENIED that came from the console. A NOTED
   // reply, or an answer claimed by anyone else, leaves the question pending.
+  // `standing` is whether that decision can still be relied on (approvals.assess):
+  // VALID, EXPIRED, NO-TTL, SPENT or DENIED. It is a display of the record, not a gate.
   function compactThread(t) {
+    const now = Date.now();
+    const isSpent = (id) => t.spent.has(id.slice(0, 16)) || fs.existsSync(approvals.spentFile(ROOT, id));
     const asks = [...t.asks.values()].map((a) => {
       const decided = a.answers.filter((x) => x.console && (x.verdict === "APPROVED" || x.verdict === "DENIED"));
       const last = decided.length ? decided[decided.length - 1] : null;
       return { id: a.id, time: a.time, from: a.from, to: a.to, text: a.text,
-               status: last ? last.verdict : "PENDING", answers: a.answers };
+               status: last ? last.verdict : "PENDING",
+               standing: last ? approvals.assess(last, { now, isSpent }) : null,
+               ttl: last ? last.ttl : null, answers: a.answers };
     });
     return { asks, notes: t.notes.slice(-12) };
   }
@@ -1510,16 +1506,29 @@ export function createServer(cfg) {
         const note = String(b.note || "").replace(/\s+/g, " ").trim().slice(0, 400);
         if (VERB === "NOTED" && !note) return json(res, { error: "a reply needs text" }, 400);
         if (VERB !== "NOTED" && !ask) return json(res, { error: "a decision must answer a question" }, 400);
+        // An approval expires. The Operator's own setting is the default; a caller may
+        // ask for a shorter or longer one inside the allowed range, never for none.
+        let ttl = null;
+        if (VERB === "APPROVED") {
+          const mins = b.ttlMinutes === undefined || b.ttlMinutes === null
+            ? (approvals.ttlMinutes(cfg.approvalTtlMinutes) ?? approvals.TTL.def)
+            : approvals.ttlMinutes(b.ttlMinutes);
+          if (mins === null) return json(res, { error: `ttlMinutes must be a whole number from ${approvals.TTL.min} to ${approvals.TTL.max}` }, 400);
+          ttl = approvals.isoZ(Date.now() + mins * 60000);
+        }
         const all = taskRows(5000);
-        if (all === null || !all.some((r) => r.key === key)) return json(res, { error: "no such row" }, 404);
-        let asker = "ALL";
+        const row = all === null ? null : all.find((r) => r.key === key);
+        if (!row) return json(res, { error: "no such row" }, 404);
+        let asker = "ALL", seen = null;
         if (ask) {
           const t = threads().by.get(key);
           const a = t && t.asks.get(ask);
           if (!a) return json(res, { error: "no such question on that row" }, 404);
           asker = a.from;
+          // What the console held when the Operator decided: the question and the row, full-width.
+          if (VERB !== "NOTED") seen = approvals.seenHash(a.raw, row.raw);
         }
-        const line = `${busTime()}  CONSOLE > ${asker}  ANS  re:${key}${ask ? " ask:" + ask : ""} ${VERB}${note ? " :: " + note : ""}`;
+        const line = `${busTime()}  CONSOLE > ${asker}  ANS  ${approvals.formatAnswer({ key, ask, verdict: VERB, note, ttl, seen })}`;
         try { appendBus(line); }
         catch (e) { return json(res, { error: "write failed: " + e.message }, 500); }
         // The asker hears it in its inbox - as a TELL that points at the record,
@@ -1531,10 +1540,10 @@ export function createServer(cfg) {
             fs.mkdirSync(dir, { recursive: true });
             inbox = path.join(dir, `${asker}.log`);
             fs.appendFileSync(inbox, `${new Date().toISOString()}  CONSOLE > ${asker}  TELL  ` +
-              `Operator answered your ASK re:${key}: ${VERB}${note ? " - " + note : ""}\n`, "utf8");
+              `Operator answered your ASK re:${key}: ${VERB}${note ? " - " + note : ""}${ttl ? ` (valid until ${ttl}, one use)` : ""}\n`, "utf8");
           } catch { inbox = null; }
         }
-        return json(res, { ok: true, line, verdict: VERB, inbox: inbox ? path.relative(ROOT, inbox) : null, executed: false });
+        return json(res, { ok: true, line, verdict: VERB, ttl, seen, inbox: inbox ? path.relative(ROOT, inbox) : null, executed: false });
       }
 
       if (url.pathname === "/induct" && POST) {

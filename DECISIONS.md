@@ -111,6 +111,15 @@ version that survives scrutiny — never by modification date.
 | **Pruned** | (b) and (c). |
 | **Why** | (b) and (c) change the premise of the protocol, not a clause. [`08`](protocol/08-AGENTS.md) §7 states the philosophy once: the machine reports, the human decides. Under (a) the public [`CONSTITUTION.md`](CONSTITUTION.md) stays unratified and binds nothing here. Inside a tree that adopts it, the Operator ratifies and amends it, an agent never enacts, and no amendment gives an agent the irreversible act (Articles III.1, XI.1, XI.3 and XI.6). The maintainer decided this on 2026-10-02, having first been asked whether the model should ratify. |
 
+## D-12 · What an approval is worth after it is given
+
+| | |
+|---|---|
+| **Rivals** | (a) An answer stays good until someone says otherwise: the latest `CONSOLE` `APPROVED` is the decision, however old and however often acted on. (b) An approval carries an expiry, is good for one act, and records what the console held when it was given. (c) A weighted vote or a quorum of agents that can open a gate. |
+| **Kept** | (b), in [`03`](protocol/03-BUS.md) §5a. |
+| **Pruned** | (a) — [`10`](protocol/10-AIRLOCK.md) §6 already says permission is per-action and per-session, and the console had no way to honour that. (c) — a vote among agents decides what [`08`](protocol/08-AGENTS.md) §7 leaves to the human, and no agent commands another. |
+| **Why** | Reading another project's approach to the same problem, [hivemind](https://github.com/miigwech-potato/hivemind) (reviewed at commit `dbd71c3`, 2026-10-02), showed three mechanics worth having: an expiry that fails shut when missing, single use, and a record of what the human saw. They are generic engineering and were reimplemented here from the idea, in Node with no dependency; nothing was copied, and its voting, role and notation machinery were not taken. Three differences from it are deliberate. Single use is **durable and cross-process** (an exclusive file create plus a `TELL` on the bus), where its spent set lives in one process's memory. `seen` is a full-width hash of the ASK line and the ledger row, and its job is narrow: the 12-hex `ask:` and `re:` ids are truncated, so it binds an approval to the exact question and fails it if the question behind the id changes. It records what the console **held**, not what the Operator **read**; if the console ever shows referenced evidence files, those belong in the hash. And the human record is not a free-text field an agent supplies: it is written by the console, from the console's own state. None of this is authentication; see U-09. |
+
 ---
 
 # Part 2 · Unresolved
@@ -250,6 +259,26 @@ ever release the act it blocks, are for the owner to decide.
 
 **What shipped.** The rule, in the proposed Constitution only, with the exclusions written out. `03` is
 unchanged.
+
+## U-09 · Who wrote an approval? — *design, and unsafe to guess*
+
+**The conflict.** [`03`](protocol/03-BUS.md) §5a lets an agent act on a `CONSOLE`-labelled `APPROVED`, and D-12 gave
+that line an expiry, a single use and a hash of what the console held. The label is still only a label. The bus is
+plain text that any process able to append can write to, so such a process can write a fresh, unexpired,
+correctly hashed approval, and create the claim file that goes with it. [`11`](protocol/11-TREASURY.md) §6 and
+[`12`](protocol/12-CREDENTIALS.md) §2 say authorisation is never text. For money and credentials that stays absolute
+and `parvis approved` is not consulted. For ordinary work, §5a accepts the label with the bounds above.
+
+**Why it was not settled.** Proving authorship needs a key that agents cannot reach. A signature (Ed25519 from
+`node:crypto` would keep the tool dependency-free) is easy to write and easy to get wrong in the one place that
+matters: **where the private key lives**. If the sidecar holds it and an agent runs as the same operating-system
+user, the agent can read it, and the signature proves nothing. The honest options each cost something: a separate
+OS account for the console; a key held by a person-operated device and used per approval; or accepting the
+label for work that can do bounded harm and refusing it for everything else, which is what ships. Which one fits
+depends on how a given Operator runs the machine.
+
+**What shipped.** Expiry, single use and `seen`, the label, and the written limit. No signature and no key custody.
+`parvis approved` prints, every time, that it reads the record and cannot prove who wrote it.
 
 ---
 

@@ -9,6 +9,22 @@ adopters' agents were told to follow. Those get a major version, the same as an 
 
 ## [Unreleased]
 
+### Changed
+
+- **An approval now expires, is good for one act, and records what the console held**
+  ([`03-BUS.md`](protocol/03-BUS.md) §5a, DECISIONS D-12). This is a change to normative text, so it is held to the
+  higher bar in `CONTRIBUTING.md`. The console writes `ttl:<UTC>` on every `APPROVED` (`approvalTtlMinutes`, default
+  60, range 1 to 10080) and `seen:<sha256>` of the ASK line and ledger row on every decision; an approval with no
+  `ttl` is not honoured, and the verdict and tags are now read only from before the `::`, so a note cannot carry
+  either. Two commands for an agent's harness: `parvis approved <key>` (read-only; exit 0 only for an unexpired,
+  unspent, console-sent `APPROVED` with a matching `seen`, while the estop reads `RUN`) and `parvis spend <key>`
+  (the same check, then an exclusive-create claim under `_os/exchange/bus/spent/` and a `TELL`). The Tasks card
+  shows an approval that has expired or been used. The idea came from reading [hivemind](https://github.com/miigwech-potato/hivemind)
+  at commit `dbd71c3`; nothing was copied from it. **What breaks:** approvals written before this change carry no
+  `ttl`, so `parvis approved` does not honour them (the console still shows them, marked as having no expiry);
+  and a hand-written `ANS` whose only verdict sits after the `::` is now a `NOTED`, where before it read as the
+  verdict. Not a fix for forgery: the `CONSOLE` label is still a label, which is recorded as U-09.
+
 ### Added
 
 - **[`CONSTITUTION.md`](CONSTITUTION.md) (proposed)** — a governing document for the AIs that work in a Parvis

@@ -30,6 +30,8 @@ node bin/parvis.mjs serve --root ../my-project
 | `parvis check` | Preflight the estop. **Exits 1 when not `RUN`** — gate a hook or a CI job on this. |
 | `parvis watch --agent N` | The agent-side pickup loop, run by the Operator as its own process. Claims one open `REQ` row addressed to `N` at a time (exclusive-create, one winner per race), hands it to the agent as a **file** — never `argv` — and, with `--run PROG --arg A…`, starts the agent with `PARVIS_REQ_FILE` in its environment. Never writes `DONE` for anyone; appends `BLOCKED` if the agent wrote nothing. Instruction-shaped rows are quarantined as security events. `--unaddressed` also takes rows inducted under the Operator's own name (opt-in, on purpose). `--once`, `--dry`, `--every SEC`. |
 | `parvis manifest` | What the ledger is waiting on: open rows (with `HOSTILE` where the airlock's markers hit), closed rows and whether their evidence resolves, active claims, session markers, rows the console cannot see. **Read-only.** |
+| `parvis approved <key> [--ask ID] [--json]` | May I rely on the Operator's approval on this row, **now**? Exits 0 only for an unexpired, unspent `APPROVED` from `CONSOLE` while the estop reads `RUN`. **Read-only.** |
+| `parvis spend <key> [--ask ID] [--by AGENT] [--json]` | The same check, then claim the approval (exclusive create, one winner per race) and `TELL` it spent. Run it **before** the act. |
 | `parvis config [--init]` | Show the effective config and where each value came from; write the file. |
 | `parvis estop <reason>` | Place the stop. Refuses without a reason in plain English. |
 | `parvis clear` | Remove the sentinel, set `RUN`. |
@@ -68,6 +70,7 @@ restart exposes.
 | `lockedFiles` | `["01-ESTOP.md", "00-PRECEDENCE.md", "COVENANT.md", "ESTOP.md"]` | Readable, never writable through the UI. |
 | `operator` | `null` | Falls back to the OS username. |
 | `refreshMs` | `5000` | |
+| `approvalTtlMinutes` | `60` | How long an Approve stays good, 1–10080. An approval is also single-use ([`03`](../protocol/03-BUS.md) §5a). RESTART. |
 
 A malformed config file is an **error you are told about**, never a silent fallback to defaults —
 falling back would change the bind address and the locked-file list without telling anyone.
