@@ -23,6 +23,18 @@ adopters' agents were told to follow. Those get a major version, the same as an 
   and `--lint`. The worker is `[PROPOSED]` against a real drive; its logic is tested on a local
   directory.
 - `LICENSE` and `LICENSE-DOCS` scope lines now name `cloud-bus/`.
+- **`reference/tools/clear-estop.ps1`** — clear a stop in plain PowerShell, no Node needed (Windows PowerShell 5.1 and 7). It is
+  the equivalent of `parvis clear`: it removes the sentinel at the root and in each parent (`-RootOnly` to leave the parents,
+  `-WhatIf` to list without touching anything), writes the one line `RUN`, and re-reads both to say whether the tree is
+  really clear, exiting non-zero if it is not. A directory named `estop` and `ESTOP.md` are never touched. Run by a person
+  at a terminal; [`01-ESTOP.md`](protocol/01-ESTOP.md) §4 now names it beside `parvis clear`.
+- **A stop button on the console** ([`07-INTERFACE.md`](protocol/07-INTERFACE.md) §4). `ESTOP` sits beside
+  the state pill and trips the stop in one press (`POST /estop`): it places the sentinel and the STATE
+  mirror and appends one `FLASH` to the bus. It works at every state, needs only the session token, and
+  only claims a stop after re-reading the gate: if neither file could be written it answers with an error
+  and the page says **NOT STOPPED**. A tree where a directory already holds the sentinel name still stops
+  through the mirror. It trips only: **no route clears a stop** (§5), so clearing stays `parvis clear` at a
+  terminal.
 - **More than one warehouse** ([`09-FLOOR.md`](protocol/09-FLOOR.md) Amendment C). Config key
   `warehouses` adds read-only storage roots (a mounted drive, say) beside the governed tree, picked
   from a switcher above the floor; an unmounted root reports offline and is never drawn as empty. Config
@@ -34,6 +46,13 @@ adopters' agents were told to follow. Those get a major version, the same as an 
   you descend, and sits on the inductor of the directory it is writing to. The directory is measured
   from the agent's own recent bus line, or from a ledger row dated today naming a file that exists and
   was modified in the last ten minutes. `/floor` carries `work` and `here` per crane.
+- **Add a directory from the Warehouse tab** (Amendment E). A `+` beside the switcher opens a dialog:
+  type a path or pick a detected disk (drive letters, OneDrive, iCloud Drive, `/Volumes`, `/mnt`), name
+  it, and add it as its own warehouse on the switcher or as an `@folder` pallet on the main floor. It
+  applies live, so `warehouses` is now a live key beside `extraFolders` and needs no restart. The
+  dialog lists what was added, with Remove. New routes: `GET /warehouses/candidates`,
+  `POST /warehouses/add`, `POST /warehouses/remove`. They edit the config file and nothing else, refuse
+  unless the state is `RUN`, and `/warehouses` now answers `{ warehouses, folders }`.
 
 ### Changed
 
@@ -52,6 +71,13 @@ adopters' agents were told to follow. Those get a major version, the same as an 
 - **A pallet behind another was painted over it.** The floor's painter's order ran nearest-first, so a
   recently written (green) pallet in front of an amber one was hidden. It is now farthest-first, decided
   per solid rather than per face, with flat ground as a layer underneath.
+- **A whole file system could not be browsed.** A drive root such as `C:\` already ends in a separator,
+  so the containment check built `C:\\` and rejected every folder under it. It now compares relative paths.
+- **A dead network share froze the console.** The warehouse online check was a blocking `statSync`, which
+  can take seconds to fail on an unreachable share and stalled every panel. It now runs on the thread pool,
+  is bounded to 1.5 s and is remembered for 15 s; paths on a known-dead drive are not walked either.
+- `/config` showed the values the sidecar started with, not the live keys' current values.
+- Switching to an offline warehouse left the previous warehouse's name in the crumb and prompt prefix.
 
 ## [1.2.0] — 2026-09-30
 

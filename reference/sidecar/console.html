@@ -66,6 +66,14 @@
   .pill.run{color:var(--green);border-color:var(--green)}
   .pill.yellow{color:var(--amber);border-color:var(--amber)}
   .pill.stop{color:#fff;background:var(--red);border-color:var(--red)}
+  /* The stop button. Always red, always reachable, one press: tripping the stop is the safe
+     direction, so it asks for no confirmation. It never clears one (07 section 5). */
+  .estopbtn{font-family:var(--mono);font-size:11.5px;font-weight:800;letter-spacing:.12em;
+            padding:5px 13px;border-radius:7px;border:1px solid var(--red);background:var(--red);
+            color:#fff;cursor:pointer;white-space:nowrap}
+  .estopbtn:hover:not(:disabled){filter:brightness(1.12)}
+  .estopbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .estopbtn:disabled{background:transparent;color:var(--red);cursor:default;opacity:.85}
   .iconbtn{background:transparent;border:1px solid var(--line2);color:var(--ink2);
            width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:14px;line-height:1}
   .iconbtn:hover{color:var(--ink);border-color:var(--ink3)}
@@ -203,6 +211,22 @@
      runtime because it wraps on narrow viewports. */
   position:sticky;top:calc(var(--barh,46px) + var(--navh,38px));z-index:15;background:var(--bg);
   padding:8px 0 10px;margin-bottom:0}
+  /* add-a-directory dialog */
+  #adlg{width:min(580px,94vw);height:auto;max-height:90vh;overflow:auto}
+  #adlg .abody{padding:14px 17px 17px}
+  #adlg label.lb{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink3);margin:12px 0 5px}
+  #adlg input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--ink);
+    padding:8px 10px;border-radius:7px;font-family:var(--mono);font-size:12.5px}
+  #adlg .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  #adlg .chip{background:var(--raised);border:1px solid var(--line2);color:var(--ink);border-radius:999px;
+    padding:3px 10px;font-family:var(--mono);font-size:11px;cursor:pointer}
+  #adlg .chip:hover{border-color:var(--ink3)}
+  #adlg .as{display:flex;flex-direction:column;gap:6px;margin-top:10px;font-size:12px;color:var(--ink2)}
+  #adlg .arow{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px}
+  #adlg .arow .nm{flex:1;overflow-wrap:anywhere}
+  #adlg .arow button{background:transparent;border:1px solid var(--line2);color:var(--ink2);border-radius:6px;padding:2px 9px;cursor:pointer;font:inherit}
+  #adlg .arow button:hover{color:var(--red);border-color:var(--red)}
+  #adlg h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--ink3);margin:18px 0 4px;font-weight:700}
   .whsel{display:inline-flex;gap:0}
   .whsel button{font-family:var(--mono);font-size:11px;padding:4px 11px;background:transparent;color:var(--ink2);
     border:1px solid var(--line2);cursor:pointer}
@@ -299,6 +323,8 @@
   <span class="brand">PARVIS<em>console</em></span>
   <span class="spacer"></span>
   <span class="pill" id="pill">CONNECTING…</span>
+  <button class="estopbtn" id="estop-btn" type="button" disabled
+          title="Stop the fleet now. One press, no confirmation. Clearing it is done at a terminal, never here.">ESTOP</button>
   <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">◑</button>
 </div>
 
@@ -343,6 +369,7 @@
   <section class="panel" id="p-warehouse">
     <div class="whbar">
       <span class="whsel" id="wh-sel" role="group" aria-label="Warehouse" hidden></span>
+      <button class="iconbtn" id="wh-add" type="button" title="Add a directory: another disk or folder to browse" aria-label="Add a directory">+</button>
       <span class="crumb" id="wh-crumb">/</span>
       <span class="spacer"></span>
       <span class="legend">
@@ -488,6 +515,30 @@
 
 <footer><div class="inner" id="foot">—</div></footer>
 
+<dialog id="adlg">
+  <div class="dhd">
+    <span class="t">Add a directory</span>
+    <span class="msg" id="a-msg"></span>
+    <button id="a-close" type="button">Close</button>
+  </div>
+  <div class="abody">
+    <p class="note">Put another disk or folder on the floor. It is <b>listed only</b>: nothing is written to it, no
+       file inside is opened, and removing it later never touches the directory itself.</p>
+    <label class="lb" for="a-path">PATH</label>
+    <input type="text" id="a-path" spellcheck="false" autocomplete="off" placeholder="C:\  or  D:\Projects  or  /Volumes/Backup">
+    <div class="chips" id="a-cands"></div>
+    <label class="lb" for="a-label">NAME ON THE SWITCHER (OPTIONAL)</label>
+    <input type="text" id="a-label" spellcheck="false" autocomplete="off" maxlength="40" placeholder="e.g. Backup disk">
+    <div class="as">
+      <label><input type="radio" name="a-as" value="warehouse" checked> its own warehouse, on the switcher</label>
+      <label><input type="radio" name="a-as" value="folder"> a pallet on the main floor, named @folder</label>
+    </div>
+    <p style="margin:14px 0 0"><button class="save" id="a-go" type="button" style="background:var(--amber);color:#14100a;border:0;font-weight:700;padding:8px 18px;border-radius:7px;cursor:pointer;font-size:12.5px">Add</button></p>
+    <h4>ON THE FLOOR NOW</h4>
+    <div id="a-list"></div>
+  </div>
+</dialog>
+
 <dialog id="dlg">
   <div class="dhd">
     <span class="t" id="d-title">—</span>
@@ -581,6 +632,12 @@
     pill.textContent = verb ? ("STATE: " + verb) : "SIDECAR UNREACHABLE";
     cell.className = "cell " + cls;
 
+    // The stop button: live at RUN and YELLOW, spent at STOP, dead with no sidecar to ask.
+    var eb = $("estop-btn");
+    if (!verb) { eb.disabled = true; eb.textContent = "ESTOP"; eb.title = "No sidecar — nothing to stop from here."; }
+    else if (verb === "STOP") { eb.disabled = true; eb.textContent = "STOPPED"; eb.title = "Already stopped. Clear it at a terminal with parvis clear; this page never clears a stop."; }
+    else { eb.disabled = false; eb.textContent = "ESTOP"; eb.title = "Stop the fleet now. One press, no confirmation. Clearing it is done at a terminal, never here."; }
+
     b.innerHTML = "";
     if (!s) {
       // §2.4 — a page with no sidecar is a snapshot and must say so.
@@ -607,7 +664,7 @@
       b.innerHTML += '<div class="banner"><b>ESTOP — STOPPED</b>' +
         (s.sentinel ? 'Sentinel present at <code>' + esc(s.sentinel) + '</code>. ' : '') +
         esc(s.reason || '') +
-        '<br>The console takes no orders and writes nothing. Only you clear it.</div>';
+        '<br>The console takes no orders and writes nothing. Only you clear it, at a terminal: <code>parvis clear</code>. This page has no button for that.</div>';
     } else if (verb === "YELLOW") {
       b.innerHTML += '<div class="banner warn"><b>ESTOP — YELLOW</b>' +
         esc(s.reason || 'Confirm before each action.') +
@@ -617,11 +674,31 @@
 
   function lock(stopped){
     STOPPED = !!stopped;
+    $("wh-add").disabled = !!stopped;       // a config write: refused at any state but RUN
     $("p").disabled = stopped;
     $("go").disabled = stopped;
     $("d-save").disabled = stopped;
     Array.prototype.forEach.call(document.querySelectorAll(".ask .act button"), function(b){ b.disabled = stopped; });
   }
+
+  // The stop button. One press stops; there is no confirmation to click through while something is
+  // going wrong. It only ever trips: there is no clear route behind this page (07 section 5).
+  $("estop-btn").addEventListener("click", function(){
+    var eb = $("estop-btn");
+    if (eb.disabled) return;
+    eb.disabled = true; eb.textContent = "STOPPING…";
+    api("/estop", { method: "POST", headers: {"content-type": "application/json"}, body: "{}" }).then(function(r){
+      // the pill, the banner and every lock come from the sidecar's own read, never from this reply
+      refresh().then(function(){
+        if (!r.ok) {
+          // A stop that did not take must never look like one that did.
+          $("banner").innerHTML += '<div class="banner"><b>NOT STOPPED</b>' + esc((r.body && r.body.error) || "the stop could not be written") +
+            '<br>Stop it by hand: <code>parvis estop "reason"</code> at a terminal, or close the sessions.</div>';
+          eb.disabled = false; eb.textContent = "ESTOP";
+        }
+      });
+    }).catch(function(){ refresh(); eb.disabled = false; eb.textContent = "ESTOP"; });
+  });
 
   function refresh(){
     return api("/state").then(function(r){
@@ -942,7 +1019,7 @@
   // dock and renders grey. Never a guessed position. (09 §3.)
   // =========================================================================
   var WH = {
-    id: "main", list: [], path: "", data: null, yaw: -0.62, pitch: 0.72, zoom: 1, top: false,
+    id: "main", list: [], folders: [], path: "", data: null, yaw: -0.62, pitch: 0.72, zoom: 1, top: false,
     drag: null, hover: null, raf: null, t0: performance.now(), layout: [], cranePos: {}
   };
 
@@ -2168,9 +2245,10 @@
   }
 
   function loadWarehouses(){
-    api("/warehouses").then(function(r){
-      if (!r.ok || !Array.isArray(r.body)) return;
-      WH.list = r.body;
+    return api("/warehouses").then(function(r){
+      if (!r.ok || !r.body || !Array.isArray(r.body.warehouses)) return;
+      WH.list = r.body.warehouses;
+      WH.folders = r.body.folders || [];
       if (!WH.list.some(function(w){ return w.id === WH.id; })) WH.id = "main";
       renderWhSel();
     });
@@ -2183,6 +2261,96 @@
     loadFloor("");
   }
 
+  // --- add a directory ------------------------------------------------------
+  // Edits the config file through the sidecar and nothing else: a directory is only listed, and
+  // removing one never touches the directory. Live: no restart. Refused at any state but RUN.
+  function aMsg(t, bad){ var m = $("a-msg"); m.textContent = t || ""; m.style.color = bad ? "var(--red)" : ""; }
+
+  function aRow(html, onRemove){
+    var row = document.createElement("div"); row.className = "arow";
+    row.innerHTML = '<span class="nm">' + html + '</span>';
+    var b = document.createElement("button"); b.type = "button"; b.textContent = "Remove";
+    b.addEventListener("click", onRemove);
+    row.appendChild(b);
+    return row;
+  }
+
+  function renderAList(){
+    var box = $("a-list"); box.innerHTML = "";
+    var any = false;
+    WH.list.forEach(function(w){
+      if (w.primary) return;
+      any = true;
+      box.appendChild(aRow('<b>' + esc(w.label) + '</b>  ' + esc(w.root || "") + (w.online ? "" : "  (offline)"),
+                           function(){ removeDir({ id: w.id }); }));
+    });
+    WH.folders.forEach(function(f){
+      any = true;
+      box.appendChild(aRow('<b>@' + esc(f.alias) + '</b>  ' + esc(f.root) + '  (a pallet on the main floor)',
+                           function(){ removeDir({ folder: f.root }); }));
+    });
+    if (!any) box.innerHTML = '<div class="note">Nothing added yet. The main warehouse is always there.</div>';
+  }
+
+  function loadCands(){
+    var box = $("a-cands"); box.innerHTML = "";
+    api("/warehouses/candidates").then(function(r){
+      if (!r.ok || !Array.isArray(r.body)) return;
+      if (!r.body.length) { box.innerHTML = '<span class="note">No other disks found. Type a path.</span>'; return; }
+      r.body.forEach(function(c){
+        var b = document.createElement("button"); b.type = "button"; b.className = "chip";
+        b.textContent = c.label; b.title = c.path;
+        b.addEventListener("click", function(){ $("a-path").value = c.path; if (!$("a-label").value) $("a-label").value = c.label; });
+        box.appendChild(b);
+      });
+    });
+  }
+
+  function afterDirChange(){
+    return loadWarehouses().then(function(){
+      renderAList(); loadCands();
+      // the floor being viewed may be the one just removed
+      if (!WH.list.some(function(w){ return w.id === WH.id; })) { WH.id = "main"; WH.path = ""; WH.cranePos = {}; renderWhSel(); }
+      if ($("p-warehouse").classList.contains("on")) loadFloor(WH.path);
+    });
+  }
+
+  function openAdd(){
+    aMsg(""); $("a-path").value = ""; $("a-label").value = "";
+    $("adlg").showModal();
+    loadWarehouses().then(renderAList);
+    loadCands();
+    $("a-path").focus();
+  }
+
+  function addDir(){
+    var p = $("a-path").value.trim();
+    if (!p) { aMsg("type a path, or pick a disk", true); return; }
+    aMsg("adding…");
+    api("/warehouses/add", { method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({ path: p, label: $("a-label").value.trim(), as: document.querySelector('input[name="a-as"]:checked').value }) })
+      .then(function(r){
+        if (!r.ok) { aMsg((r.body && r.body.error) || "refused", true); return; }
+        aMsg("added" + (r.body.label ? ": " + r.body.label : ""));
+        $("a-path").value = ""; $("a-label").value = "";
+        afterDirChange();
+      });
+  }
+
+  function removeDir(body){
+    api("/warehouses/remove", { method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body) })
+      .then(function(r){
+        if (!r.ok) { aMsg((r.body && r.body.error) || "refused", true); return; }
+        aMsg("removed");
+        afterDirChange();
+      });
+  }
+
+  $("wh-add").addEventListener("click", openAdd);
+  $("a-close").addEventListener("click", function(){ $("adlg").close(); });
+  $("a-go").addEventListener("click", addDir);
+  $("a-path").addEventListener("keydown", function(e){ if (e.key === "Enter") addDir(); });
+
   function loadFloor(rel){
     if (rel === null || rel === undefined) rel = WH.path;
     var asked = WH.id;
@@ -2192,6 +2360,10 @@
         // An offline warehouse must not leave the previous floor on screen under its name.
         WH.data = null;
         ctx.clearRect(0, 0, cv.width, cv.height);
+        // The crumb and the prompt prefix must name THIS warehouse too, not the one drawn before it.
+        var wl = WH.list.filter(function(w){ return w.id === WH.id; })[0];
+        $("wh-crumb").textContent = wl ? wl.label : WH.id;
+        $("pbar-pfx").textContent = (WH.id === "main" ? "" : WH.id + ":") + "/";
         $("wh-hud").textContent = r.body.error || "sidecar unreachable";
         $("wh-equip").innerHTML = '<div class="empty">' + esc(r.body.error || "sidecar unreachable") + '</div>';
         return;
