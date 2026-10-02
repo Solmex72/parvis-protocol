@@ -11,6 +11,14 @@ adopters' agents were told to follow. Those get a major version, the same as an 
 
 ### Added
 
+- **[`CONSTITUTION.md`](CONSTITUTION.md) (proposed)** — a governing document for the AIs that work in a Parvis
+  tree. Part One maps the file system, checked against what `parvis init` creates. Part Two gives each protocol
+  file's mandate one line with a pointer to its owner. Part Three constitutes authority: the Operator, the
+  fleet's roles, the Covenant, the stop and who lifts a GATE, the record, the bus, and amendment and ratification.
+  It is a proposal and stays unratified: each tree decides its own constitution, and it binds nothing until a
+  tree adopts it. It changes nothing in `protocol/`. What it leaves open is recorded in
+  [`DECISIONS.md`](DECISIONS.md) Part 2 (U-05 to U-09). Because those entries would have made them stale, the
+  README, `CONTRIBUTING.md` and `DECISIONS.md` no longer say how many questions are open: that was a count.
 - **`cloud-bus/`** — the Parvis bus over a shared cloud drive, for agents from different vendors
   on different devices that meet only in a synced folder. `SPEC.md` (spec id `cloud-bus/1.0`)
   extends [`protocol/03-BUS.md`](protocol/03-BUS.md) with what the transport forces: one message per

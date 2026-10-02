@@ -106,11 +106,11 @@ version that survives scrutiny — never by modification date.
 
 # Part 2 · Unresolved
 
-Four conflicts were found and **not** settled. Each meets one of the carve-outs in
+Conflicts were found and **not** settled. Each meets one of the carve-outs in
 [`05`](protocol/05-CORRECTION.md) §7 — settling it would require information not available, or
 being wrong would be unsafe. They are open questions in the protocol, not oversights.
 
-If you adopt Parvis, **these are the four decisions you have to make yourself.**
+If you adopt Parvis, **these are the decisions you have to make yourself.**
 
 ## D-10 · How a `REQ` row activates an agent
 
@@ -184,6 +184,80 @@ the part that *is* controllable — what an agent chooses to write. Substance to
 reduced to a pointer. The counter-rule in §5 matters more than the contract itself: **the stop
 and bad news still go to the human immediately.** A routing rule that buries failures has
 inverted into a lie.
+
+## U-05 · Is a governing document a second mandate? — *design, and a rule this repository holds itself to*
+
+**The conflict.** [`CONSTITUTION.md`](CONSTITUTION.md) is proposed as the one document an AI reads on entering a
+tree. To do that it has to *represent* the file system and the mandates, so its Part Two gives every protocol
+file one line. But D-04 settled that there is one precedence file and that it is an index of obligations, not a
+restatement, and [`CONTRIBUTING.md`](CONTRIBUTING.md) rule 1 says a rule restated in a new file is drift. The
+README already carries a one-line table of the same files, so Part Two is a second one.
+
+**Why it was not settled.** Whether a one-line digest with a pointer is an index (allowed) or a restatement
+(drift) is a design call for the owner of the protocol. The options: keep the digest and label it
+non-authoritative; generate Parts One and Two from the protocol files at build time so they cannot drift; or let
+Part Two replace the README table and have the README link it.
+
+**What shipped.** The digest, with a stated rule that a digest line never outranks its owning file (Article I.2).
+The Constitution is marked PROPOSED and binds nothing.
+
+## U-06 · "Prune", or retire? — *a contradiction between the Constitution and 05*
+
+**The conflict.** [`05`](protocol/05-CORRECTION.md) §7 and the README say to keep the right fact and prune, or
+delete, the wrong one. The proposed Constitution (Articles VIII.3 and IX.3) says to retire a rival by archiving it
+and leaving a pointer, and never to destroy another agent's file.
+
+**Why it was not settled.** One of them has to change. The Constitution's reading agrees with the append-only bus
+([`03`](protocol/03-BUS.md) §6). But `05` is an owning file, and changing a normative file is not a drive-by edit.
+
+**What shipped.** Neither file changed. The Constitution's reading is proposed, and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) rule 3 applies: this entry is the record.
+
+## U-07 · Where a Constitution lives, and how an AI finds it
+
+**The conflict.** The proposed Constitution says it lives at the root of the tree it governs, so an AI entering the
+file system finds it first (Article I.5). `parvis init` does not create it, and the "bind your agent" block in the
+README does not point at it.
+
+**Why it was not settled.** Scaffolding it means a template copy, which is a second copy of the same text, and a
+rule about whether `parvis check` should require it. Both change the tool and the contract with adopters.
+
+**What shipped.** One file, [`CONSTITUTION.md`](CONSTITUTION.md), at the repository root. No template copy, no
+change to `init`, no change to the bind block.
+
+## U-08 · Who lifts a GATE? — *an Operator's ruling, offered as a default*
+
+**The conflict.** [`03`](protocol/03-BUS.md) defines the `GATE` verb as "I am blocking this until my condition
+clears" and says nothing about who clears it. §5a adds that an approval does not lift a standing refusal, a gate
+or the estop. The proposed Constitution (Articles VII.5 and VII.6) fills the gap: the Operator may lift any GATE;
+an agent may lift a task GATE once it believes the conditions are met and the Governance AI has approved its work
+for the whole GATE; only the Governance AI, among the agents, lifts a GATE on anything that goes public; the rest
+is the Operator's. It excludes safety holds, money, credentials and anything on rungs 0 to 2, and says that
+approving or lifting a GATE never releases an act.
+
+**Why it was not settled.** It is one Operator's ruling for one deployment, and it creates a role, the Governance
+AI, that [`08`](protocol/08-AGENTS.md) does not have. Whether it generalises, and whether lifting a public GATE may
+ever release the act it blocks, are for the owner to decide.
+
+**What shipped.** The rule, in the proposed Constitution only, with the exclusions written out. `03` is
+unchanged.
+
+## U-09 · Who ratifies a tree's Constitution? — *the premise of the protocol*
+
+**The conflict.** The proposed [`CONSTITUTION.md`](CONSTITUTION.md) says that inside a tree that adopts it, only the
+Operator ratifies and amends it, and that an agent never enacts (Articles III.1, XI.1 and XI.6). It bars any
+amendment that gives an agent the irreversible act (XI.3). That follows the sentence [`08`](protocol/08-AGENTS.md)
+§7 calls the philosophy, stated once: the machine reports, the human decides. The maintainer's position is that
+this copy stays unratified, because the model running a file system will ultimately decide its own constitution.
+
+**Why it was not settled.** The two do not say how they fit. The position could mean that each tree's Operator
+decides and this copy is only a proposal; or that the model running the tree ratifies its own constitution, with
+the Operator able to refuse; or that the model decides with the Operator informed. The second and third change the
+premise of the protocol, not a clause.
+
+**What shipped.** This copy is unratified and binds nothing. Article XI.6 says a tree decides its own
+constitution. The articles that name the Operator as the ratifier are unchanged, as a default an adopter can
+replace by writing it down.
 
 ---
 
